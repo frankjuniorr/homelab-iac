@@ -1,0 +1,22 @@
+version: '3'
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: always
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "80:80/tcp"
+      - "443:443/tcp"
+    environment:
+      - TZ=America/Recife  # Defina o fuso horário desejado
+      - WEBPASSWORD=admin  # Defina uma senha para o painel de administração do Pi-Hole
+      - DNS1=192.168.0.1  # Configuração de servidor DNS (opcional)
+      - DNS2=8.8.8.8  # Configuração de servidor DNS (opcional)
+    volumes:
+      - /mnt/nfs/data/pihole_data/etc-pihole/:/etc/pihole/
+      - /mnt/nfs/data/pihole_data/etc-dnsmasq.d/:/etc/dnsmasq.d/
+    dns:
+      - 192.168.0.1
+      - 8.8.8.8

@@ -1,0 +1,18 @@
+---
+
+- name: Definir variáveis de usuário e senha
+  set_fact:
+    vm_user: "{{ hostvars[inventory_hostname].vm_user }}"
+    vm_user_passwd: "{{ hostvars[inventory_hostname].vm_user_passwd }}"
+
+- name: Adicionar usuário ao grupo wheel
+  become_user: root
+  shell: usermod -aG wheel {{ vm_user }}
+
+- name: Configurar NOPASSWD para o grupo wheel
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    state: present
+    validate: visudo -cf %s

@@ -1,0 +1,14 @@
+---
+
+- name: "Copy docker-compose.yaml"
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.src }}"
+  loop:
+    - {src: "docker-compose.yml", dest: "/home/{{ hostvars['pihole']['vm_user'] }}/docker-compose.yml"}
+
+- name: Deploy docker-compose
+  shell: docker compose up -d
+  become: false
+  args:
+    chdir: "/home/{{ hostvars['pihole']['vm_user'] }}"

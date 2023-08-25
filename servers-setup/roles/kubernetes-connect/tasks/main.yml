@@ -1,0 +1,21 @@
+---
+####################### Traz o kubeconfig pra máquina local
+- name: Transferir arquivo de configuração do Kubernetes
+  fetch:
+    src: /root/.kube/config
+    dest: "{{ lookup('ansible.builtin.env', 'HOME') }}/.kube/config.kubespray"
+    flat: yes
+
+- name: "Defininfo variáveis"
+  set_fact:
+    user_home: "{{ lookup('ansible.builtin.env', 'HOME') }}"
+    k8s_ip: "{{ hostvars['k8s-master']['ansible_host'] }}"
+
+####################### Atualiza o IP dos erver no arquivo, de '127.0.0.1' para o IP do k8s_master
+- name: Alterar o IP do Kubernetes server
+  become: false
+  replace:
+    path: "{{ user_home }}/.kube/config.kubespray"
+    regexp: '(\s+)server:.*'
+    replace: '\1server: https://{{ k8s_ip }}:6443'
+  delegate_to: localhost

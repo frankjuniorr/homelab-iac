@@ -1,0 +1,89 @@
+---
+
+
+####################### Configurando o Kubespray
+- name: Fazer git clone do Kubespray
+  git:
+    repo: "https://github.com/kubernetes-sigs/kubespray.git"
+    dest: "{{ playbook_dir }}/kubespray"
+    version: "master"
+
+- name: Definindo Variáveis
+  set_fact:
+    kubespray_folder: "{{ playbook_dir }}/kubespray"
+
+- name: Copiar o arquivo de inventory de exemplo
+  copy:
+    src: "{{ kubespray_folder }}/inventory/sample"
+    dest: "{{ kubespray_folder }}/inventory/homelab"
+
+
+# ####################### Gerando o Template
+- name: "Definir uma variável com todos os hosts"
+  set_fact:
+    all_hosts: "{{ hostvars | dict2items | json_query('[*].key') }}"
+
+- name: "Criar uma lista com os nomes dos k8s-workers"
+  set_fact:
+    k8s_workers_list: "{{ k8s_workers_list | default([]) + [item] }}"
+  loop: "{{ all_hosts }}"
+  when: item.startswith('k8s-worker')
+
+- name: "Criar uma lista com os nomes dos k8s-masters"
+  set_fact:
+    k8s_masters_list: "{{ k8s_masters_list | default([]) + [item] }}"
+  loop: "{{ all_hosts }}"
+  when: item.startswith('k8s-master')
+
+- name: "Copiando template de inventory.ini"
+  template:
+    src: "inventory.ini.j2"
+    dest: "{{ kubespray_folder }}/inventory/homelab/sample/inventory.ini"
+
+
+# ####################### Criando um venv python
+# - name: Criar ambiente virtual Python
+#   command: python3 -m venv {{ kubespray_folder }}/.venv
+#   args:
+#     creates: kubespray/.venv
+
+# - name: Ativar ambiente virtual Python
+#   shell: source {{ kubespray_folder }}/.venv/bin/activate
+#   args:
+#     executable: /bin/bash
+#   environment:
+#     PATH: "{{ ansible_env.PATH }}:{{ kubespray_folder }}/.venv/bin"
+
+# - name: Instalar requisitos do Kubespray
+#   pip:
+#     requirements: "{{ kubespray_folder }}/requirements.txt"
+#     virtualenv: "{{ kubespray_folder }}/.venv"
+
+# # ####################### Executa o kubespray em outra janela
+
+# - name: Definindo arquivo de lock
+#   set_fact:
+#     lock_file: "{{ playbook_dir }}/terminator.lock"
+
+# - name: "Definindo o comando do kubespray"
+#   set_fact:
+#     kubespray_command: |
+#       touch {{ lock_file }} && \
+#       cd kubespray && \
+#       source .venv/bin/activate && \
+#       ansible-playbook -i inventory/homelab/sample/inventory.ini --become --become-user=root cluster.yml && \
+#       cd .. && \
+#       rm -rf kubespray {{ lock_file }}
+
+# # Esse comando levou em média 25 min
+# - name: Executando o Kubespray em um nova janela do Terminator
+#   shell: "terminator --geometry=800x600 -e '{{ kubespray_command }}'"
+
+# # Essa TASK espera no máximo 50 min, até o comando de cima terminar
+# - name: Esperar o kubspray terminar
+#   stat:
+#     path: "{{ lock_file }}"
+#   register: lock_file_status
+#   until: not lock_file_status.stat.exists
+#   retries: 50
+#   delay: 60

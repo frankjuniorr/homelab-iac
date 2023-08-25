@@ -1,0 +1,8 @@
+---
+
+- name: Replace the DNS server
+  become: yes
+  lineinfile:
+    path: /etc/resolv.conf
+    line: nameserver {{ hostvars['pihole']['ansible_host'] }}
+    state: present

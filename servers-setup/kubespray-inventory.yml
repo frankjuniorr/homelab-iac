@@ -1,0 +1,12 @@
+---
+
+##############################################
+# Configurando o Kubespray
+##############################################
+- name: Configurando o Kubespray
+  hosts: localhost
+  become: false
+  gather_facts: no
+
+  roles:
+    - kubespray-inventory

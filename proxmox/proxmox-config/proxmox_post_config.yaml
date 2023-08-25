@@ -1,0 +1,10 @@
+---
+- name: "Proxmox post-configure"
+  hosts: proxmox
+  gather_facts: no
+  become: yes
+
+  roles:
+    - create-nfs-storage
+
+    # TODO: Adicionar aqui depois, a configuração do Metrics-Server

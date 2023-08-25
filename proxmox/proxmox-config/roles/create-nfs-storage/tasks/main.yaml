@@ -1,0 +1,14 @@
+---
+
+- name: "Scan NFS folder in server"
+  shell: pvesm scan nfs {{ nfs_server_ip }} | awk '{print $1}'
+  register: nfs_folder_output
+
+- name: "Definindo variáveis"
+  set_fact:
+    nfs_folder: "{{ nfs_folder_output.stdout_lines[0] }}"
+  when: nfs_folder_output.stdout_lines | length > 0
+
+- name: "Create NFS Storage"
+  shell: pvesm add nfs "{{ nfs_storage_name }}" --server "{{ nfs_server_ip }}" --export "{{ nfs_folder }}"
+  when: nfs_folder is defined

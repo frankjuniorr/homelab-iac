@@ -1,0 +1,29 @@
+[all]
+{% for k8s_masters in k8s_masters_list %}
+{{ k8s_masters }}   ansible_host={{ hostvars[k8s_masters]['ansible_host'] }}   ansible_user={{ hostvars[k8s_masters]['vm_user'] }}   etcd_member_name=etcd1
+{% endfor %}
+{% for k8s_workers in k8s_workers_list %}
+{{ k8s_workers }}   ansible_host={{ hostvars[k8s_workers]['ansible_host'] }}   ansible_user={{ hostvars[k8s_workers]['vm_user'] }}
+{% endfor %}
+
+[kube_control_plane]
+{% for k8s_masters in k8s_masters_list %}
+{{ k8s_masters }}
+{% endfor %}
+
+[etcd]
+{% for k8s_masters in k8s_masters_list %}
+{{ k8s_masters }}
+{% endfor %}
+
+[kube_node]
+{% for k8s_workers in k8s_workers_list %}
+{{ k8s_workers }}
+{% endfor %}
+
+[calico_rr]
+
+[k8s_cluster:children]
+kube_control_plane
+kube_node
+calico_rr

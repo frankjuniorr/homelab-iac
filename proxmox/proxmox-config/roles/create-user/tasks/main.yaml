@@ -1,0 +1,35 @@
+---
+- name: "Creating Proxmox user"
+  shell: |
+    pveum role add {{ iac_role }} -privs "{{ iac_role_permissions }}"
+    pveum user add {{ iac_user }} --password {{ iac_user_password }}
+    pveum aclmod / -user {{ iac_user }} -role {{ iac_role }}
+    pveum user token add {{ iac_user }} terraform-token --privsep=0 > {{ user_token_output_file }}
+
+    awk 'NR==4 {print $4;}' {{ user_token_output_file }}
+    awk 'NR==8 {print $4;}' {{ user_token_output_file }}
+  register: token_values
+
+- name: "Define user and API Token variables"
+  set_fact:
+    proxmox_token_id: "{{ token_values.stdout_lines[0] }}"
+    proxmox_token_secret: "{{ token_values.stdout_lines[1] }}"
+    host_vars: "{{ hostvars[inventory_hostname] }}"
+  when: token_values.stdout_lines is defined and token_values.stdout_lines | length > 0
+
+- name: generating .tfvars file with proxmox credentials
+  delegate_to: "localhost"
+  become: false
+  template:
+    src: "proxmox_variables.tf.j2"
+    dest: "{{ playbook_dir | dirname }}/create-vms/modules/proxmox_vms/proxmox_variables.tf"
+  vars:
+    proxmox_api_url: "https://{{ host_vars.ansible_host }}:8006/api2/json"
+  when: token_values.stdout_lines is defined and token_values.stdout_lines | length > 0
+
+- name: "Delete temporary file: {{ user_token_output_file }}"
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ user_token_output_file }}"

@@ -1,0 +1,41 @@
+---
+- name: "Proxmox init-configure"
+  hosts: proxmox
+  gather_facts: no
+  become: yes
+
+  vars_files:
+    - group_vars/vm_template_config.yaml
+
+  tasks:
+
+    ##################################################################
+    # Remove VM Template
+    ##################################################################
+    - name: "Remove VM Template"
+      shell: "{{ item }}"
+      loop:
+        - "qm stop {{ vm_id }}"
+        - "qm destroy {{ vm_id }}"
+
+
+    ##################################################################
+    # Remove User
+    ##################################################################
+    - name: "Remove User"
+      shell: "{{ item }}"
+      loop:
+        - "pveum user delete {{ iac_user }}"
+        - "pveum role del {{ iac_role }}"
+
+
+    ##################################################################
+    # Remove Temporary folder
+    ##################################################################
+    - name: "Delete temporary folder and image file"
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ config_cloud_image_directory }}"
+        # - "{{ rocky_linux_cloud_image_file }}"

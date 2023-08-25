@@ -1,0 +1,12 @@
+---
+####################### Abre a porta 6443 no firewall
+- name: Abrir a porta 6443 no firewall
+  become: true
+  firewalld:
+    port: 6443/tcp
+    permanent: true
+    state: enabled
+
+- name: Recarregar configurações do firewall
+  command: firewall-cmd --reload
+  become: true

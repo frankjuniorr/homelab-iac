@@ -1,0 +1,36 @@
+---
+- name: Instalar pacotes NFS
+  package:
+    name: nfs-utils
+    state: present
+
+- name: Criar pasta "data" que será o NFS
+  file:
+    path: "{{ nfs_folder }}"
+    state: directory
+    owner: "nobody"
+    group: "nobody"
+    mode: '0755'
+
+# *(rw,sync,all_squash,no_subtree_check)
+- name: Configurar exportações NFS
+  lineinfile:
+    path: /etc/exports
+    line: |
+      {{ nfs_folder }} *(rw,sync,no_subtree_check,no_root_squash)
+
+- name: Iniciar serviço NFS
+  service:
+    name: nfs-server
+    state: started
+    enabled: yes
+
+- name: Configurar firewall
+  command: firewall-cmd --permanent --add-service={{ item }}
+  loop:
+    - nfs
+    - mountd
+    - rpc-bind
+
+- name: Recarregar configurações do firewall
+  command: firewall-cmd --reload

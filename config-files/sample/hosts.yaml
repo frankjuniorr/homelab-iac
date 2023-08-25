@@ -1,0 +1,10 @@
+
+all:
+  hosts:
+    proxmox:
+      ansible_host: 192.168.0.99 # CHANGE: IP for proxmox server
+      ansible_user: root
+      root_password: "1234" # CHANGE: Password of Proxmox root user
+      # vm_user: "terraform@pve"
+      # vm_user_passwd: "Terraform!@#$"
+      ssh_public_key_file: .ssh/id_rsa.pub # CHANGE: path to your ssh public key

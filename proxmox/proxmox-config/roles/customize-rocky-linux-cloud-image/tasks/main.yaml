@@ -1,0 +1,56 @@
+- name: Install libguestfs-tools package
+  apt:
+    name: libguestfs-tools
+    state: present
+    update_cache: yes
+
+- name: "Create a temporary directory in root's home"
+  file:
+    path: "{{ config_cloud_image_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: "Donwload Rocky Linux Cloud image file"
+  get_url:
+    url: "{{ rocky_linux_cloud_image_url }}"
+    dest: "{{ rocky_linux_cloud_image_file }}"
+
+- name: "Copy configuration file to remote server"
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - { src: "{{ role_path }}/files/sshd_config", dest: "{{ config_cloud_image_directory }}/sshd_config" }
+
+- name: "Copy configuration file to remote server"
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: "resolv.conf.j2", dest: "{{ config_cloud_image_directory }}/resolv.conf" }
+
+- name: "Change config files in Cloud Init Image"
+  shell: "{{ item }}"
+  loop:
+    - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/cloud/cloud.cfg -e \"s/^ssh_pwauth:.*$/ssh_pwauth: 1/\""
+    - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/selinux/config -e \"s/^SELINUX=.*$/SELINUX=permissive/\""
+    - "virt-copy-in -a {{ rocky_linux_cloud_image_file }} {{ config_cloud_image_directory }}/resolv.conf /etc/"
+    - "virt-copy-in -a {{ rocky_linux_cloud_image_file }} {{ config_cloud_image_directory }}/sshd_config /etc/ssh/"
+
+- name: "Customize Cloud Init Image"
+  shell: "{{ item }}"
+  loop:
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --timezone \"America/Recife\""
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --update"
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --install qemu-guest-agent,nano,vim,wget,epel-release,firewalld"
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl enable qemu-guest-agent'"
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl unmask firewalld'"
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl start firewalld'"
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl enable firewalld'"
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --root-password password:{{ rocky_linux_cloud_image_root_password }}"
+

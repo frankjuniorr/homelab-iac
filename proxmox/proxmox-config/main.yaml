@@ -1,0 +1,13 @@
+---
+- name: "Proxmox init-configure"
+  hosts: proxmox
+  gather_facts: no
+  become: yes
+
+  vars_files:
+    - group_vars/vm_template_config.yaml
+
+  roles:
+    - create-user
+    - customize-rocky-linux-cloud-image
+    - create-cloud-init-vm-template

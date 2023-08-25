@@ -1,0 +1,10 @@
+---
+- name: Reiniciar a VM
+  become: yes
+  reboot:
+    reboot_timeout: 50
+
+- name: Esperar a VM ligar novamente
+  wait_for_connection:
+    delay: 5
+    timeout: 300

@@ -1,5 +1,4 @@
-Project Name
-===========
+# IaC (Infrastructure as a Code)
 
 <p align="left">
   <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">
@@ -7,15 +6,62 @@ Project Name
   </a>
 </p>
 
-  ## Description
+## Description
 
-  ## Use
+Code responsable to deploy all my infra in Proxmox, everything by code.
+Features:
+ - Send ssh public key to Proxmox server
+ - Trigger an Ansible code to configure Proxmox
+    -  Create user, and role permission
+    -  Create a VM Template in Proxmox with Rocky Linux (cloud-init image)
+ - Trigger a Terraform code, to create all VMs
+ - Trigger an Ansible code to confgure all VMs
+    -  download kubespray repository and install it
 
-  ## Install
+## It is divided by:
 
-----
+- `scripts`: folder with auxiliar scripts
+- `proxmox`: Folder with all necessary coded to create and configure Vms in Proxmox hypervisor
+- - `proxmox-config`: Ansible code, to configure Proxmox server and create VM Template
+    - `create-vms`: Terraform code, to create all VMs
+- `servers-setup`: Ansible code to install and configure all servers
 
-  ### License:
+## How to use
+
+### Config files
+First of all, **review and edit** all necessary config files, there are in `config-files/sample` folder.
+make a copy of this folder, running the command:
+```bash
+make init-config-files
+```
+
+After that, **open, review and edit** all files into a new folder called `config-files/my-configs`
+When all files are configured, run this command to install them:
+```bash
+make install-config-files
+```
+
+### Deploy infra
+When all config files are filled and revised, run this command to start the complete deploy process:
+```bash
+make proxmox-build
+```
+
+this command takes a while, around 30 minutes
+
+### Infra fluxogram
+As the code uses some configuration files, and some others are automatically generated, so here is an image summarizing the flow of the solution
+
+Legend:
+
+- Purple lines: The config files that user configure mannually in the start of code
+- Orange lines: Configuration files that are automatically generated and sent to their respective locations
+- Yellow lines: Configuration files that are automatically generated and sent to my localhost
+
+
+![Alt iac_fluxogram](images/iac_fluxogram.png)
+
+### License:
 
 <p align="center">
   <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">

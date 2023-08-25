@@ -1,0 +1,73 @@
+---
+##############################################
+# Executando em todos os hosts
+##############################################
+- name: "Criando o usuário e configurando o ssh"
+  hosts: all
+  become: yes
+  gather_facts: no
+
+  roles:
+    # - update-packages # talvez não precise
+    - create-user # talvez não precise
+    - create-ssh-config # atualiza o .ssh/config do meu client
+
+
+##############################################
+# Executando apenas no grupo 'nfs_server_hosts'
+##############################################
+- name: "Configurando o NFS Server"
+  hosts: nfs_server_hosts
+  become: yes
+  gather_facts: no
+
+  roles:
+    - nfs-server
+
+##############################################
+# Configurando NFS nos clients
+##############################################
+- name: "Configurando NFS nos clients"
+  hosts: all
+  become: yes
+  gather_facts: no
+
+  roles:
+    - nfs-client
+
+##############################################
+# Executando apenas no grupo 'nfs_server_hosts'
+##############################################
+- name: "Configurando o DNS Server"
+  hosts: dns_server_host
+  remote_user: pihole
+  become: yes
+  gather_facts: no
+
+  roles:
+    - docker-install
+    - restart-machine
+    - dns-server
+
+
+##############################################
+# Configurando DNS nos clients
+##############################################
+- name: "Configurando DNS nos clients"
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - dns-client
+
+##############################################
+# Abrindo porta 6443 no Firewall no cluster k8s
+##############################################
+- name: "Abrindo porta 6443 no Firewall no cluster k8s"
+  hosts: k8s_cluster
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - kubernetes-firewall
