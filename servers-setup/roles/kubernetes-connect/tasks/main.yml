@@ -9,6 +9,8 @@
 - name: "Defininfo variáveis"
   set_fact:
     user_home: "{{ lookup('ansible.builtin.env', 'HOME') }}"
+    cluster_name: 'cerebro'
+    cluster_username: 'kubernetes-kubespray'
     k8s_ip: "{{ hostvars['k8s-master']['ansible_host'] }}"
 
 ####################### Atualiza o IP dos erver no arquivo, de '127.0.0.1' para o IP do k8s_master
@@ -16,6 +18,21 @@
   become: false
   replace:
     path: "{{ user_home }}/.kube/config.kubespray"
-    regexp: '(\s+)server:.*'
-    replace: '\1server: https://{{ k8s_ip }}:6443'
+    regexp: "{{ item.regex }}"
+    replace: "{{ item.replace }}"
   delegate_to: localhost
+  loop:
+    # change the Server IP
+    - { regex: '(\s+)server:.*', replace: '\1server: https://{{ k8s_ip }}:6443' }
+
+    # Change the Cluster name
+    - { regex: '^(\s+name:\s+)cluster.local$', replace: '\1{{ cluster_name }}' }
+    - { regex: '^(\s+cluster:\s+)cluster.local$', replace: '\1{{ cluster_name }}' }
+
+    # Change the context name
+    - { regex: '^(\s+name:\s+)kubernetes-admin@cluster.local$', replace: '\1{{ cluster_name }}' }
+    - { regex: '^(current-context:\s+)kubernetes-admin@cluster.local$', replace: '\1{{ cluster_name }}' }
+
+    # change the User name
+    - { regex: '^(\s+user:\s+)kubernetes-admin$', replace: '\1{{ cluster_username }}' }
+    - { regex: '^(-\s+name:\s+)kubernetes-admin$', replace: '\1{{ cluster_username }}' }
