@@ -76,6 +76,5 @@ destroy-infra:
 	@echo "" > ~/.ssh/known_hosts && echo "" > ~/.ssh/config
 	@find proxmox/create-vms -iname "*.lock.hcl" -delete
 	@find proxmox/create-vms -iname "*.tfstate*" -delete
-	@find proxmox/create-vms -iname ".terraform" -exec rm -rf {} \;
-#	@find proxmox/create-vms -iname "*.lock.hcl" -o -iname "*.tfstate*" -o -iname ".terraform" -delete
+#	@find proxmox/create-vms -iname ".terraform" -exec rm -rf {} \;
 	@find scripts -iname ".venv" -exec rm -rf {} \;
