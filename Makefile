@@ -74,5 +74,8 @@ destroy-infra:
 	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} proxmox/proxmox-config/reset-nfs.yaml
 	@cd proxmox/create-vms && terraform destroy -var-file=terraform.tfvars -auto-approve
 	@echo "" > ~/.ssh/known_hosts && echo "" > ~/.ssh/config
-	@find proxmox/create-vms -iname "*.lock.hcl" -o -iname "*.tfstate*" -o -iname ".terraform" -delete
-	@find scripts -iname ".venv" -delete
+	@find proxmox/create-vms -iname "*.lock.hcl" -delete
+	@find proxmox/create-vms -iname "*.tfstate*" -delete
+	@find proxmox/create-vms -iname ".terraform" -exec rm -rf {} \;
+#	@find proxmox/create-vms -iname "*.lock.hcl" -o -iname "*.tfstate*" -o -iname ".terraform" -delete
+	@find scripts -iname ".venv" -exec rm -rf {} \;
