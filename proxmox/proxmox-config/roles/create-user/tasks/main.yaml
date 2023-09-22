@@ -1,4 +1,15 @@
 ---
+
+- name: "Use Rocky Linux in VM Template"
+  set_fact:
+    vm_template_name: "rocky8-cloud-init-template"
+  when: operation_system == 'rocky'
+
+- name: "Use Ubuntu in VM Template"
+  set_fact:
+    vm_template_name: "ubuntu-cloud-init-template"
+  when: operation_system == 'ubuntu'
+
 - name: "Creating Proxmox user"
   shell: |
     pveum role add {{ iac_role }} -privs "{{ iac_role_permissions }}"

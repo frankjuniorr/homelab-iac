@@ -9,5 +9,5 @@
 
   roles:
     - create-user
-    - customize-rocky-linux-cloud-image
+    - customize-cloud-init-image
     - create-cloud-init-vm-template

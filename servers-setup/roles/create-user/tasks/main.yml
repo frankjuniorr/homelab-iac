@@ -5,14 +5,36 @@
     vm_user: "{{ hostvars[inventory_hostname].vm_user }}"
     vm_user_passwd: "{{ hostvars[inventory_hostname].vm_user_passwd }}"
 
-- name: Adicionar usuário ao grupo wheel
+#######################################################################
+# Add permissions to Ubuntu
+#######################################################################
+- name: 'Ubuntu: Adicionar usuário ao grupo sudo'
+  become_user: root
+  shell: usermod -aG sudo {{ vm_user }}
+  when: linux_distro == 'ubuntu'
+
+- name: 'Ubuntu: Configurar NOPASSWD para o grupo sudo'
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: '^%sudo'
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+    state: present
+    validate: visudo -cf %s
+  when: linux_distro == 'ubuntu'
+
+#######################################################################
+# Add permissions to Rocky Linux
+#######################################################################
+- name: 'Rocky Linux: Adicionar usuário ao grupo wheel'
   become_user: root
   shell: usermod -aG wheel {{ vm_user }}
+  when: linux_distro == 'rocky'
 
-- name: Configurar NOPASSWD para o grupo wheel
+- name: 'Rocky Linux: Configurar NOPASSWD para o grupo wheel'
   lineinfile:
     dest: /etc/sudoers
     regexp: '^%wheel'
     line: '%wheel ALL=(ALL) NOPASSWD: ALL'
     state: present
     validate: visudo -cf %s
+  when: linux_distro == 'rocky'

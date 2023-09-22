@@ -1,0 +1,15 @@
+---
+
+- name: Install libguestfs-tools package
+  apt:
+    name: libguestfs-tools
+    state: present
+    update_cache: yes
+
+- name: "Using Rocky Linux with Cloud Init"
+  include: rocky-linux-cloud-init.yaml
+  when: operation_system == 'rocky'
+
+- name: "Using Ubuntu with Cloud Init"
+  include: ubuntu-server-cloud-init.yaml
+  when: operation_system == 'ubuntu'

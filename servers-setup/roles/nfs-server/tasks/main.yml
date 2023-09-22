@@ -1,15 +1,36 @@
 ---
+
+- name: "Ubuntu: Remover locks do apt-get"
+  become: true
+  command: "rm -rf {{ item }}"
+  loop:
+    - /var/lib/dpkg/lock-frontend
+    - /var/lib/dpkg/lock
+    - /var/lib/apt/lists/lock
+    - /var/cache/apt/archives/lock
+  when: linux_distro == 'ubuntu'
+
 - name: Instalar pacotes NFS
   package:
-    name: nfs-utils
+    name: nfs-kernel-server
     state: present
+
+- name: "Rocky Linux: Definindo nobody group"
+  set_fact:
+    no_group: "nobody"
+  when: linux_distro == 'rocky'
+
+- name: "Ubuntu: Definindo nogroup group"
+  set_fact:
+    no_group: "nogroup"
+  when: linux_distro == 'ubuntu'
 
 - name: Criar pasta "data" que será o NFS
   file:
     path: "{{ nfs_folder }}"
     state: directory
     owner: "nobody"
-    group: "nobody"
+    group: "{{ no_group }}"
     mode: '0755'
 
 # *(rw,sync,all_squash,no_subtree_check)
@@ -21,16 +42,32 @@
 
 - name: Iniciar serviço NFS
   service:
-    name: nfs-server
+    name: nfs-kernel-server
     state: started
     enabled: yes
 
-- name: Configurar firewall
-  command: firewall-cmd --permanent --add-service={{ item }}
-  loop:
-    - nfs
-    - mountd
-    - rpc-bind
+# Configure Firewall to Ubuntu
+# - name: "Configure firewall"
+#   command: ufw allow {{ item }}
+#   loop:
+#     - nfs
+#     - mountd
+#     - rpc-bind
+#   when: linux_distro == 'ubuntu'
 
-- name: Recarregar configurações do firewall
-  command: firewall-cmd --reload
+# - name: "Reload firewall"
+#   command: ufw reload
+#   when: linux_distro == 'ubuntu'
+
+# # Configure Firewall to Rocky Linux
+# - name: "Configure firewall"
+#   command: firewall-cmd --permanent --add-service={{ item }}
+#   loop:
+#     - nfs
+#     - mountd
+#     - rpc-bind
+#   when: linux_distro == 'rocky'
+
+# - name: "Reload firewall"
+#   command: firewall-cmd --reload
+#   when: linux_distro == 'rocky'

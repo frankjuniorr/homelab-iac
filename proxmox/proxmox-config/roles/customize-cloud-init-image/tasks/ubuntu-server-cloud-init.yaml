@@ -1,0 +1,49 @@
+- name: "Create a temporary directory in root's home"
+  file:
+    path: "{{ config_cloud_image_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: "Donwload Ubuntu Server Cloud image file"
+  get_url:
+    url: "{{ ubuntu_server_cloud_image_url }}"
+    dest: "{{ ubuntu_server_cloud_image_file }}"
+
+- name: "Copy configuration file to remote server"
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - { src: "{{ role_path }}/files/sshd_config", dest: "{{ config_cloud_image_directory }}/sshd_config" }
+
+- name: "Copy configuration file to remote server"
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: "resolv.conf.j2", dest: "{{ config_cloud_image_directory }}/resolv.conf" }
+
+- name: "Change config files in Cloud Init Image"
+  shell: "{{ item }}"
+  loop:
+    - "virt-edit -a {{ ubuntu_server_cloud_image_file }} /etc/cloud/cloud.cfg -e \"s/^ssh_pwauth:.*$/ssh_pwauth: 1/\""
+    # - "virt-edit -a {{ ubuntu_server_cloud_image_file }} /etc/selinux/config -e \"s/^SELINUX=.*$/SELINUX=permissive/\""
+    - "virt-copy-in -a {{ ubuntu_server_cloud_image_file }} {{ config_cloud_image_directory }}/resolv.conf /etc/"
+    # - "virt-copy-in -a {{ ubuntu_server_cloud_image_file }} {{ config_cloud_image_directory }}/sshd_config /etc/ssh/"
+
+- name: "Customize Cloud Init Image"
+  shell: "virt-customize -a {{ ubuntu_server_cloud_image_file }} {{ item }}"
+  loop:
+    - "--timezone \"America/Recife\""
+    - "--update"
+    - "--install qemu-guest-agent,nano,vim,wget,curl"
+    - "--run-command 'sudo systemctl enable qemu-guest-agent'"
+    - "--run-command 'sudo ufw disable'"
+    # - "--run-command 'sudo ufw allow 22/tcp'"
+    - "--root-password password:{{ ubuntu_server_cloud_image_root_password }}"
+

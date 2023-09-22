@@ -1,0 +1,8 @@
+---
+- name: "Read the file /etc/os-release"
+  command: cat /etc/os-release
+  register: os_release
+
+- name: "Check Linux distro"
+  set_fact:
+    linux_distro: "{{ 'rocky' if 'rocky' in os_release.stdout | lower else 'ubuntu' }}"

@@ -1,7 +1,16 @@
 ---
-- name: Desabilitar o serviço firewalld
+
+# Disable Firewall to Ubuntu
+- name: "Disable firewall"
+  become: true
+  command: ufw disable
+  when: linux_distro == 'ubuntu'
+
+# Disable Firewall to Rocky Linux
+- name: "Disable firewall"
+  become: true
   systemd:
     name: firewalld
     enabled: no
     state: stopped
-  become: true
+  when: linux_distro == 'rocky'

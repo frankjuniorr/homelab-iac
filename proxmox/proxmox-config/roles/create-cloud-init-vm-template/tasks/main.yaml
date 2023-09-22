@@ -24,6 +24,16 @@
   register: vm_exists
   ignore_errors: yes
 
+- name: "Use Rocky Linux in VM Template"
+  set_fact:
+    linux_image_file: "{{ rocky_linux_cloud_image_file }}"
+  when: operation_system == 'rocky'
+
+- name: "Use Ubuntu in VM Template"
+  set_fact:
+    linux_image_file: "{{ ubuntu_server_cloud_image_file }}"
+  when: operation_system == 'ubuntu'
+
 # --name: Create a new virtual machine with this specific name
 # --memory, --core: Configure CPU and memory
 # --net0 virtio,bridge=vmbr0: Configure the first network interface (net0) to use the "virtio" driver (which is optimized for virtualization environments) and be connected to the vmbr0 network bridge.
@@ -48,7 +58,7 @@
   loop:
     - "qm create {{ vm_id }} --name {{ vm_template_name }} --memory 1024 --cores 1 --net0 virtio,bridge=vmbr0"
     - "qm set {{ vm_id }} --tags template"
-    - "qm disk import {{ vm_id }} {{ rocky_linux_cloud_image_file }} {{ vm_storage }} --format qcow2"
+    - "qm disk import {{ vm_id }} {{ linux_image_file }} {{ vm_storage }} --format qcow2"
     - "qm set {{ vm_id }} --scsihw virtio-scsi-pci"
     - "qm set {{ vm_id }} --scsi0  {{ vm_storage }}:vm-{{ vm_id }}-disk-0,discard=on,ssd=on"
     - "qm set {{ vm_id }} --boot c"

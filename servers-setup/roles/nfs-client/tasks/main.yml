@@ -1,7 +1,7 @@
 ---
-- name: Instalar nfs-utils
+- name: Instalar nfs-common
   package:
-    name: nfs-utils
+    name: nfs-common
     state: present
   when: inventory_hostname != 'nfs'
 

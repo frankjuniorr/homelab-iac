@@ -8,7 +8,7 @@
   gather_facts: no
 
   roles:
-    # - update-packages # talvez não precise
+    - linux-distro
     - create-user # talvez não precise
     - create-ssh-config # atualiza o .ssh/config do meu client
 
@@ -64,10 +64,10 @@
 ##############################################
 # Abrindo porta 6443 no Firewall no cluster k8s
 ##############################################
-- name: "Aplicando configurações de firewall nos nodes do cluster k8s"
-  hosts: k8s_cluster
-  become: yes
-  gather_facts: yes
+# - name: "Aplicando configurações de firewall nos nodes do cluster k8s"
+#   hosts: k8s_cluster
+#   become: yes
+#   gather_facts: yes
 
-  roles:
-    - kubernetes-firewall
+#   roles:
+#     - kubernetes-firewall

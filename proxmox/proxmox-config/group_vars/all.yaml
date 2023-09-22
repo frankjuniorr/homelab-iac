@@ -9,11 +9,18 @@ iac_role_permissions: "VM.Allocate VM.Clone VM.Config.CDROM VM.Config.CPU VM.Con
 # auxiliar and temporary file
 user_token_output_file: "/tmp/terraform_user_token.txt"
 
-# Cloud init image config
+############ Cloud init image config ############
 config_cloud_image_directory: "/root/config-cloud-image"
+
+# Rocky Linux
 rocky_linux_cloud_image_url: "https://download.rockylinux.org/pub/rocky/8/images/x86_64/Rocky-8-GenericCloud-Base.latest.x86_64.qcow2"
 rocky_linux_cloud_image_file: "/var/lib/vz/images/rocky8.qcow2"
 rocky_linux_cloud_image_root_password: "RockyLinux"
+
+# Ubuntu Server
+ubuntu_server_cloud_image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
+ubuntu_server_cloud_image_file: "/var/lib/vz/images/ubuntu.qcow2"
+ubuntu_server_cloud_image_root_password: "Ubuntu"
 
 
 # NFS storage
