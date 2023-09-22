@@ -40,50 +40,14 @@
     src: "inventory.ini.j2"
     dest: "{{ kubespray_folder }}/inventory/homelab/sample/inventory.ini"
 
-
-# ####################### Criando um venv python
-# - name: Criar ambiente virtual Python
-#   command: python3 -m venv {{ kubespray_folder }}/.venv
-#   args:
-#     creates: kubespray/.venv
-
-# - name: Ativar ambiente virtual Python
-#   shell: source {{ kubespray_folder }}/.venv/bin/activate
-#   args:
-#     executable: /bin/bash
-#   environment:
-#     PATH: "{{ ansible_env.PATH }}:{{ kubespray_folder }}/.venv/bin"
-
-# - name: Instalar requisitos do Kubespray
-#   pip:
-#     requirements: "{{ kubespray_folder }}/requirements.txt"
-#     virtualenv: "{{ kubespray_folder }}/.venv"
-
-# # ####################### Executa o kubespray em outra janela
-
-# - name: Definindo arquivo de lock
-#   set_fact:
-#     lock_file: "{{ playbook_dir }}/terminator.lock"
-
-# - name: "Definindo o comando do kubespray"
-#   set_fact:
-#     kubespray_command: |
-#       touch {{ lock_file }} && \
-#       cd kubespray && \
-#       source .venv/bin/activate && \
-#       ansible-playbook -i inventory/homelab/sample/inventory.ini --become --become-user=root cluster.yml && \
-#       cd .. && \
-#       rm -rf kubespray {{ lock_file }}
-
-# # Esse comando levou em média 25 min
-# - name: Executando o Kubespray em um nova janela do Terminator
-#   shell: "terminator --geometry=800x600 -e '{{ kubespray_command }}'"
-
-# # Essa TASK espera no máximo 50 min, até o comando de cima terminar
-# - name: Esperar o kubspray terminar
-#   stat:
-#     path: "{{ lock_file }}"
-#   register: lock_file_status
-#   until: not lock_file_status.stat.exists
-#   retries: 50
-#   delay: 60
+# ####################### Configurando o Kubespray
+- name: "Configure Kubespray"
+  replace:
+    path: "{{ item.file }}"
+    regexp: "{{ item.regex }}"
+    replace: "{{ item.replace }}"
+  loop:
+    # - { file: "{{ kubespray_folder }}/inventory/homelab/sample/group_vars/all/all.yml", regex: '^# kube_read_only_port:', replace: 'kube_read_only_port: 10255' }
+    - { file: "{{ kubespray_folder }}/inventory/homelab/sample/group_vars/k8s_cluster/k8s-cluster.yml", regex: 'enable_nodelocaldns:\s*true', replace: 'enable_nodelocaldns: false' }
+    # - { file: "{{ kubespray_folder }}/inventory/homelab/sample/group_vars/k8s_cluster/k8s-cluster.yml", regex: 'kube_network_plugin:\s*calico', replace: 'kube_network_plugin: flannel' }
+    # - { file: "{{ kubespray_folder }}/inventory/homelab/sample/group_vars/k8s_cluster/k8s-net-flannel.yml", regex: '^# flannel_interface:', replace: 'flannel_interface: eth0' }

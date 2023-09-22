@@ -15,7 +15,7 @@ init-config-files:
 install-config-files:
 	@cp -v "${MY_CONFIG_FILES}/hosts.yaml" ${PROXMOX_HOSTS_FILE}
 	@cp -v "${MY_CONFIG_FILES}/vm_template_config.yaml" proxmox/proxmox-config/group_vars/vm_template_config.yaml
-	@cp -v "${MY_CONFIG_FILES}/terraform.tfvars" proxmox/create-vms/terraform.tfvars
+	@cp -v "${MY_CONFIG_FILES}/terraform.vars" proxmox/create-vms/terraform.tfvars
 
 
 ##############################################################################################################
@@ -61,6 +61,9 @@ deploy-infra:
 	@nfs_server_ip=$$(grep --max-count=1 --after-context=1 "nfs:" ${SERVERS_HOST_FILE} | grep "ansible_host" | awk '{print $$2}') && \
 			ansible-playbook -i ${PROXMOX_HOSTS_FILE} proxmox/proxmox-config/proxmox_post_config.yaml -e "nfs_server_ip=$$nfs_server_ip"
 
+	@make kubespray-install
+
+kubespray-install:
 	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/kubespray-inventory.yml
 	@cd servers-setup/ && bash install-kubespray.sh
 	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/kubespray-connect.yml
@@ -76,5 +79,5 @@ destroy-infra:
 	@echo "" > ~/.ssh/known_hosts && echo "" > ~/.ssh/config
 	@find proxmox/create-vms -iname "*.lock.hcl" -delete
 	@find proxmox/create-vms -iname "*.tfstate*" -delete
-#	@find proxmox/create-vms -iname ".terraform" -exec rm -rf {} \;
-	@find scripts -iname ".venv" -exec rm -rf {} \;
+	@test -d "proxmox/create-vms/.terraform" && rm -rf "proxmox/create-vms/.terraform" || true
+	@test -d "scripts/.venv" && rm -rf "scripts/.venv" || true
