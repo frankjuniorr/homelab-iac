@@ -1,2 +1,39 @@
 ---
 ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+
+# IP do roteador (servindo como DNS externo ao cluster).
+# Esse IP só vai no arquivo /etc/resolv.conf do DNS Server (o Pihole nesse caso)
+external_dns_server: "192.168.0.1"
+
+k3s_version: "v1.25.12+k3s1"
+k3s_token: '@Jg_6_Ex6.PMicZRzym8fHTUgTM*@C'
+
+# Disable the taint manually by setting: k3s_master_taint = false
+k3s_master_taint: "{{ true if groups['k8s_nodes'] | length >= 1 else false }}"
+
+flannel_iface: "eth0"
+k3s_node_ip: '{{ ansible_facts[flannel_iface]["ipv4"]["address"] }}'
+
+extra_args: >-
+  --flannel-iface={{ flannel_iface }}
+  --node-ip={{ k3s_node_ip }}
+
+extra_server_args: >-
+  {{ extra_args }}
+  {{ '--node-taint node-role.kubernetes.io/master=true:NoSchedule' if k3s_master_taint else '' }}
+  --disable servicelb
+  --disable traefik
+extra_agent_args: >-
+  {{ extra_args }}
+
+server_init_args: >-
+  {% if groups['k8s_masters'] | length > 1 %}
+    {% if ansible_hostname == hostvars[groups['k8s_masters'][0]]['ansible_hostname'] %}
+      --cluster-init
+    {% else %}
+      --server https://{{ hostvars[groups['k8s_masters'][0]].ansible_host | split(",") | first | ansible.utils.ipwrap }}:6443
+    {% endif %}
+    --token {{ k3s_token }}
+  {% endif %}
+  {{ extra_server_args }}
+

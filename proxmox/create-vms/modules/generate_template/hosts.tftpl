@@ -59,3 +59,14 @@ all:
     ${worker_user[index]}:
     %{ endfor ~}
 
+    k8s_masters:
+      hosts:
+    %{ for index in range(k8s_master_amount) ~}
+    ${master_user[index]}:
+    %{ endfor ~}
+
+    k8s_nodes:
+      hosts:
+    %{ for index in range(k8s_worker_amount) ~}
+    ${worker_user[index]}:
+    %{ endfor ~}

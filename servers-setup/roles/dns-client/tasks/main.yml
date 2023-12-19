@@ -1,8 +1,8 @@
 ---
-
-- name: Replace the DNS server
+- name: "Copy resolv.conf file to remote server"
   become: yes
-  lineinfile:
-    path: /etc/resolv.conf
-    line: nameserver {{ hostvars['pihole']['ansible_host'] }}
-    state: present
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: "resolv.conf.j2", dest: "/etc/resolv.conf" }

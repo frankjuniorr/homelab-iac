@@ -5,7 +5,7 @@
 - name: "Criando o usuário e configurando o ssh"
   hosts: all
   become: yes
-  gather_facts: no
+  gather_facts: yes
 
   roles:
     # - update-packages # talvez não precise
