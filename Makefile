@@ -15,7 +15,7 @@ init-config-files:
 install-config-files:
 	@cp -v "${MY_CONFIG_FILES}/hosts.yaml" ${PROXMOX_HOSTS_FILE}
 	@cp -v "${MY_CONFIG_FILES}/vm_template_config.yaml" proxmox/proxmox-config/group_vars/vm_template_config.yaml
-	@cp -v "${MY_CONFIG_FILES}/terraform.vars" proxmox/create-vms/terraform.tfvars
+	@cp -v "${MY_CONFIG_FILES}/terraform.tfvars.template" proxmox/create-vms/terraform.tfvars
 
 
 ##############################################################################################################
