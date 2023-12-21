@@ -27,19 +27,11 @@
   loop:
     - { src: "{{ role_path }}/files/sshd_config", dest: "{{ config_cloud_image_directory }}/sshd_config" }
 
-# - name: "Copy configuration file to remote server"
-#   template:
-#     src: "{{ item.src }}"
-#     dest: "{{ item.dest }}"
-#   loop:
-#     - { src: "resolv.conf.j2", dest: "{{ config_cloud_image_directory }}/resolv.conf" }
-
 - name: "Change config files in Cloud Init Image"
   shell: "{{ item }}"
   loop:
     - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/cloud/cloud.cfg -e \"s/^ssh_pwauth:.*$/ssh_pwauth: 1/\""
     - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/selinux/config -e \"s/^SELINUX=.*$/SELINUX=permissive/\""
-    # - "virt-copy-in -a {{ rocky_linux_cloud_image_file }} {{ config_cloud_image_directory }}/resolv.conf /etc/"
     - "virt-copy-in -a {{ rocky_linux_cloud_image_file }} {{ config_cloud_image_directory }}/sshd_config /etc/ssh/"
 
 - name: "Customize Cloud Init Image"

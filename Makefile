@@ -61,12 +61,10 @@ deploy-infra:
 	@nfs_server_ip=$$(grep --max-count=1 --after-context=1 "nfs:" ${SERVERS_HOST_FILE} | grep "ansible_host" | awk '{print $$2}') && \
 			ansible-playbook -i ${PROXMOX_HOSTS_FILE} proxmox/proxmox-config/proxmox_post_config.yaml -e "nfs_server_ip=$$nfs_server_ip"
 
-	@make kubespray-install
+	@make k3s-install
 
-kubespray-install:
-	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/kubespray-inventory.yml
-	@cd servers-setup/ && bash install-kubespray.sh
-	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/kubespray-connect.yml
+k3s-install:
+	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/k3s-install.yml
 	@kubecolor get nodes -o wide --kubeconfig=$${HOME}/.kube/config.kubespray
 
 ##############################################################################################################

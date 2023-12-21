@@ -1,12 +1,12 @@
 ---
 
 ##############################################
-# Configurando o Kubespray
+# Desinstalando o k3s
 ##############################################
-- name: Conectando no Kubernetes server
-  hosts: k8s-master
+- name: Desinstalando o k3s
+  hosts: k8s_cluster
   become: true
   gather_facts: no
 
   roles:
-    - kubernetes-connect
+    - kubernetes-uninstall

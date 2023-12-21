@@ -1,0 +1,2 @@
+nameserver {{ hostvars['pihole']['ansible_host'] if inventory_hostname != 'pihole' else external_dns_server}}
+
