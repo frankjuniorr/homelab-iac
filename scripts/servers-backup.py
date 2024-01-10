@@ -67,11 +67,8 @@ def pihole_backup_filename():
     pihole_backup_filename = f"{formatted_date}-pihole-backup.tar.gz"
     return pihole_backup_filename
 
-def create_dns_backup(client):
-    pihole_backup_file = pihole_backup_filename()
+def create_dns_backup(client, home_folder, pihole_backup_file):
     docker_container_name = "pihole"
-
-    home_folder = execute_remote_commands(client, "echo $HOME")
 
     # 1º command: create a backup file, with 'pihole' CLI
     # 2º command: copy the file from container to remote host
@@ -95,10 +92,9 @@ def dns_backup(host_data):
     client = connect_remote_host(ansible_host, vm_user, vm_user_passwd)
 
     print("creating backup file")
-    create_dns_backup(client)
-
     home_folder = execute_remote_commands(client, "echo $HOME")
     pihole_backup_file = pihole_backup_filename()
+    create_dns_backup(client, home_folder, pihole_backup_file)
 
     remote_backup_file = f"{home_folder}/{pihole_backup_file}"
     local_backup_file = f"{LOCAL_BACKUP_FOLDER}/{pihole_backup_file}"

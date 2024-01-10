@@ -1,4 +1,6 @@
 
+SHELL := /bin/bash
+
 # Variables
 PROXMOX_HOSTS_FILE = "proxmox/proxmox-config/hosts.yaml"
 SERVERS_HOST_FILE = "servers-setup/hosts.yaml"
@@ -56,6 +58,8 @@ proxmox-reset: destroy-infra
 #		- Create the NFS Storage
 deploy-infra:
 	@cd proxmox/create-vms && terraform init && terraform fmt -recursive && terraform apply -var-file=terraform.tfvars -auto-approve
+	@echo "Waiting 1 minute to VMs to breath..."
+	@sleep 60
 #
 	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/servers-setup.yml
 	@nfs_server_ip=$$(grep --max-count=1 --after-context=1 "nfs:" ${SERVERS_HOST_FILE} | grep "ansible_host" | awk '{print $$2}') && \
@@ -65,7 +69,7 @@ deploy-infra:
 
 k3s-install:
 	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/k3s-install.yml
-	@kubecolor get nodes -o wide --kubeconfig=$${HOME}/.kube/config.kubespray
+	@kubecolor get nodes -o wide --kubeconfig=$${HOME}/.kube/config.k3s
 
 ##############################################################################################################
 # DESTROY ONLY INFRA

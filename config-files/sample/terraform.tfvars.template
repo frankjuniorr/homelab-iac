@@ -7,20 +7,20 @@ ssh_private_key_file = "YOUR_PRIVATE_SSH_KEY_HERE"
 
 # ####################### NFS VM parameters #######################
 nfs_vm_id                = 300
-nfs_cpu                  = 1
+nfs_cpu                  = 2
 nfs_vm_name              = ["VM_NAME_HERE"]
 nfs_vm_user              = "VM_USER_HERE"
-nfs_vm_memory            = 1024
+nfs_vm_memory            = 2048
 nfs_vm_network_ip_suffix = 50
 nfs_vm_disk_size         = "50G"
 nfs_vm_tags              = "VM_TAG_HERE"
 
 # ####################### DNS VM parameters #######################
 dns_vm_id                = 301
-dns_cpu                  = 1
+dns_cpu                  = 2
 dns_vm_name              = ["VM_NAME_HERE"]
 dns_vm_user              = "VM_USER_HERE"
-dns_vm_memory            = 4096
+dns_vm_memory            = 2048
 dns_vm_network_ip_suffix = 51
 dns_vm_disk_size         = "20G"
 dns_vm_tags              = "VM_TAG_HERE"
@@ -28,18 +28,18 @@ dns_vm_tags              = "VM_TAG_HERE"
 # ####################### K8s Master parameters #######################
 k8s_master_amount            = 1
 k8s_master_id                = 400
-k8s_master_cpu               = 1
+k8s_master_cpu               = 2
 k8s_master_name              = ["VM_K8S_MASTER_NAME_1_HERE", "VM_K8S_MASTER_NAME_2_HERE", "VM_K8S_MASTER_NAME_3_HERE"]
 k8s_master_network_ip_suffix = 60
 k8s_master_user              = "VM_USER_HERE"
-k8s_master_memory            = 3072
+k8s_master_memory            = 5120
 k8s_master_disk_size         = "20G"
 k8s_master_tags              = "VM_TAG_HERE"
 
 # ####################### K8s Nodes parameters #######################
 k8s_worker_amount            = 2
 k8s_worker_id                = 500
-k8s_worker_cpu               = 1
+k8s_worker_cpu               = 2
 k8s_worker_name              = ["VM_K8S_NODE_NAME_1_HERE", "VM_K8S_NODE_NAME_2_HERE", "VM_K8S_NODE_NAME_3_HERE"]
 k8s_worker_network_ip_suffix = 70
 k8s_worker_user              = "VM_USER_HERE"
