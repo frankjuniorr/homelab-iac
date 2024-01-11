@@ -56,22 +56,29 @@ systemctl restart pveproxy.service
 ```
 
 ## Run the code
-First, to Ansible code with root user works, is necessary send the ssh public key to the proxmox server.
 
-This is can be made trought the `ssh-copy-id` command, but here is the python code that do this.
+Review the files `hosts.yaml`,  `group_vars/all.yaml` and `group_vars/vm_template_config.yaml`
 
-1. Review the files `hosts.yaml`,  `group_vars/all.yaml` and `group_vars/vm_template_config.yaml`
-3. Run `ssh-copy-to-host` code (in this repository)
-4. Run `ansible-playbook -i hosts.yaml main.yaml`
+```bash
+
+# full deploy
+make proxmox-build
+
+# or
+
+# to full destroy
+make proxmox-reset
+```
 
 ## Output
-This code generate a credentials proxmox file, and send to Terraform code (`create-vms` folder), called `proxmox-variables.tfvars`, and send them to terraform code in `create-vms/modules/proxmox_vms`
+This code generate a credentials proxmox file, and send to terraform code in `create-vms/modules/proxmox_vms` called `proxmox-variables.tfvars`
 
 ## Playbooks
 
-Here in thie code have 3 playbooks files, that are triggered in different moments:
+Here in code have 3 playbooks files, that are triggered in different moments:
+Take a look in Makefile
 
-- `main.yaml`: principal playbook that make all this things and run the initial proxmox conigure
+- `main.yaml`: principal playbook that make all this things and run the initial proxmox configure
 - `proxmox-post-config.yaml`: Playbook to run **after** Terraform code (`create-vms` folder) to finalizing the configurations in Proxmox.
 - `reset-nfs.yaml`: PLaybok to reset NFS storage on Proxmox.
 - `reset.yaml`: Playbook that undo all configurations.

@@ -15,13 +15,13 @@ Features:
     -  Create user, and role permission
     -  Create a VM Template in Proxmox with Rocky Linux (cloud-init image)
  - Trigger a Terraform code, to create all VMs
- - Trigger an Ansible code to confgure all VMs
-    -  download kubespray repository and install it
+ - Trigger an Ansible code to configure all VMs
+-  Install Kubernetes cluster with k3s
 
 ## It is divided by:
 
 - `scripts`: folder with auxiliar scripts
-- `proxmox`: Folder with all necessary coded to create and configure Vms in Proxmox hypervisor
+- `proxmox`: Folder with all necessary code to create and configure Vms in Proxmox hypervisor
 - - `proxmox-config`: Ansible code, to configure Proxmox server and create VM Template
     - `create-vms`: Terraform code, to create all VMs
 - `servers-setup`: Ansible code to install and configure all servers
@@ -30,7 +30,7 @@ Features:
 
 ### Config files
 First of all, **review and edit** all necessary config files, there are in `config-files/sample` folder.
-make a copy of this folder, running the command:
+Make a copy of this folder, running the command:
 ```bash
 make init-config-files
 ```
@@ -47,7 +47,7 @@ When all config files are filled and revised, run this command to start the comp
 make proxmox-build
 ```
 
-this command takes a while, around 30 minutes
+this command takes a while, around 10 minutes
 
 ### Infra fluxogram
 As the code uses some configuration files, and some others are automatically generated, so here is an image summarizing the flow of the solution

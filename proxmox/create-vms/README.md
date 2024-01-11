@@ -26,8 +26,7 @@ There are two modules in this code:
 
 Execute:
 ```bash
-teraform init
-terraform apply -var-file=terraform.tfvars -auto-approve
+make deploy-infra
 ```
 
 ## Output
