@@ -3,7 +3,7 @@
 ##############################################
 # Instalando o k3s
 ##############################################
-- name: Instalando o k3s servers
+- name: "Installing k3s servers"
   hosts: k8s_masters
   become: true
   gather_facts: no
@@ -11,7 +11,7 @@
   roles:
     - kubernetes-install-masters
 
-- name: Instalando o k3s nodes
+- name: "Installing k3s nodes"
   hosts: k8s_nodes
   become: true
   gather_facts: no

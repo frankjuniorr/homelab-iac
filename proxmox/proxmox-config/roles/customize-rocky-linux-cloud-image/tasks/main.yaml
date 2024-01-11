@@ -1,4 +1,4 @@
-- name: Install libguestfs-tools package
+- name: "Install libguestfs-tools package"
   apt:
     name: libguestfs-tools
     state: present

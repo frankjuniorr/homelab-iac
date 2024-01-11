@@ -2,13 +2,12 @@
 ##############################################
 # Executando em todos os hosts
 ##############################################
-- name: "Criando o usuário e configurando o ssh"
+- name: "Creating the user and configuring ssh"
   hosts: all
   become: yes
   gather_facts: yes
 
   roles:
-    # - update-packages # talvez não precise
     - create-user # talvez não precise
     - create-ssh-config # atualiza o .ssh/config do meu client
 
@@ -16,7 +15,7 @@
 ##############################################
 # Executando apenas no grupo 'nfs_server_hosts'
 ##############################################
-- name: "Configurando o NFS Server"
+- name: "Configuring NFS Server"
   hosts: nfs_server_hosts
   become: yes
   gather_facts: no
@@ -27,7 +26,7 @@
 ##############################################
 # Configurando NFS nos clients
 ##############################################
-- name: "Configurando NFS nos clients"
+- name: "Configuring NFS on clients"
   hosts: all
   become: yes
   gather_facts: no
@@ -38,7 +37,7 @@
 ##############################################
 # Executando apenas no grupo 'nfs_server_hosts'
 ##############################################
-- name: "Configurando o DNS Server"
+- name: "Configuring the DNS Server"
   hosts: dns_server_host
   remote_user: pihole
   become: yes
@@ -46,14 +45,14 @@
 
   roles:
     - docker-install
-    - restart-machine
+    - restart-machine #talvez não precise
     - dns-server
 
 
 ##############################################
 # Configurando DNS nos clients
 ##############################################
-- name: "Configurando DNS nos clients"
+- name: "Configuring DNS on clients"
   hosts: all
   become: yes
   gather_facts: yes
@@ -64,7 +63,7 @@
 ##############################################
 # Abrindo porta 6443 no Firewall no cluster k8s
 ##############################################
-- name: "Aplicando configurações de firewall nos nodes do cluster k8s"
+- name: "Applying firewall settings to k8s cluster nodes"
   hosts: k8s_cluster
   become: yes
   gather_facts: yes

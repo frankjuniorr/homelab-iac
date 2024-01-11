@@ -1,21 +1,21 @@
 ---
-- name: Check for package updates
+- name: "Check for package updates"
   dnf:
     update_cache: yes
 
-- name: Add repository
+- name: "Add repository"
   shell: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 
-- name: Install Docker packages
+- name: "Install Docker packages"
   shell: dnf -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-- name: Start Docker service
+- name: "Start Docker service"
   service:
     name: docker
     state: started
     enabled: yes
 
-- name: Add user to docker group
+- name: "Add user to docker group"
   user:
     name: "{{ vm_user }}"
     groups: docker

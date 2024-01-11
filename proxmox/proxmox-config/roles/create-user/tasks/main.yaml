@@ -17,7 +17,7 @@
     host_vars: "{{ hostvars[inventory_hostname] }}"
   when: token_values.stdout_lines is defined and token_values.stdout_lines | length > 0
 
-- name: generating .tfvars file with proxmox credentials
+- name: "Generating .tfvars file with proxmox credentials"
   delegate_to: "localhost"
   become: false
   template:

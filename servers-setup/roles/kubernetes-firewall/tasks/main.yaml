@@ -1,5 +1,5 @@
 ---
-- name: Desabilitar o serviço firewalld
+- name: "Disable the firewalld service"
   systemd:
     name: firewalld
     enabled: no

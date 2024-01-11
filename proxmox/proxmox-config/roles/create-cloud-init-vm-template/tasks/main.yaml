@@ -8,7 +8,7 @@
   set_fact:
     vm_ssh_public_key: "{{ host_vars.ssh_public_key_file }}"
 
-- name: "Copy configuration file to remote server"
+- name: "Copy ssh public key to remote server"
   copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"

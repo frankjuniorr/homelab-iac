@@ -1,15 +1,15 @@
 ---
 
-- name: Definir variáveis de usuário e senha
+- name: "Set user and password variables"
   set_fact:
     vm_user: "{{ hostvars[inventory_hostname].vm_user }}"
     vm_user_passwd: "{{ hostvars[inventory_hostname].vm_user_passwd }}"
 
-- name: Adicionar usuário ao grupo wheel
+- name: "Add user to wheel group"
   become_user: root
   shell: usermod -aG wheel {{ vm_user }}
 
-- name: Configurar NOPASSWD para o grupo wheel
+- name: "Configure NOPASSWD for the wheel group"
   lineinfile:
     dest: /etc/sudoers
     regexp: '^%wheel'

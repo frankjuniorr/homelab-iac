@@ -1,5 +1,5 @@
 ---
-- name: Install k3s on masters
+- name: "Install k3s on masters"
   shell: "{{ k3s_server_install_command }}"
 
 ####################### Traz o kubeconfig pra máquina local
@@ -16,7 +16,7 @@
     cluster_username: 'k3s'
     k8s_ip: "{{ hostvars['k8s-master']['ansible_host'] }}"
 
-####################### Atualiza o IP dos erver no arquivo, de '127.0.0.1' para o IP do k8s_master
+####################### Atualiza o IP do server no arquivo, de '127.0.0.1' para o IP do k8s_master
 - name: "Change .kube/config file values"
   become: false
   replace:

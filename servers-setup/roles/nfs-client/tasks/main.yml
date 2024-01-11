@@ -1,11 +1,11 @@
 ---
-- name: Instalar nfs-utils
+- name: "Install nfs-utils"
   package:
     name: nfs-utils
     state: present
   when: inventory_hostname != 'nfs'
 
-- name: Montar diretório NFS
+- name: "Mount NFS directory"
   mount:
     src: "{{ hostvars['nfs']['ansible_host'] }}:/home/nfs/data"
     path: "/mnt/nfs"

@@ -4,7 +4,7 @@
   shell: pvesm scan nfs {{ nfs_server_ip }} | awk '{print $1}'
   register: nfs_folder_output
 
-- name: "Definindo variáveis"
+- name: "Define variables"
   set_fact:
     nfs_folder: "{{ nfs_folder_output.stdout_lines[0] }}"
   when: nfs_folder_output.stdout_lines | length > 0
