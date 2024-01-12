@@ -7,6 +7,9 @@
   become: yes
   gather_facts: yes
 
+  vars_files:
+    - group_vars/dns_and_k3s_config.yaml
+
   roles:
     - create-user # talvez não precise
     - create-ssh-config # atualiza o .ssh/config do meu client
@@ -34,18 +37,21 @@
   roles:
     - nfs-client
 
-##############################################
+#############################################
 # Executando apenas no grupo 'nfs_server_hosts'
-##############################################
+#############################################
 - name: "Configuring the DNS Server"
   hosts: dns_server_host
   remote_user: pihole
   become: yes
   gather_facts: no
 
+  vars_files:
+    - group_vars/dns_and_k3s_config.yaml
+
   roles:
     - docker-install
-    - restart-machine #talvez não precise
+    - restart-machine
     - dns-server
 
 
@@ -56,6 +62,9 @@
   hosts: all
   become: yes
   gather_facts: yes
+
+  vars_files:
+    - group_vars/dns_and_k3s_config.yaml
 
   roles:
     - dns-client

@@ -18,6 +18,7 @@ install-config-files:
 	@cp -v "${MY_CONFIG_FILES}/hosts.yaml" ${PROXMOX_HOSTS_FILE}
 	@cp -v "${MY_CONFIG_FILES}/vm_template_config.yaml" proxmox/proxmox-config/group_vars/vm_template_config.yaml
 	@cp -v "${MY_CONFIG_FILES}/terraform.tfvars.template" proxmox/create-vms/terraform.tfvars
+	@cp -v "${MY_CONFIG_FILES}/dns_and_k3s_config.yaml" servers-setup/group_vars/dns_and_k3s_config.yaml
 
 
 ##############################################################################################################
@@ -60,7 +61,7 @@ deploy-infra:
 	@cd proxmox/create-vms && terraform init && terraform fmt -recursive && terraform apply -var-file=terraform.tfvars -auto-approve
 	@echo "Waiting 1 minute to VMs to breath..."
 	@sleep 60
-#
+
 	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/servers-setup.yml
 	@nfs_server_ip=$$(grep --max-count=1 --after-context=1 "nfs:" ${SERVERS_HOST_FILE} | grep "ansible_host" | awk '{print $$2}') && \
 			ansible-playbook -i ${PROXMOX_HOSTS_FILE} proxmox/proxmox-config/proxmox_post_config.yaml -e "nfs_server_ip=$$nfs_server_ip"

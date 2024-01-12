@@ -1,24 +1,12 @@
 ---
 ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
 
-# IP do roteador (servindo como DNS externo ao cluster).
-# Esse IP só vai no arquivo /etc/resolv.conf do DNS Server (o Pihole nesse caso)
-external_dns_server: "8.8.8.8"
-
-# k3s token, used by installation on master and joins nodes
-k3s_token: '@Jg_6_Ex6.PMicZRzym8fHTUgTM*@C'
-
 # generic script to install k3s
 k3s_install_script: "curl -sfL https://get.k3s.io | K3S_TOKEN={{ k3s_token }} sh -s -"
 
 #############################################
 # K3s Server installation
 #############################################
-# flag to enable (or not) to master execute nodes
-master_execute_pod: true
-node_taint: "{{ '' if master_execute_pod else '--node-taint CriticalAddonsOnly=true:NoExecute' }}"
-
-# server parameters and installation
 k3s_server_install_parameters: "{{ node_taint }} --write-kubeconfig-mode=644 --disable servicelb --disable traefik"
 k3s_server_install_command: "{{ k3s_install_script }} server {{ k3s_server_install_parameters }}"
 

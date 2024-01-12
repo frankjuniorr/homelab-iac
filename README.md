@@ -49,6 +49,39 @@ make proxmox-build
 
 this command takes a while, around 10 minutes
 
+### All Avaliable Commands
+```bash
+##################### Init Configs #####################
+
+# copy the sample folder with config files
+make init-config-files
+
+# Install the config files, after changing them
+make install-config-files
+
+##################### Proxmox #####################
+
+# Full Deploy: Configure Proxmox and after run the deploy
+make proxmox-build
+
+# Full Destroy: Destroy everything, reset Proxmox inclusive
+make proxmox-reset
+
+##################### VMs #####################
+
+# Deploy all Infra, starting with clone VM template in Proxmox
+make deploy-infra
+
+# Destroy only Infra (VMs). Proxmox configs and VM Template remain intact
+make destroy-infra
+
+
+##################### Backup #####################
+
+# Make backup of Infrastructure
+make servers-backup
+```
+
 ### Infra fluxogram
 As the code uses some configuration files, and some others are automatically generated, so here is an image summarizing the flow of the solution
 

@@ -9,6 +9,7 @@ proxmox/proxmox-config/group_vars/vm_template_config.yaml
 proxmox/proxmox-config/hosts.yaml
 
 servers-setup/hosts.yaml
+servers-setup/group_vars/dns_and_k3s_config.yaml
 config-files/my-configs
 
 ########################## Python ##########################

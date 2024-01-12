@@ -1,11 +1,11 @@
 ---
 
 - name: "Copy docker-compose.yaml"
-  copy:
+  template:
     src: "{{ item.src }}"
-    dest: "{{ item.src }}"
+    dest: "{{ item.dest }}"
   loop:
-    - {src: "docker-compose.yml", dest: "/home/{{ hostvars['pihole']['vm_user'] }}/docker-compose.yml"}
+    - {src: "docker-compose.yml.j2", dest: "/home/{{ hostvars['pihole']['vm_user'] }}/docker-compose.yml"}
 
 - name: Deploy docker-compose
   shell: docker compose up -d

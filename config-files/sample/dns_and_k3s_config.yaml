@@ -1,0 +1,20 @@
+---
+
+########################### Pihole Config ###########################
+# External DNS (It can be Google DNS for example: 8.8.8.8)
+# This IP is only used in /etc/resolv.conf of DNS Server (Pihole in this case)
+external_dns_server: "8.8.8.8"
+
+# pihole admin password, in the browser
+pihole_password: "CHANGE_PIHOLE_PASSWORD_HERE"
+
+
+########################### K3s ###########################
+# k3s token, used by installation on master and joins nodes
+# It can b any token (password generator for example)
+k3s_token: 'CHANGE_K3S_TOKEN_HERE'
+
+# flag to enable (or not) to master execute pods
+# Set to "true" if you want to master execute pods. Set to "false" otherwise
+master_execute_pod: true
+node_taint: "{{ '' if master_execute_pod else '--node-taint CriticalAddonsOnly=true:NoExecute' }}"

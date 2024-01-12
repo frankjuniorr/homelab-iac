@@ -8,6 +8,9 @@
   become: true
   gather_facts: no
 
+  vars_files:
+    - group_vars/dns_and_k3s_config.yaml
+
   roles:
     - kubernetes-install-masters
 
@@ -15,6 +18,9 @@
   hosts: k8s_nodes
   become: true
   gather_facts: no
+
+  vars_files:
+    - group_vars/dns_and_k3s_config.yaml
 
   roles:
     - kubernetes-install-nodes
