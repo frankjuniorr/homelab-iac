@@ -7,7 +7,7 @@
   set_fact:
     host_ip: "{{ host_vars.ansible_host }}"
     host_user: "{{ host_vars.vm_user }}"
-    ssh_private_key: "{{ host_vars.ansible_ssh_private_key_file }}"
+    ssh_private_key: "{{ host_vars.ssh_private_key_file }}"
     ssh_config_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.ssh/config"
 
 - name: "Update file {{ ssh_config_file }}"

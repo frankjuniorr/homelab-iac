@@ -5,6 +5,6 @@
   become: yes
 
   roles:
-    - create-nfs-storage
+    - proxmox-create-nfs-storage
 
     # TODO: Adicionar aqui depois, a configuração do Metrics-Server

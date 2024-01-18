@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 # Variables
-PROXMOX_HOSTS_FILE = "proxmox/proxmox-config/hosts.yaml"
+PROXMOX_HOSTS_FILE = "src-deploy/hosts.yaml"
 SERVERS_HOST_FILE = "servers-setup/hosts.yaml"
 MY_CONFIG_FILES = "config-files/my-configs"
 
@@ -35,14 +35,15 @@ servers-backup:
 proxmox-build:
 	@bash scripts/install-scripts-dependencies.sh && clear
 	@python3 scripts/ssh-copy-to-host.py ${PROXMOX_HOSTS_FILE}
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} proxmox/proxmox-config/main.yaml
-	@sleep 2
-	@make deploy-infra
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml
+#	@sleep 2
+#	@make deploy-infra
 
 ##############################################################################################################
 # FULL DESTROY
-proxmox-reset: destroy-infra
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} proxmox/proxmox-config/reset.yaml
+# proxmox-reset: destroy-infra
+proxmox-reset:
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/reset.yaml
 
 
 ##############################################################################################################

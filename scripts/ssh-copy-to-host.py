@@ -28,7 +28,8 @@ def get_hosts_from_yaml(hosts_file):
         with open(hosts_file, "r") as f:
             data = yaml.safe_load(f)
             hosts = data["all"]["hosts"]
-            return hosts
+            global_vars = data["all"]["vars"]
+            return (hosts, global_vars)
     else:
         print(f"file {hosts_file} not found in current directory")
         sys.exit(1)
@@ -120,26 +121,31 @@ def add_ssh_in_authorized_key(client, ssh_public_key):
 if __name__ == "__main__":
 
     hosts_file = get_parameters()
-    hosts = get_hosts_from_yaml(hosts_file)
+    hosts, global_vars = get_hosts_from_yaml(hosts_file)
+
+    ssh_public_key_file = global_vars["ssh_public_key_file"]
 
     for host, host_data in hosts.items():
-        ansible_host = host_data["ansible_host"]
-        ansible_user = host_data["ansible_user"]
-        root_password = host_data["root_password"]
-        ssh_public_key_file = host_data["ssh_public_key_file"]
 
-        print("\n> Sending ssh key to:")
-        print("-------------------------------------")
-        print(f"Host: {host}")
-        print(f"ssh_public_key_file: {ssh_public_key_file}")
+        # Only Proxmox nodes
+        if(host.startswith("proxmox")):
 
-        ssh_public_key = read_ssh_key(ssh_public_key_file)
-        client = connect_remote_host(ansible_host, ansible_user, root_password)
+            ansible_host = host_data["ansible_host"]
+            ansible_user = host_data["ansible_user"]
+            root_password = host_data["root_password"]
 
-        if check_if_authorized_keys_exists(client):
-            check_if_ssh_already_in_authorized_key(ssh_public_key)
+            print("\n> Sending ssh key to:")
+            print("-------------------------------------")
+            print(f"Host: {host}")
+            print(f"ssh_public_key_file: {ssh_public_key_file}")
 
-        else:
-            add_ssh_in_authorized_key(client, ssh_public_key)
+            ssh_public_key = read_ssh_key(ssh_public_key_file)
+            client = connect_remote_host(ansible_host, ansible_user, root_password)
 
-        client.close()
+            if check_if_authorized_keys_exists(client):
+                check_if_ssh_already_in_authorized_key(ssh_public_key)
+
+            else:
+                add_ssh_in_authorized_key(client, ssh_public_key)
+
+            client.close()

@@ -1,11 +1,11 @@
 ---
 - name: "Proxmox init-configure"
-  hosts: proxmox
+  hosts: proxmox_nodes
   gather_facts: no
   become: yes
 
-  vars_files:
-    - group_vars/vm_template_config.yaml
+  # vars_files:
+  #   - group_vars/config.yaml
 
   tasks:
 
@@ -15,8 +15,8 @@
     - name: "Remove VM Template"
       shell: "{{ item }}"
       loop:
-        - "qm stop {{ vm_id }}"
-        - "qm destroy {{ vm_id }}"
+        - "qm stop {{ cloud_init_template.vm_id }}"
+        - "qm destroy {{ cloud_init_template.vm_id }}"
 
 
     ##################################################################

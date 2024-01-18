@@ -1,3 +1,5 @@
+# vira um template por causa do 'network_ip_cidr'
+
 ####################### Variables module constants #######################
 variable "on_boot" {
   description = "Determines whether the virtual machine should start automatically when the host system boots up."

@@ -1,12 +1,8 @@
 ---
 
-- name: "Define variables from hosts file"
-  set_fact:
-    host_vars: "{{ hostvars[inventory_hostname] }}"
-
 - name: "Define ssh_public_key_file variable"
   set_fact:
-    vm_ssh_public_key: "{{ host_vars.ssh_public_key_file }}"
+    vm_ssh_public_key: "{{ ssh_public_key_file }}"
 
 - name: "Copy ssh public key to remote server"
   copy:
@@ -20,7 +16,7 @@
     vm_ssh_public_key: "{{ config_cloud_image_directory }}/id_rsa_homelab.pub"
 
 - name: "Check if VM already exist"
-  shell: qm list | grep -q "{{ vm_id }}"
+  shell: qm list | grep -q "{{ cloud_init_template.vm_id }}"
   register: vm_exists
   ignore_errors: yes
 
@@ -29,8 +25,8 @@
 # --net0 virtio,bridge=vmbr0: Configure the first network interface (net0) to use the "virtio" driver (which is optimized for virtualization environments) and be connected to the vmbr0 network bridge.
 # --tags: set a tag to VM
 # disk import: import disk to storage, and enable "SSD Emulation" and "Discard"
-# --scsihw virtio-scsi-pci: Set the SCSI controller type to "virtio-scsi-pci" for the virtual machine with ID {{ vm_id }}. The virtio-scsi controller is used for better performance and efficiency in virtualization environments.
-# --scsi0: Connect the previously imported disk (ID "vm-{{ vm_id }}-disk-0") to SCSI port 0 of the virtual machine.
+# --scsihw virtio-scsi-pci: Set the SCSI controller type to "virtio-scsi-pci" for the virtual machine with ID {{ cloud_init_template.vm_id }}. The virtio-scsi controller is used for better performance and efficiency in virtualization environments.
+# --scsi0: Connect the previously imported disk (ID "vm-{{ cloud_init_template.vm_id }}-disk-0") to SCSI port 0 of the virtual machine.
 # --boot c: Set the boot option to "c", which means the VM should boot from disk (the SCSI0 disk we configured earlier).
 # --bootdisk scsi0: Set the boot device to "scsi0", i.e. the VM will boot from the disk connected to SCSI port 0.
 # --ide2: Attach the "cloudinit" image to the virtual machine's IDE2 device. This "cloudinit" image will contain the cloud boot metadata, allowing you to customize the instance when deploying it in a cloud environment.
@@ -46,22 +42,22 @@
 - name: "Create Cloud Init VM Template"
   shell: "{{ item }}"
   loop:
-    - "qm create {{ vm_id }} --name {{ vm_template_name }} --memory 1024 --cores 1 --net0 virtio,bridge=vmbr0"
-    - "qm set {{ vm_id }} --tags template"
-    - "qm disk import {{ vm_id }} {{ rocky_linux_cloud_image_file }} {{ vm_storage }} --format qcow2"
-    - "qm set {{ vm_id }} --scsihw virtio-scsi-pci"
-    - "qm set {{ vm_id }} --scsi0  {{ vm_storage }}:vm-{{ vm_id }}-disk-0,discard=on,ssd=on"
-    - "qm set {{ vm_id }} --boot c"
-    - "qm set {{ vm_id }} --bootdisk scsi0"
-    - "qm set {{ vm_id }} --ide2 {{ vm_storage }}:cloudinit"
-    - "qm set {{ vm_id }} --agent 1"
-    - "qm set {{ vm_id }} --sshkey '{{ vm_ssh_public_key }}'"
-    - "qm set {{ vm_id }} --ciuser {{ vm_username }}"
-    - "qm set {{ vm_id }} --cipassword {{ vm_user_password }}"
-    - "qm set {{ vm_id }} --citype nocloud"
-    - "qm set {{ vm_id }} --ipconfig0 ip=dhcp"
-    - "qm set {{ vm_id }} --serial0 socket --vga serial0"
-    - "qm template {{ vm_id }}"
+    - "qm create {{ cloud_init_template.vm_id }} --name {{ cloud_init_template.vm_template_name }} --memory 1024 --cores 1 --net0 virtio,bridge=vmbr0"
+    - "qm set {{ cloud_init_template.vm_id }} --tags template"
+    - "qm disk import {{ cloud_init_template.vm_id }} {{ rocky_linux_cloud_image_file }} {{ cloud_init_template.vm_storage }} --format qcow2"
+    - "qm set {{ cloud_init_template.vm_id }} --scsihw virtio-scsi-pci"
+    - "qm set {{ cloud_init_template.vm_id }} --scsi0  {{ cloud_init_template.vm_storage }}:vm-{{ cloud_init_template.vm_id }}-disk-0,discard=on,ssd=on"
+    - "qm set {{ cloud_init_template.vm_id }} --boot c"
+    - "qm set {{ cloud_init_template.vm_id }} --bootdisk scsi0"
+    - "qm set {{ cloud_init_template.vm_id }} --ide2 {{ cloud_init_template.vm_storage }}:cloudinit"
+    - "qm set {{ cloud_init_template.vm_id }} --agent 1"
+    - "qm set {{ cloud_init_template.vm_id }} --sshkey '{{ vm_ssh_public_key }}'"
+    - "qm set {{ cloud_init_template.vm_id }} --ciuser {{ cloud_init_template.vm_username }}"
+    - "qm set {{ cloud_init_template.vm_id }} --cipassword {{ cloud_init_template.vm_user_password }}"
+    - "qm set {{ cloud_init_template.vm_id }} --citype nocloud"
+    - "qm set {{ cloud_init_template.vm_id }} --ipconfig0 ip=dhcp"
+    - "qm set {{ cloud_init_template.vm_id }} --serial0 socket --vga serial0"
+    - "qm template {{ cloud_init_template.vm_id }}"
   when: vm_exists.rc != 0
 
 - name: "Delete temporary folder"

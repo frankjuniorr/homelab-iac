@@ -20,5 +20,5 @@ variable "proxmox_token_secret" {
 variable "proxmox_vm_template_name" {
     description = "VM Template name in Proxmox"
     type = string
-    default = "{{ vm_template_name }}"
+    default = "{{ cloud_init_template.vm_template_name }}"
 }

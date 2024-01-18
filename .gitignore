@@ -5,8 +5,8 @@ proxmox/create-vms/.terraform.lock.hcl
 proxmox/create-vms/.terraform
 proxmox/create-vms/modules/proxmox_vms/proxmox_variables.tf
 
-proxmox/proxmox-config/group_vars/vm_template_config.yaml
-proxmox/proxmox-config/hosts.yaml
+src-deploy/group_vars/config.yaml
+src-deploy/hosts.yaml
 
 servers-setup/hosts.yaml
 servers-setup/group_vars/dns_and_k3s_config.yaml
