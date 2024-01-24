@@ -12,11 +12,11 @@
     ##################################################################
     # Remove VM Template
     ##################################################################
-    - name: "Remove VM Template"
-      shell: "{{ item }}"
-      loop:
-        - "qm stop {{ cloud_init_template.vm_id }}"
-        - "qm destroy {{ cloud_init_template.vm_id }}"
+    # - name: "Remove VM Template"
+    #   shell: "{{ item }}"
+    #   loop:
+    #     - "qm stop {{ cloud_init_template.vm_id }}"
+    #     - "qm destroy {{ cloud_init_template.vm_id }}"
 
 
     ##################################################################
@@ -39,3 +39,4 @@
       loop:
         - "{{ config_cloud_image_directory }}"
         # - "{{ rocky_linux_cloud_image_file }}"
+        # - "{{ rocky_linux_cloud_image_file_sha }}"

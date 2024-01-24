@@ -1,4 +1,25 @@
-# vira um template por causa do 'network_ip_cidr'
+####################### Proxmox Credentials #######################
+
+variable "proxmox_api_url" {
+    description = "Proxmox API URL"
+    type = string
+    default = "{{ proxmox_api_url }}"
+}
+variable "proxmox_token_id" {
+    description = "Proxmox User ID"
+    type = string
+    default = "{{ proxmox_token_id }}"
+}
+variable "proxmox_token_secret" {
+    description = "Proxmox User Secret"
+    type = string
+    default = "{{ proxmox_token_secret }}"
+}
+variable "proxmox_vm_template_name" {
+    description = "VM Template name in Proxmox"
+    type = string
+    default = "{{ proxmox_vm_template_name }}"
+}
 
 ####################### Variables module constants #######################
 variable "on_boot" {
@@ -56,7 +77,3 @@ variable "vm_user" {}
 variable "vm_user_password" {}
 variable "vm_network_ip_suffix" {}
 variable "vm_tags" {}
-
-
-
-

@@ -1,0 +1,6 @@
+# Usa assim:
+# ansible-galaxy install -r src-deploy/requirements.yml
+
+collections:
+  - name: community.general
+    version: 8.1.0

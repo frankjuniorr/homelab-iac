@@ -1,5 +1,3 @@
-# Template
-
 ####################### Global Parameters #######################
 variable "proxmox_target_node" {
   description = "Proxmox node"
@@ -19,146 +17,123 @@ variable "ssh_private_key_file" {
   type        = string
 }
 
-####################### NFS VM parameters #######################
-variable "nfs_vm_id" {
-  description = "NFS VM id"
+{% for host in groups['single_vms'] %}
+####################### {{ host | upper }} VM parameters #######################
+variable "{{ host | lower }}_vm_id" {
+  description = "{{ host | upper }} VM id"
   type        = number
 }
-variable "nfs_vm_disk_size" {
-  description = "NFS VM Disk size"
+variable "{{ host | lower }}_vm_disk_size" {
+  description = "{{ host | upper }} VM Disk size"
   type        = string
 }
-variable "nfs_cpu" {
+variable "{{ host | lower }}_cpu" {
   description = "The number of CPU cores per CPU socket to allocate to the VM."
   type        = number
 }
-variable "nfs_vm_name" {
-  description = "NFS VM name"
+variable "{{ host | lower }}_vm_name" {
+  description = "{{ host | upper }} VM name"
   type        = list(string)
 }
-variable "nfs_vm_memory" {
+variable "{{ host | lower }}_vm_memory" {
   description = "The amount of memory to allocate to the VM in Megabytes."
   type        = number
 }
-variable "nfs_vm_user" {
+variable "{{ host | lower }}_vm_user" {
   description = "Override the default cloud-init user for provisioning."
   type        = string
 }
-variable "nfs_vm_network_ip_suffix" {
+variable "{{ host | lower }}_vm_network_ip_suffix" {
   description = "Suffix of IP range"
   type        = number
 }
-variable "nfs_vm_tags" {
+variable "{{ host | lower }}_vm_tags" {
+  description = "Tags of the VM. This is only meta information."
+  type        = string
+}
+{{ '\n' if not loop.last else '' }}
+{% endfor %}
+
+{% set first_k8s_master_node = groups['k8s_masters_nodes'][0] %}
+{% set k8s_master_node_title = first_k8s_master_node | regex_replace('-\d+$', '') | replace('-', ' ') | title %}
+{% set k8s_master_node_lower = first_k8s_master_node | regex_replace('-\d+$', '') | replace('-', '_') | lower %}
+
+####################### {{ k8s_master_node_title }} parameters #######################
+variable "{{ k8s_master_node_lower }}_amount" {
+  description = "{{ k8s_master_node_title }} amount of nodes"
+  type        = number
+}
+variable "{{ k8s_master_node_lower }}_id" {
+  description = "{{ k8s_master_node_title }} VM id"
+  type        = number
+}
+variable "{{ k8s_master_node_lower }}_disk_size" {
+  description = "{{ k8s_master_node_title }} VM Disk size"
+  type        = string
+}
+variable "{{ k8s_master_node_lower }}_cpu" {
+  description = "The number of CPU cores per CPU socket to allocate to the VM."
+  type        = number
+}
+variable "{{ k8s_master_node_lower }}_name" {
+  description = "{{ k8s_master_node_title }} VM name"
+  type        = list(string)
+}
+variable "{{ k8s_master_node_lower }}_memory" {
+  description = "The amount of memory to allocate to the VM in Megabytes."
+  type        = number
+}
+variable "{{ k8s_master_node_lower }}_user" {
+  description = "Override the default cloud-init user for provisioning."
+  type        = string
+}
+variable "{{ k8s_master_node_lower }}_network_ip_suffix" {
+  description = "Suffix of IP range"
+  type        = number
+}
+variable "{{ k8s_master_node_lower }}_tags" {
   description = "Tags of the VM. This is only meta information."
   type        = string
 }
 
-####################### DNS VM parameters #######################
-variable "dns_vm_id" {
-  description = "DNS VM id"
-  type        = number
-}
-variable "dns_vm_disk_size" {
-  description = "DNS VM Disk size"
-  type        = string
-}
-variable "dns_cpu" {
-  description = "The number of CPU cores per CPU socket to allocate to the VM."
-  type        = number
-}
-variable "dns_vm_name" {
-  description = "DNS VM name"
-  type        = list(string)
-}
-variable "dns_vm_memory" {
-  description = "The amount of memory to allocate to the VM in Megabytes."
-  type        = number
-}
-variable "dns_vm_user" {
-  description = "Override the default cloud-init user for provisioning."
-  type        = string
-}
-variable "dns_vm_network_ip_suffix" {
-  description = "Suffix of IP range"
-  type        = number
-}
-variable "dns_vm_tags" {
-  description = "Tags of the VM. This is only meta information."
-  type        = string
-}
+{% set first_k8s_worker_node = groups['k8s_worker_nodes'][0] %}
+{% set k8s_worker_node_title = first_k8s_worker_node | regex_replace('-\d+$', '') | replace('-', ' ') | title %}
+{% set k8s_worker_node_lower = first_k8s_worker_node | regex_replace('-\d+$', '') | replace('-', '_') | lower %}
 
-####################### K8s Master parameters #######################
-variable "k8s_master_amount" {
-  description = "K8s master amount of nodes"
+####################### {{ k8s_worker_node_title }} parameters #######################
+variable "{{ k8s_worker_node_lower }}_amount" {
+  description = "{{ k8s_worker_node_title }} amount of nodes"
   type        = number
 }
-variable "k8s_master_id" {
-  description = "K8s master VM id"
+variable "{{ k8s_worker_node_lower }}_id" {
+  description = "{{ k8s_worker_node_title }} VM id"
   type        = number
 }
-variable "k8s_master_disk_size" {
-  description = "K8s master VM Disk size"
+variable "{{ k8s_worker_node_lower }}_disk_size" {
+  description = "{{ k8s_worker_node_title }} VM Disk size"
   type        = string
 }
-variable "k8s_master_cpu" {
+variable "{{ k8s_worker_node_lower }}_cpu" {
   description = "The number of CPU cores per CPU socket to allocate to the VM."
   type        = number
 }
-variable "k8s_master_name" {
-  description = "K8s master VM name"
+variable "{{ k8s_worker_node_lower }}_name" {
+  description = "{{ k8s_worker_node_title }} VM name"
   type        = list(string)
 }
-variable "k8s_master_memory" {
+variable "{{ k8s_worker_node_lower }}_memory" {
   description = "The amount of memory to allocate to the VM in Megabytes."
   type        = number
 }
-variable "k8s_master_user" {
+variable "{{ k8s_worker_node_lower }}_user" {
   description = "Override the default cloud-init user for provisioning."
   type        = string
 }
-variable "k8s_master_network_ip_suffix" {
+variable "{{ k8s_worker_node_lower }}_network_ip_suffix" {
   description = "Suffix of IP range"
   type        = number
 }
-variable "k8s_master_tags" {
-  description = "Tags of the VM. This is only meta information."
-  type        = string
-}
-
-####################### K8s Workers parameters #######################
-variable "k8s_worker_amount" {
-  description = "K8s master amount of nodes"
-  type        = number
-}
-variable "k8s_worker_id" {
-  description = "K8s worker VM id"
-  type        = number
-}
-variable "k8s_worker_disk_size" {
-  description = "K8s Worker VM Disk size"
-  type        = string
-}
-variable "k8s_worker_cpu" {
-  description = "The number of CPU cores per CPU socket to allocate to the VM."
-  type        = number
-}
-variable "k8s_worker_name" {
-  description = "K8s worker VM name"
-  type        = list(string)
-}
-variable "k8s_worker_memory" {
-  description = "The amount of memory to allocate to the VM in Megabytes."
-  type        = number
-}
-variable "k8s_worker_user" {
-  description = "Override the default cloud-init user for provisioning."
-  type        = string
-}
-variable "k8s_worker_network_ip_suffix" {
-  description = "Suffix of IP range"
-  type        = number
-}
-variable "k8s_worker_tags" {
+variable "{{ k8s_worker_node_lower }}_tags" {
   description = "Tags of the VM. This is only meta information."
   type        = string
 }

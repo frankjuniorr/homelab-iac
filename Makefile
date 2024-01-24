@@ -37,7 +37,7 @@ proxmox-build:
 	@python3 scripts/ssh-copy-to-host.py ${PROXMOX_HOSTS_FILE}
 	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml
 	@sleep 2
-	@make deploy-infra
+#	@make deploy-infra
 
 ##############################################################################################################
 # FULL DESTROY
@@ -59,9 +59,9 @@ proxmox-reset:
 # - Start the playbook that make post-config Proxmox:
 #		- Create the NFS Storage
 deploy-infra:
-	@cd proxmox/create-vms && terraform init && terraform fmt -recursive && terraform apply -var-file=terraform.tfvars -auto-approve
-	@echo "Waiting 1 minute to VMs to breath..."
-	@sleep 60
+#	@cd proxmox/create-vms && terraform init && terraform fmt -recursive && terraform apply -var-file=terraform.tfvars -auto-approve
+#	@echo "Waiting 1 minute to VMs to breath..."
+#	@sleep 60
 
 	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/servers-setup.yml
 	@nfs_server_ip=$$(grep --max-count=1 --after-context=1 "nfs:" ${SERVERS_HOST_FILE} | grep "ansible_host" | awk '{print $$2}') && \

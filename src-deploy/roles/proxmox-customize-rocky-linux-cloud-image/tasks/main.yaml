@@ -12,11 +12,6 @@
     group: root
     mode: '0755'
 
-- name: "Donwload Rocky Linux Cloud image file"
-  get_url:
-    url: "{{ rocky_linux_cloud_image_url }}"
-    dest: "{{ rocky_linux_cloud_image_file }}"
-
 - name: "Copy configuration file to remote server"
   copy:
     src: "{{ item.src }}"
@@ -27,12 +22,48 @@
   loop:
     - { src: "{{ role_path }}/files/sshd_config", dest: "{{ config_cloud_image_directory }}/sshd_config" }
 
+
+
+
+##############  TASKs relative to Rocky Linux image ##############
+- name: "Donwload Rocky Linux Cloud image file"
+  get_url:
+    url: "{{ rocky_linux_cloud_image_url }}"
+    dest: "{{ rocky_linux_cloud_image_file }}"
+
+#>>>>>>>>>>>>  Checking SHA256 file
+- name: "Check if {{ rocky_linux_cloud_image_file_sha | basename}} exists"
+  stat:
+    path: "{{ rocky_linux_cloud_image_file_sha }}"
+  register: sha256sum_exist
+
+- name: "Creating {{ rocky_linux_cloud_image_file_sha | basename}} file"
+  shell: "sha256sum {{ rocky_linux_cloud_image_file }} | awk '{print $1}' > {{ rocky_linux_cloud_image_file_sha }}"
+  when: not sha256sum_exist.stat.exists
+
+- name: "Reading {{ rocky_linux_cloud_image_file_sha | basename }} file"
+  ansible.builtin.slurp:
+    path: "{{ rocky_linux_cloud_image_file_sha }}"
+  register: sha256sum_content
+
+- name: "Checking SHA256 from {{ rocky_linux_cloud_image_file | basename }}"
+  shell: "sha256sum {{ rocky_linux_cloud_image_file }} | awk '{print $1}'"
+  register: sha256_image
+
+- name: "Define SHA256 variables"
+  set_fact:
+    sha256_from_file: "{{ sha256sum_content.content | b64decode | replace('\n', '') }}"
+    sha256_from_image: "{{ sha256_image.stdout }}"
+
+
+#>>>>>>>>>>>> Just customize the image if it hasn't been customized before
 - name: "Change config files in Cloud Init Image"
   shell: "{{ item }}"
   loop:
     - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/cloud/cloud.cfg -e \"s/^ssh_pwauth:.*$/ssh_pwauth: 1/\""
     - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/selinux/config -e \"s/^SELINUX=.*$/SELINUX=permissive/\""
     - "virt-copy-in -a {{ rocky_linux_cloud_image_file }} {{ config_cloud_image_directory }}/sshd_config /etc/ssh/"
+  when: sha256_from_file != sha256_from_image
 
 - name: "Customize Cloud Init Image"
   shell: "{{ item }}"
@@ -45,4 +76,8 @@
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl start firewalld'"
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl enable firewalld'"
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --root-password password:{{ rocky_linux_cloud_image_root_password }}"
+  when: sha256_from_file != sha256_from_image
 
+- name: "Creating {{ rocky_linux_cloud_image_file_sha | basename}} file"
+  shell: "sha256sum {{ rocky_linux_cloud_image_file }} | awk '{print $1}' > {{ rocky_linux_cloud_image_file_sha }}"
+  when: sha256_from_file != sha256_from_image

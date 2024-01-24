@@ -4,10 +4,8 @@
   gather_facts: no
   become: yes
 
-  # vars_files:
-  #   - group_vars/config.yaml
-
   roles:
     - proxmox-create-user
     - proxmox-customize-rocky-linux-cloud-image
     - proxmox-create-cloud-init-vm-template
+    - terraform-create-vms

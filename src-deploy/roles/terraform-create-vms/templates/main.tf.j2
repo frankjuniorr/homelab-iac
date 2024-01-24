@@ -1,0 +1,76 @@
+
+{% for host in groups['single_vms'] %}
+# ####################### {{ host | upper }} VM #######################
+module "{{ host | lower }}" {
+  source = "./modules/proxmox_vms"
+
+  # Proxmox node name
+  proxmox_target_node = var.proxmox_target_node
+  disk_storage        = var.disk_storage
+
+  # VM identification
+  vm_id   = var.{{ host | lower }}_vm_id
+  vm_name = var.{{ host | lower }}_vm_name
+
+  # VM resources
+  vm_cpu       = var.{{ host | lower }}_cpu
+  vm_memory    = var.{{ host | lower }}_vm_memory
+  vm_disk_size = var.{{ host | lower }}_vm_disk_size
+
+  # VM user
+  vm_user          = var.{{ host | lower }}_vm_user
+  vm_user_password = var.user_password
+
+  # Vm network
+  vm_network_ip_suffix = var.{{ host | lower }}_vm_network_ip_suffix
+
+  # VM tags
+  vm_tags = var.{{ host | lower }}_vm_tags
+}
+{{ '\n' if not loop.last else '' }}
+{% endfor %}
+
+{# Get first K8s-Master node, and ser variables to lower #}
+{% set first_k8s_master_node = groups['k8s_masters_nodes'][0] %}
+{% set k8s_master_node_lower = first_k8s_master_node | regex_replace('-\d+$', '') | replace('-', '_') | lower %}
+
+{# Get first K8s-Worker node, and ser variables to lower #}
+{% set first_k8s_worker_node = groups['k8s_worker_nodes'][0] %}
+{% set k8s_worker_node_lower = first_k8s_worker_node | regex_replace('-\d+$', '') | replace('-', '_') | lower %}
+
+{# Create a new list with this 2 strings #}
+{% set k8s_cluster = [k8s_master_node_lower, k8s_worker_node_lower] %}
+
+{% for k8s_item in k8s_cluster %}
+
+# ####################### {{ k8s_item }} VM #######################
+module "{{ k8s_item }}" {
+
+  source = "./modules/proxmox_vms"
+
+  loop = var.{{ k8s_item }}_amount
+
+  # Proxmox node name
+  proxmox_target_node = var.proxmox_target_node
+  disk_storage        = var.disk_storage
+
+  # VM identification
+  vm_id   = var.{{ k8s_item }}_id
+  vm_name = var.{{ k8s_item }}_name
+
+  # VM resources
+  vm_cpu       = var.{{ k8s_item }}_cpu
+  vm_memory    = var.{{ k8s_item }}_memory
+  vm_disk_size = var.{{ k8s_item }}_disk_size
+
+  # VM user
+  vm_user          = var.{{ k8s_item }}_user
+  vm_user_password = var.user_password
+
+  # Vm network
+  vm_network_ip_suffix = var.{{ k8s_item }}_network_ip_suffix
+
+  # VM tags
+  vm_tags = var.{{ k8s_item }}_tags
+}
+{% endfor %}

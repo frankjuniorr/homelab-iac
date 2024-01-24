@@ -1,0 +1,52 @@
+---
+
+# Anyway, check the local file with Proxmox user credetentials relative to terraform user
+- name: "Reading Proxmox user from local file"
+  delegate_to: localhost
+  become: no
+  shell: |
+    awk 'NR==4 {print $4;}' {{ user_token_output_file_localhost }}
+    awk 'NR==8 {print $4;}' {{ user_token_output_file_localhost }}
+  register: proxmox_user_token_values
+
+- name: "Define user and API Token variables"
+  set_fact:
+    proxmox_token_id: "{{ proxmox_user_token_values.stdout_lines[0] }}"
+    proxmox_token_secret: "{{ proxmox_user_token_values.stdout_lines[1] }}"
+    proxmox_host: "{{ ansible_host }}"
+    proxmox_vm_template_name: "{{ cloud_init_template.vm_template_name }}"
+  when: proxmox_user_token_values.stdout_lines is defined and proxmox_user_token_values.stdout_lines | length > 0
+
+- name: "Define proxmox_api_url variable"
+  set_fact:
+    proxmox_api_url: "https://{{ proxmox_host }}:8006/api2/json"
+
+
+
+# Generate Terraform Code
+- name: "Generate Terraform code"
+  delegate_to: "localhost"
+  become: false
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: "variables.tf.j2", dest: "{{ role_path }}/files/variables.tf" }
+    - { src: "terraform.tfvars.j2", dest: "{{ role_path }}/files/terraform.tfvars" }
+    - { src: "main.tf.j2", dest: "{{ role_path }}/files/main.tf" }
+    - { src: "module_variables.tf.j2", dest: "{{ role_path }}/files/modules/proxmox_vms/variables.tf" }
+
+- name: "Running terraform code"
+  delegate_to: "localhost"
+  become: false
+  shell: "{{ item }}"
+  loop:
+    - "terraform init "
+    - "terraform fmt -recursive"
+    - "terraform apply -var-file=terraform.tfvars -auto-approve"
+  args:
+    chdir: "{{ role_path }}/files/"
+
+- name: "Waiting 1 minute to VMs to breath..."
+  ansible.builtin.pause:
+    seconds: 60
