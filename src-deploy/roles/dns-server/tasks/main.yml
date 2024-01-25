@@ -5,10 +5,10 @@
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   loop:
-    - {src: "docker-compose.yml.j2", dest: "/home/{{ hostvars['pihole']['vm_user'] }}/docker-compose.yml"}
+    - {src: "docker-compose.yml.j2", dest: "/home/{{ vm_user }}/docker-compose.yml"}
 
 - name: Deploy docker-compose
   shell: docker compose up -d
   become: false
   args:
-    chdir: "/home/{{ hostvars['pihole']['vm_user'] }}"
+    chdir: "/home/{{ vm_user }}"

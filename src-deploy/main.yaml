@@ -43,3 +43,17 @@
 
   roles:
     - nfs-client
+
+#############################################
+# Executing only in 'dns_server_hosts'
+#############################################
+- name: "Configuring the DNS Server"
+  hosts: dns_server_hosts
+  remote_user: pihole
+  become: yes
+  gather_facts: no
+
+  roles:
+    - docker-install
+    - restart-machine
+    - dns-server
