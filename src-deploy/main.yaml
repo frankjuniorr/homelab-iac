@@ -61,10 +61,21 @@
 ##############################################
 # Configuring DNS on clients
 ##############################################
-- name: "Configuring DNS on clients"
-  hosts: vms_all
+# - name: "Configuring DNS on clients"
+#   hosts: vms_all
+#   become: yes
+#   gather_facts: yes
+
+#   roles:
+#     - dns-client
+
+##############################################
+# Opening 6443 port on cluster k8s Firewall
+##############################################
+- name: "Applying firewall settings to k8s cluster nodes"
+  hosts: k8s_cluster
   become: yes
   gather_facts: yes
 
   roles:
-    - dns-client
+    - kubernetes-firewall
