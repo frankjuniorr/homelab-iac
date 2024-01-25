@@ -11,7 +11,7 @@
     - terraform-create-vms
 
 ##############################################
-# Executando em todos os hosts
+# Running in all hosts
 ##############################################
 - name: "Creating the user and configuring ssh"
   hosts: all
@@ -21,3 +21,14 @@
   roles:
     - create-user
     - create-ssh-config # atualiza o .ssh/config do meu client
+
+##############################################
+# Running only in 'nfs_server_hosts' group
+##############################################
+- name: "Configuring NFS Server"
+  hosts: nfs_server_hosts
+  become: yes
+  gather_facts: no
+
+  roles:
+    - nfs-server
