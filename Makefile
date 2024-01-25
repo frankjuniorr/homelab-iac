@@ -33,10 +33,10 @@ servers-backup:
 ##############################################################################################################
 # FULL DEPLOY
 proxmox-build:
-	@bash scripts/install-scripts-dependencies.sh && clear
-	@python3 scripts/ssh-copy-to-host.py ${PROXMOX_HOSTS_FILE}
+#	@bash scripts/install-scripts-dependencies.sh && clear
+#	@python3 scripts/ssh-copy-to-host.py ${PROXMOX_HOSTS_FILE}
 	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml
-	@sleep 2
+#	@sleep 2
 #	@make deploy-infra
 
 ##############################################################################################################

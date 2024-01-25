@@ -1,0 +1,21 @@
+---
+
+- name: "Set user and password variables"
+  set_fact:
+    vm_user: "{{ hostvars[inventory_hostname].vm_user }}"
+    vm_user_passwd: "{{ hostvars[inventory_hostname].vm_user_passwd }}"
+  when: "inventory_hostname != 'proxmox'"
+
+- name: "Add user to wheel group"
+  become_user: root
+  shell: usermod -aG wheel {{ vm_user }}
+  when: "inventory_hostname != 'proxmox'"
+
+- name: "Configure NOPASSWD for the wheel group"
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    state: present
+    validate: visudo -cf %s
+  when: "inventory_hostname != 'proxmox'"

@@ -41,7 +41,7 @@
   become: false
   shell: "{{ item }}"
   loop:
-    - "terraform init "
+    - "terraform init"
     - "terraform fmt -recursive"
     - "terraform apply -var-file=terraform.tfvars -auto-approve"
   args:

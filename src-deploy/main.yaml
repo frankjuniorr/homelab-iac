@@ -9,3 +9,15 @@
     - proxmox-customize-rocky-linux-cloud-image
     - proxmox-create-cloud-init-vm-template
     - terraform-create-vms
+
+##############################################
+# Executando em todos os hosts
+##############################################
+- name: "Creating the user and configuring ssh"
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - create-user
+    - create-ssh-config # atualiza o .ssh/config do meu client
