@@ -1,5 +1,9 @@
 ---
 
+- name: "Define nfs_server_ip variable"
+  set_fact:
+    nfs_server_ip: "{{ hostvars['nfs']['ansible_host'] }}"
+
 - name: "Scan NFS folder in server"
   shell: pvesm scan nfs {{ nfs_server_ip }} | awk '{print $1}'
   register: nfs_folder_output

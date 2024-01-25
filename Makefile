@@ -63,8 +63,8 @@ deploy-infra:
 #	@echo "Waiting 1 minute to VMs to breath..."
 #	@sleep 60
 
-	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/servers-setup.yml
-	@nfs_server_ip=$$(grep --max-count=1 --after-context=1 "nfs:" ${SERVERS_HOST_FILE} | grep "ansible_host" | awk '{print $$2}') && \
+#	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/servers-setup.yml
+#	@nfs_server_ip=$$(grep --max-count=1 --after-context=1 "nfs:" ${SERVERS_HOST_FILE} | grep "ansible_host" | awk '{print $$2}') && \
 			ansible-playbook -i ${PROXMOX_HOSTS_FILE} proxmox/proxmox-config/proxmox_post_config.yaml -e "nfs_server_ip=$$nfs_server_ip"
 
 	@make k3s-install

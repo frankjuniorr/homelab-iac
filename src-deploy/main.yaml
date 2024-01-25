@@ -72,10 +72,21 @@
 ##############################################
 # Opening 6443 port on cluster k8s Firewall
 ##############################################
-- name: "Applying firewall settings to k8s cluster nodes"
-  hosts: k8s_cluster
+# - name: "Applying firewall settings to k8s cluster nodes"
+#   hosts: k8s_cluster
+#   become: yes
+#   gather_facts: yes
+
+#   roles:
+#     - kubernetes-firewall
+
+##############################################
+# Exporting NFS folder to Proxmox too
+##############################################
+- name: "Exporting NFS folder to Proxmox too"
+  hosts: proxmox
+  gather_facts: no
   become: yes
-  gather_facts: yes
 
   roles:
-    - kubernetes-firewall
+    - proxmox-create-nfs-storage
