@@ -1,84 +1,84 @@
 ---
-# - name: "Proxmox init-configure"
-#   hosts: proxmox_nodes
-#   gather_facts: no
-#   become: yes
+- name: "Proxmox init-configure"
+  hosts: proxmox_nodes
+  gather_facts: no
+  become: yes
 
-#   roles:
-#     - proxmox-create-user
-#     - proxmox-customize-rocky-linux-cloud-image
-#     - proxmox-create-cloud-init-vm-template
-#     - terraform-create-vms
+  roles:
+    - proxmox-create-user
+    - proxmox-customize-rocky-linux-cloud-image
+    - proxmox-create-cloud-init-vm-template
+    - terraform-create-vms
 
-# ##############################################
-# # Running in all hosts
-# ##############################################
-# - name: "Creating the user and configuring ssh"
-#   hosts: all
-#   become: yes
-#   gather_facts: yes
+##############################################
+# Running in all hosts
+##############################################
+- name: "Creating the user and configuring ssh"
+  hosts: all
+  become: yes
+  gather_facts: yes
 
-#   roles:
-#     - create-user
-#     - create-ssh-config # atualiza o .ssh/config do meu client
+  roles:
+    - create-user
+    - create-ssh-config # atualiza o .ssh/config do meu client
 
-# ##############################################
-# # Running only in 'nfs_server_hosts' group
-# ##############################################
-# - name: "Configuring NFS Server"
-#   hosts: nfs_server_hosts
-#   become: yes
-#   gather_facts: no
+##############################################
+# Running only in 'nfs_server_hosts' group
+##############################################
+- name: "Configuring NFS Server"
+  hosts: nfs_server_hosts
+  become: yes
+  gather_facts: no
 
-#   roles:
-#     - nfs-server
+  roles:
+    - nfs-server
 
-# ##############################################
-# # Configuring NFS clients
-# ##############################################
-# - name: "Configuring NFS on clients"
-#   hosts: vms_all
-#   become: yes
-#   gather_facts: no
+##############################################
+# Configuring NFS clients
+##############################################
+- name: "Configuring NFS on clients"
+  hosts: vms_all
+  become: yes
+  gather_facts: no
 
-#   roles:
-#     - nfs-client
+  roles:
+    - nfs-client
 
 # #############################################
 # # Executing only in 'dns_server_hosts'
 # #############################################
-# - name: "Configuring the DNS Server"
-#   hosts: dns_server_hosts
-#   remote_user: pihole
-#   become: yes
-#   gather_facts: no
+- name: "Configuring the DNS Server"
+  hosts: dns_server_hosts
+  remote_user: pihole
+  become: yes
+  gather_facts: no
 
-#   roles:
-#     - docker-install
-#     - restart-machine
-#     - dns-server
+  roles:
+    - docker-install
+    - restart-machine
+    - dns-server
 
 ##############################################
 # Configuring DNS on clients
 ##############################################
-# - name: "Configuring DNS on clients"
-#   hosts: vms_all
-#   become: yes
-#   gather_facts: yes
+- name: "Configuring DNS on clients"
+  hosts: vms_all
+  become: yes
+  gather_facts: yes
 
-#   roles:
-#     - dns-client
+  roles:
+    - dns-client
 
 ##############################################
 # Opening 6443 port on cluster k8s Firewall
 ##############################################
-# - name: "Applying firewall settings to k8s cluster nodes"
-#   hosts: k8s_cluster
-#   become: yes
-#   gather_facts: yes
+- name: "Applying firewall settings to k8s cluster nodes"
+  hosts: k8s_cluster
+  become: yes
+  gather_facts: yes
 
-#   roles:
-#     - kubernetes-firewall
+  roles:
+    - kubernetes-firewall
 
 ##############################################
 # Exporting NFS folder to Proxmox too
@@ -90,3 +90,23 @@
 
   roles:
     - proxmox-create-nfs-storage
+
+
+##############################################
+# Instalando o k3s
+##############################################
+- name: "Installing k3s servers"
+  hosts: k8s_masters_nodes
+  become: true
+  gather_facts: no
+
+  roles:
+    - kubernetes-install-masters
+
+- name: "Installing k3s nodes"
+  hosts: k8s_worker_nodes
+  become: true
+  gather_facts: no
+
+  roles:
+    - kubernetes-install-nodes
