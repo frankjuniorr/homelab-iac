@@ -6,6 +6,7 @@
   shell: "pvesm list NFS"
   register: nfs_exists
   ignore_errors: yes
+  failed_when: "'storage ''NFS'' does not exist' in nfs_exists.stderr"
 
 - name: "Check if mount point {{ nfs_mount_point }} exists"
   stat:

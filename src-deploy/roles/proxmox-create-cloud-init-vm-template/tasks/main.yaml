@@ -18,7 +18,7 @@
 - name: "Check if VM already exist"
   shell: qm list | grep -q "{{ cloud_init_template.vm_id }}"
   register: vm_exists
-  failed_when: "vm_exists.rc == 1 and 'non-zero return code' not in vm_exists.stderr"
+  failed_when: "vm_exists.rc == 1 and 'non-zero return code' in vm_exists.stderr"
   ignore_errors: yes
 
 # --name: Create a new virtual machine with this specific name

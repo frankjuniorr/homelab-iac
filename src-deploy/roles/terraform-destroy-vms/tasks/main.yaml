@@ -1,5 +1,12 @@
 ---
 
+- name: "Check if terraform.tfvars exists"
+  delegate_to: "localhost"
+  become: false
+  stat:
+    path: "{{ playbook_dir }}/roles/terraform-create-vms/files/terraform.tfvars"
+  register: tfvars_stat
+
 - name: "Destroy VMs by Terraform"
   delegate_to: "localhost"
   become: false
@@ -8,3 +15,4 @@
     - "terraform destroy -var-file=terraform.tfvars -auto-approve"
   args:
     chdir: "{{ playbook_dir }}/roles/terraform-create-vms/files"
+  when: tfvars_stat.stat.exists

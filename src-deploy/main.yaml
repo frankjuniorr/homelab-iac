@@ -1,14 +1,28 @@
 ---
+##############################################
+# Proxmox Init Configure
+##############################################
 - name: "Proxmox init-configure"
   hosts: proxmox_nodes
   gather_facts: no
   become: yes
 
   roles:
-    - proxmox-create-user
-    - proxmox-customize-rocky-linux-cloud-image
-    - proxmox-create-cloud-init-vm-template
-    - terraform-create-vms
+    - role: proxmox-create-user
+      tags:
+        - proxmox-init
+
+    - role: proxmox-customize-rocky-linux-cloud-image
+      tags:
+        - proxmox-init
+
+    - role: proxmox-create-cloud-init-vm-template
+      tags:
+        - proxmox-init
+
+    - role: terraform-create-vms
+      tags:
+        - deploy-infra
 
 ##############################################
 # Running in all hosts
@@ -19,8 +33,13 @@
   gather_facts: yes
 
   roles:
-    - create-user
-    - create-ssh-config # atualiza o .ssh/config do meu client
+    - role: create-user
+      tags:
+        - deploy-infra
+
+    - role: create-ssh-config # atualiza o .ssh/config do meu client
+      tags:
+        - deploy-infra
 
 ##############################################
 # Running only in 'nfs_server_hosts' group
@@ -31,7 +50,9 @@
   gather_facts: no
 
   roles:
-    - nfs-server
+    - role: nfs-server
+      tags:
+        - deploy-infra
 
 ##############################################
 # Configuring NFS clients
@@ -42,7 +63,9 @@
   gather_facts: no
 
   roles:
-    - nfs-client
+    - role: nfs-client
+      tags:
+        - deploy-infra
 
 # #############################################
 # # Executing only in 'dns_server_hosts'
@@ -54,9 +77,17 @@
   gather_facts: no
 
   roles:
-    - docker-install
-    - restart-machine
-    - dns-server
+    - role: docker-install
+      tags:
+        - deploy-infra
+
+    - role: restart-machine
+      tags:
+        - deploy-infra
+
+    - role: dns-server
+      tags:
+        - deploy-infra
 
 ##############################################
 # Configuring DNS on clients
@@ -67,7 +98,9 @@
   gather_facts: yes
 
   roles:
-    - dns-client
+    - role: dns-client
+      tags:
+        - deploy-infra
 
 ##############################################
 # Opening 6443 port on cluster k8s Firewall
@@ -78,7 +111,9 @@
   gather_facts: yes
 
   roles:
-    - kubernetes-firewall
+    - role: kubernetes-firewall
+      tags:
+        - deploy-infra
 
 ##############################################
 # Exporting NFS folder to Proxmox too
@@ -89,8 +124,9 @@
   become: yes
 
   roles:
-    - proxmox-create-nfs-storage
-
+    - role: proxmox-create-nfs-storage
+      tags:
+        - deploy-infra
 
 ##############################################
 # Instalando o k3s
@@ -101,7 +137,9 @@
   gather_facts: no
 
   roles:
-    - kubernetes-install-masters
+    - role: kubernetes-install-masters
+      tags:
+        - deploy-infra
 
 - name: "Installing k3s nodes"
   hosts: k8s_worker_nodes
@@ -109,4 +147,6 @@
   gather_facts: no
 
   roles:
-    - kubernetes-install-nodes
+    - role: kubernetes-install-nodes
+      tags:
+        - deploy-infra

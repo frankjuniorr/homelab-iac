@@ -33,8 +33,8 @@ servers-backup:
 ##############################################################################################################
 # FULL DEPLOY
 proxmox-build:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml
-	@kubecolor get nodes -o wide --kubeconfig=$${HOME}/.kube/config.k3s
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml --tags "proxmox-init,deploy-infra"
+#	@kubecolor get nodes -o wide --kubeconfig=$${HOME}/.kube/config.k3s
 
 ##############################################################################################################
 # FULL DESTROY

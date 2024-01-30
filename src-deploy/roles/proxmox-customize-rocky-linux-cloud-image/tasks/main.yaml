@@ -39,6 +39,7 @@
 
 - name: "Creating {{ rocky_linux_cloud_image_file_sha | basename}} file"
   shell: "sha256sum {{ rocky_linux_cloud_image_file }} | awk '{print $1}' > {{ rocky_linux_cloud_image_file_sha }}"
+  register: sha256_created
   when: not sha256sum_exist.stat.exists
 
 - name: "Reading {{ rocky_linux_cloud_image_file_sha | basename }} file"
@@ -63,7 +64,7 @@
     - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/cloud/cloud.cfg -e \"s/^ssh_pwauth:.*$/ssh_pwauth: 1/\""
     - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/selinux/config -e \"s/^SELINUX=.*$/SELINUX=permissive/\""
     - "virt-copy-in -a {{ rocky_linux_cloud_image_file }} {{ config_cloud_image_directory }}/sshd_config /etc/ssh/"
-  when: sha256_from_file != sha256_from_image
+  when: (sha256_created.skipped == 'false' and sha256_from_file != sha256_from_image)
 
 - name: "Customize Cloud Init Image"
   shell: "{{ item }}"
@@ -76,8 +77,8 @@
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl start firewalld'"
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl enable firewalld'"
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --root-password password:{{ rocky_linux_cloud_image_root_password }}"
-  when: sha256_from_file != sha256_from_image
+  when: (sha256_created.skipped == 'false' and sha256_from_file != sha256_from_image)
 
 - name: "Creating {{ rocky_linux_cloud_image_file_sha | basename}} file"
   shell: "sha256sum {{ rocky_linux_cloud_image_file }} | awk '{print $1}' > {{ rocky_linux_cloud_image_file_sha }}"
-  when: sha256_from_file != sha256_from_image
+  when: (sha256_created.skipped == 'false' and sha256_from_file != sha256_from_image)
