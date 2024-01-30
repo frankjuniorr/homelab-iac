@@ -1,0 +1,31 @@
+---
+
+- name: "Define HOME var"
+  set_fact:
+    home_folder: "{{ lookup('ansible.builtin.env', 'HOME') }}"
+
+- name: "Clean {{ home_folder }}/.ssh/known_hosts"
+  delegate_to: "localhost"
+  become: false
+  shell: "echo > {{ item }}"
+  loop:
+    - "{{ home_folder }}/.ssh/known_hosts"
+    - "{{ home_folder }}/.ssh/config"
+
+- name: "Delete Terraform temporary files"
+  delegate_to: "localhost"
+  become: false
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ playbook_dir }}/roles/terraform-create-vms/files/.terraform.lock.hcl"
+    - "{{ playbook_dir }}/roles/terraform-create-vms/files/terraform.tfstate"
+    - "{{ playbook_dir }}/roles/terraform-create-vms/files/terraform.tfstate.backup"
+    - "{{ playbook_dir }}/roles/terraform-create-vms/files/.terraform"
+
+    # Templates
+    - "{{ playbook_dir }}/roles/terraform-create-vms/files/modules/proxmox_vms/variables.tf"
+    - "{{ playbook_dir }}/roles/terraform-create-vms/files/main.tf"
+    - "{{ playbook_dir }}/roles/terraform-create-vms/files/variables.tf"
+    - "{{ playbook_dir }}/roles/terraform-create-vms/files/terraform.tfvars"

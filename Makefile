@@ -33,11 +33,8 @@ servers-backup:
 ##############################################################################################################
 # FULL DEPLOY
 proxmox-build:
-#	@bash scripts/install-scripts-dependencies.sh && clear
-#	@python3 scripts/ssh-copy-to-host.py ${PROXMOX_HOSTS_FILE}
 	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml
-#	@sleep 2
-#	@make deploy-infra
+	@kubecolor get nodes -o wide --kubeconfig=$${HOME}/.kube/config.k3s
 
 ##############################################################################################################
 # FULL DESTROY
@@ -68,10 +65,6 @@ deploy-infra:
 			ansible-playbook -i ${PROXMOX_HOSTS_FILE} proxmox/proxmox-config/proxmox_post_config.yaml -e "nfs_server_ip=$$nfs_server_ip"
 
 	@make k3s-install
-
-k3s-install:
-	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/k3s-install.yml
-	@kubecolor get nodes -o wide --kubeconfig=$${HOME}/.kube/config.k3s
 
 ##############################################################################################################
 # DESTROY ONLY INFRA

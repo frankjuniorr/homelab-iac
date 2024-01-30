@@ -1,0 +1,10 @@
+---
+
+- name: "Destroy VMs by Terraform"
+  delegate_to: "localhost"
+  become: false
+  shell: "{{ item }}"
+  loop:
+    - "terraform destroy -var-file=terraform.tfvars -auto-approve"
+  args:
+    chdir: "{{ playbook_dir }}/roles/terraform-create-vms/files"
