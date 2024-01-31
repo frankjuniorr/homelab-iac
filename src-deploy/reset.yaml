@@ -5,7 +5,14 @@
   become: yes
 
   roles:
-    - proxmox-remove-nfs
-    - terraform-destroy-vms
-    - proxmox-reset
-    - clean-local-files
+    - role: proxmox-remove-nfs
+      tags: "destroy-infra"
+
+    - role: terraform-destroy-vms
+      tags: "destroy-infra"
+
+    - role: proxmox-reset
+      tags: "reset-proxmox"
+
+    - role: clean-local-files
+      tags: "reset-proxmox"

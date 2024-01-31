@@ -40,7 +40,7 @@ proxmox-build:
 # FULL DESTROY
 # proxmox-reset: destroy-infra
 proxmox-reset:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/reset.yaml
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/reset.yaml --tags "destroy-infra,reset-proxmox"
 
 
 ##############################################################################################################
@@ -56,25 +56,11 @@ proxmox-reset:
 # - Start the playbook that make post-config Proxmox:
 #		- Create the NFS Storage
 deploy-infra:
-#	@cd proxmox/create-vms && terraform init && terraform fmt -recursive && terraform apply -var-file=terraform.tfvars -auto-approve
-#	@echo "Waiting 1 minute to VMs to breath..."
-#	@sleep 60
-
-#	@ansible-playbook -i ${SERVERS_HOST_FILE} servers-setup/servers-setup.yml
-#	@nfs_server_ip=$$(grep --max-count=1 --after-context=1 "nfs:" ${SERVERS_HOST_FILE} | grep "ansible_host" | awk '{print $$2}') && \
-			ansible-playbook -i ${PROXMOX_HOSTS_FILE} proxmox/proxmox-config/proxmox_post_config.yaml -e "nfs_server_ip=$$nfs_server_ip"
-
-	@make k3s-install
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml --tags "deploy-infra"
 
 ##############################################################################################################
 # DESTROY ONLY INFRA
 
 # Command to destroy all infrastructure
 destroy-infra:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} proxmox/proxmox-config/reset-nfs.yaml
-	@cd proxmox/create-vms && terraform destroy -var-file=terraform.tfvars -auto-approve
-	@echo "" > ~/.ssh/known_hosts && echo "" > ~/.ssh/config
-	@find proxmox/create-vms -iname "*.lock.hcl" -delete
-	@find proxmox/create-vms -iname "*.tfstate*" -delete
-	@test -d "proxmox/create-vms/.terraform" && rm -rf "proxmox/create-vms/.terraform" || true
-	@test -d "scripts/.venv" && rm -rf "scripts/.venv" || true
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/reset.yaml --tags "destroy-infra"

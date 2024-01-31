@@ -1,7 +1,16 @@
 ---
-########################################################
+##################################################################
 # Remove VM Template
-#################################################################
+##################################################################
+- name: "Check for locked VMs"
+  shell: find /etc/pve -type f -name '*.conf' -exec grep -H 'lock:' {} \; | wc -l
+  register: vm_lock_check
+  changed_when: false
+
+- name: "Unlock VM"
+  shell: qm unlock {{ cloud_init_template.vm_id }}
+  when: vm_lock_check.stdout | int > 0
+
 - name: "Remove VM Template"
   shell: "{{ item }}"
   loop:
@@ -19,6 +28,9 @@
   loop:
     - "pveum user delete {{ iac_user }}"
     - "pveum role del {{ iac_role }}"
+  register: delete_role_output
+  ignore_errors: yes
+  failed_when: "'delete role failed' in delete_role_output.stderr and ('pveum role del' in item and 'role' not in item)"
 
 
 ##################################################################
