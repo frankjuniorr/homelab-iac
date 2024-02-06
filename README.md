@@ -11,32 +11,29 @@
 Code responsable to deploy all my infra in Proxmox, everything by code.
 Features:
  - Send ssh public key to Proxmox server
- - Trigger an Ansible code to configure Proxmox
+ - Trigger an Ansible code to install al my infra
     -  Create user, and role permission
     -  Create a VM Template in Proxmox with Rocky Linux (cloud-init image)
- - Trigger a Terraform code, to create all VMs
- - Trigger an Ansible code to configure all VMs
--  Install Kubernetes cluster with k3s
+    - Trigger a Terraform code, to create all VMs
+    - Configure all VMs
+    -  Install Kubernetes cluster with k3s
 
 ## It is divided by:
 
 - `scripts`: folder with auxiliar scripts
-- `proxmox`: Folder with all necessary code to create and configure Vms in Proxmox hypervisor
-- - `proxmox-config`: Ansible code, to configure Proxmox server and create VM Template
-    - `create-vms`: Terraform code, to create all VMs
-- `servers-setup`: Ansible code to install and configure all servers
+- `src`: folder with Ansible code
 
 ## How to use
 
 ### Config files
-First of all, **review and edit** all necessary config files, there are in `config-files/sample` folder.
+First of all, **review and edit** the hosts.yaml file, there is in `config-files/sample` folder.
 Make a copy of this folder, running the command:
 ```bash
 make init-config-files
 ```
 
-After that, **open, review and edit** all files into a new folder called `config-files/my-configs`
-When all files are configured, run this command to install them:
+After that, **open, review and edit** the file into a new folder called `config-files/my-configs`
+When hosts.yaml file are configured, run this command to install them:
 ```bash
 make install-config-files
 ```
@@ -75,24 +72,27 @@ make deploy-infra
 # Destroy only Infra (VMs). Proxmox configs and VM Template remain intact
 make destroy-infra
 
+##################### Kubernetes #####################
 
-##################### Backup #####################
+# Install K3s
+make k3s-install
 
-# Make backup of Infrastructure
-make servers-backup
+# Uninstall K3s
+make k3s-uninstall
+
 ```
 
 ### Infra fluxogram
-As the code uses some configuration files, and some others are automatically generated, so here is an image summarizing the flow of the solution
+Here is an image summarizing the flow of the solution
 
-Legend:
+The folder "config-file" created by the command `make init-config-files`, sends the `hosts.yaml` file into Ansible Code by the command `make install-config-files`.
+The Ansible Code will launch many functions and on of them will bring to the localhost `.kube/config` of k8s-master. Additionally, the code will change the `.ssh/config` file by adding all the hosts configured in the `hosts.yaml` file.
 
-- Purple lines: The config files that user configure mannually in the start of code
-- Orange lines: Configuration files that are automatically generated and sent to their respective locations
-- Yellow lines: Configuration files that are automatically generated and sent to my localhost
+![Alt iac_fluxogram](images/ansible-code.png)
 
 
-![Alt iac_fluxogram](images/iac_fluxogram.png)
+This image show all the Makefile commands
+![Alt makefile_commands](images/makefile-commands.png)
 
 ### License:
 
