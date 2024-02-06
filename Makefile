@@ -2,11 +2,13 @@
 SHELL := /bin/bash
 
 # Variables
-PROXMOX_HOSTS_FILE = "src/hosts.yaml"
 MY_CONFIG_FILES = "config-files/my-configs"
 
 ##############################################################################################################
 # INITIAL CONFIGURATION
+install-dependencies:
+	pip3 install watchdog
+
 
 # Command to copy config-files/sample folder, to you fill yours settings
 init-config-files:
@@ -14,7 +16,7 @@ init-config-files:
 
 # Command to install all the main config files, from 'config-files/my-configs', to correct place
 install-config-files:
-	@cp -v "${MY_CONFIG_FILES}/hosts.yaml" ${PROXMOX_HOSTS_FILE}
+	@cp -v "${MY_CONFIG_FILES}/hosts.yaml" src/hosts.yaml
 
 
 ##############################################################################################################
@@ -29,14 +31,14 @@ servers-backup:
 ##############################################################################################################
 # FULL DEPLOY
 proxmox-build:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/main.yaml --tags "proxmox-init,deploy-infra"
+	@cd src && ansible-playbook -i hosts.yaml main.yaml --tags "proxmox-init,deploy-infra"
 #	@kubecolor get nodes -o wide --kubeconfig=$${HOME}/.kube/config.k3s
 
 ##############################################################################################################
 # FULL DESTROY
 # proxmox-reset: destroy-infra
 proxmox-reset:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/reset.yaml --tags "destroy-infra,reset-proxmox"
+	@cd src && ansible-playbook -i hosts.yaml reset.yaml --tags "destroy-infra,reset-proxmox"
 
 
 ##############################################################################################################
@@ -52,24 +54,24 @@ proxmox-reset:
 # - Start the playbook that make post-config Proxmox:
 #		- Create the NFS Storage
 deploy-infra:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/main.yaml --tags "deploy-infra"
+	@cd src && ansible-playbook -i hosts.yaml main.yaml --tags "deploy-infra"
 
 ##############################################################################################################
 # DESTROY ONLY INFRA
 
 # Command to destroy all infrastructure
 destroy-infra:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/reset.yaml --tags "destroy-infra"
+	@cd src && ansible-playbook -i hosts.yaml reset.yaml --tags "destroy-infra"
 
 
 
 ##############################################################################################################
 # DEPLOY ONLY K3S
 k3s-install:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/main.yaml --tags "k3s-install"
+	@cd src && ansible-playbook -i hosts.yaml main.yaml --tags "k3s-install"
 
 
 ##############################################################################################################
 # DESTROY ONLY K3S
 k3s-uninstall:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/reset.yaml --tags "k3s-uninstall"
+	@cd src && ansible-playbook -i hosts.yaml reset.yaml --tags "k3s-uninstall"
