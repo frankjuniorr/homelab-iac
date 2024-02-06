@@ -1,5 +1,5 @@
 # Usa assim:
-# ansible-galaxy install -r src-deploy/requirements.yml
+# ansible-galaxy install -r src/requirements.yml
 
 collections:
   - name: community.general

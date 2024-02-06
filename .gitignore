@@ -1,17 +1,17 @@
 ########################## My files ##########################
 
 # Main file with all variables
-src-deploy/hosts.yaml
+src/hosts.yaml
 
 # Terraform code
-src-deploy/roles/terraform-create-vms/files.terraform.lock.hcl
-src-deploy/roles/terraform-create-vms/files/.terraform
+src/roles/terraform-create-vms/files.terraform.lock.hcl
+src/roles/terraform-create-vms/files/.terraform
 # terraform code template result
-src-deploy/roles/terraform-create-vms/files/main.tf
-src-deploy/roles/terraform-create-vms/files/variables.tf
-src-deploy/roles/terraform-create-vms/files/.terraform.lock.hcl
-src-deploy/roles/terraform-create-vms/files/terraform.tfvars
-src-deploy/roles/terraform-create-vms/files/modules/proxmox_vms/variables.tf
+src/roles/terraform-create-vms/files/main.tf
+src/roles/terraform-create-vms/files/variables.tf
+src/roles/terraform-create-vms/files/.terraform.lock.hcl
+src/roles/terraform-create-vms/files/terraform.tfvars
+src/roles/terraform-create-vms/files/modules/proxmox_vms/variables.tf
 
 config-files/my-configs
 
