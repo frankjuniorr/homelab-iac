@@ -3,7 +3,6 @@ SHELL := /bin/bash
 
 # Variables
 PROXMOX_HOSTS_FILE = "src-deploy/hosts.yaml"
-SERVERS_HOST_FILE = "servers-setup/hosts.yaml"
 MY_CONFIG_FILES = "config-files/my-configs"
 
 ##############################################################################################################
@@ -16,9 +15,6 @@ init-config-files:
 # Command to install all the main config files, from 'config-files/my-configs', to correct place
 install-config-files:
 	@cp -v "${MY_CONFIG_FILES}/hosts.yaml" ${PROXMOX_HOSTS_FILE}
-	@cp -v "${MY_CONFIG_FILES}/vm_template_config.yaml" proxmox/proxmox-config/group_vars/vm_template_config.yaml
-	@cp -v "${MY_CONFIG_FILES}/terraform.tfvars.template" proxmox/create-vms/terraform.tfvars
-	@cp -v "${MY_CONFIG_FILES}/dns_and_k3s_config.yaml" servers-setup/group_vars/dns_and_k3s_config.yaml
 
 
 ##############################################################################################################
@@ -64,3 +60,16 @@ deploy-infra:
 # Command to destroy all infrastructure
 destroy-infra:
 	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/reset.yaml --tags "destroy-infra"
+
+
+
+##############################################################################################################
+# DEPLOY ONLY K3S
+k3s-install:
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml --tags "k3s-install"
+
+
+##############################################################################################################
+# DESTROY ONLY K3S
+k3s-uninstall:
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/reset.yaml --tags "k3s-uninstall"

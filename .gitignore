@@ -13,8 +13,6 @@ src-deploy/roles/terraform-create-vms/files/.terraform.lock.hcl
 src-deploy/roles/terraform-create-vms/files/terraform.tfvars
 src-deploy/roles/terraform-create-vms/files/modules/proxmox_vms/variables.tf
 
-servers-setup/hosts.yaml
-servers-setup/group_vars/dns_and_k3s_config.yaml
 config-files/my-configs
 
 ########################## Python ##########################

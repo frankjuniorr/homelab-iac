@@ -140,6 +140,7 @@
     - role: kubernetes-install-masters
       tags:
         - deploy-infra
+        - k3s-install
 
 - name: "Installing k3s nodes"
   hosts: k8s_worker_nodes
@@ -150,3 +151,4 @@
     - role: kubernetes-install-nodes
       tags:
         - deploy-infra
+        - k3s-install
