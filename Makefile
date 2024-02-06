@@ -6,9 +6,6 @@ MY_CONFIG_FILES = "config-files/my-configs"
 
 ##############################################################################################################
 # INITIAL CONFIGURATION
-install-dependencies:
-	pip3 install watchdog
-
 
 # Command to copy config-files/sample folder, to you fill yours settings
 init-config-files:
