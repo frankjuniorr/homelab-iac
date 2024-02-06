@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 # Variables
-PROXMOX_HOSTS_FILE = "src-deploy/hosts.yaml"
+PROXMOX_HOSTS_FILE = "src/hosts.yaml"
 MY_CONFIG_FILES = "config-files/my-configs"
 
 ##############################################################################################################
@@ -29,14 +29,14 @@ servers-backup:
 ##############################################################################################################
 # FULL DEPLOY
 proxmox-build:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml --tags "proxmox-init,deploy-infra"
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/main.yaml --tags "proxmox-init,deploy-infra"
 #	@kubecolor get nodes -o wide --kubeconfig=$${HOME}/.kube/config.k3s
 
 ##############################################################################################################
 # FULL DESTROY
 # proxmox-reset: destroy-infra
 proxmox-reset:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/reset.yaml --tags "destroy-infra,reset-proxmox"
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/reset.yaml --tags "destroy-infra,reset-proxmox"
 
 
 ##############################################################################################################
@@ -52,24 +52,24 @@ proxmox-reset:
 # - Start the playbook that make post-config Proxmox:
 #		- Create the NFS Storage
 deploy-infra:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml --tags "deploy-infra"
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/main.yaml --tags "deploy-infra"
 
 ##############################################################################################################
 # DESTROY ONLY INFRA
 
 # Command to destroy all infrastructure
 destroy-infra:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/reset.yaml --tags "destroy-infra"
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/reset.yaml --tags "destroy-infra"
 
 
 
 ##############################################################################################################
 # DEPLOY ONLY K3S
 k3s-install:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/main.yaml --tags "k3s-install"
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/main.yaml --tags "k3s-install"
 
 
 ##############################################################################################################
 # DESTROY ONLY K3S
 k3s-uninstall:
-	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src-deploy/reset.yaml --tags "k3s-uninstall"
+	@ansible-playbook -i ${PROXMOX_HOSTS_FILE} src/reset.yaml --tags "k3s-uninstall"
