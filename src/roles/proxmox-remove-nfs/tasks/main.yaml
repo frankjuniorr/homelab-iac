@@ -3,24 +3,24 @@
 # Remove NFS
 ##################################################################
 - name: "Check if {{ nfs_storage_name }} storage exists"
-  shell: "pvesm list NFS"
+  ansible.builtin.shell: "pvesm list NFS"
   register: nfs_exists
   ignore_errors: yes
   failed_when: "'storage ''NFS'' does not exist' in nfs_exists.stderr"
 
 - name: "Check if mount point {{ nfs_mount_point }} exists"
-  stat:
+  ansible.builtin.stat:
     path: "{{ nfs_mount_point }}"
   register: nfs_dir_exists
 
 - name: "Remove NFS Storage"
-  shell: "{{ item }}"
+  ansible.builtin.shell: "{{ item }}"
   loop:
     - "pvesm remove {{ nfs_storage_name }}"
   when: nfs_exists.rc == 0
 
 - name: "Remove NFS Mount Point"
-  shell: "{{ item }}"
+  ansible.builtin.shell: "{{ item }}"
   loop:
     - "umount {{ nfs_mount_point }}"
     - "rm -rf {{ nfs_mount_point }}"

@@ -1,11 +1,11 @@
 ---
 - name: "Install NFS packages"
-  package:
+  ansible.builtin.dnf:
     name: nfs-utils
     state: present
 
 - name: "Create 'data' folder which will be the NFS"
-  file:
+  ansible.builtin.file:
     path: "{{ nfs_folder }}"
     state: directory
     owner: "nobody"
@@ -13,13 +13,13 @@
     mode: '0755'
 
 - name: "Configure NFS exports"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/exports
     line: |
       {{ nfs_folder }} *(rw,sync,no_subtree_check,no_root_squash)
 
 - name: "Start NFS service"
-  service:
+  ansible.builtin.service:
     name: nfs-server
     state: started
     enabled: yes

@@ -1,6 +1,6 @@
 ---
 - name: "Disable the firewalld service"
-  systemd:
+  ansible.builtin.systemd:
     name: firewalld
     enabled: no
     state: stopped

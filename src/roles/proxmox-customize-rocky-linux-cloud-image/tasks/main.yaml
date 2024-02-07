@@ -1,11 +1,11 @@
 - name: "Install libguestfs-tools package"
-  apt:
+  ansible.builtin.apt:
     name: libguestfs-tools
     state: present
     update_cache: yes
 
 - name: "Create a temporary directory in root's home"
-  file:
+  ansible.builtin.file:
     path: "{{ config_cloud_image_directory }}"
     state: directory
     owner: root
@@ -13,7 +13,7 @@
     mode: '0755'
 
 - name: "Copy configuration file to remote server"
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     owner: root
@@ -25,19 +25,19 @@
 
 ##############  TASKs relative to Rocky Linux image ##############
 - name: "Donwload Rocky Linux Cloud image file"
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ rocky_linux_cloud_image_url }}"
     dest: "{{ rocky_linux_cloud_image_file }}"
 
 - name: "Change config files in Cloud Init Image"
-  shell: "{{ item }}"
+  ansible.builtin.shell: "{{ item }}"
   loop:
     - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/cloud/cloud.cfg -e \"s/^ssh_pwauth:.*$/ssh_pwauth: 1/\""
     - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/selinux/config -e \"s/^SELINUX=.*$/SELINUX=permissive/\""
     - "virt-copy-in -a {{ rocky_linux_cloud_image_file }} {{ config_cloud_image_directory }}/sshd_config /etc/ssh/"
 
 - name: "Customize Cloud Init Image"
-  shell: "{{ item }}"
+  ansible.builtin.shell: "{{ item }}"
   loop:
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --timezone \"America/Recife\""
     # - "virt-customize -a {{ rocky_linux_cloud_image_file }} --update"

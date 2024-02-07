@@ -1,16 +1,16 @@
 ---
 - name: "Install k3s on masters"
-  shell: "{{ k3s_server_install_command }}"
+  ansible.builtin.shell: "{{ k3s_server_install_command }}"
 
 ####################### Traz o kubeconfig pra máquina local
 - name: "Transfer kubernetes config file to localhost"
-  fetch:
+  ansible.builtin.fetch:
     src: /etc/rancher/k3s/k3s.yaml
     dest: "{{ lookup('ansible.builtin.env', 'HOME') }}/.kube/config.k3s"
     flat: yes
 
 - name: "Define cluster variables"
-  set_fact:
+  ansible.builtin.set_fact:
     user_home: "{{ lookup('ansible.builtin.env', 'HOME') }}"
     cluster_name: 'cerebro'
     cluster_username: 'k3s'

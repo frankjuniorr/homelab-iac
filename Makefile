@@ -6,6 +6,10 @@ MY_CONFIG_FILES = "config-files/my-configs"
 
 ##############################################################################################################
 # INITIAL CONFIGURATION
+install-dependencies:
+	pip3 install watchdog
+	ansible-galaxy install -r src/requirements.yml
+
 
 # Command to copy config-files/sample folder, to you fill yours settings
 init-config-files:

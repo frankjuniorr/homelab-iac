@@ -3,14 +3,14 @@
 - name: "Check if terraform.tfvars exists"
   delegate_to: "localhost"
   become: false
-  stat:
+  ansible.builtin.stat:
     path: "{{ playbook_dir }}/roles/terraform-create-vms/files/terraform.tfvars"
   register: tfvars_stat
 
 - name: "Destroy VMs by Terraform"
   delegate_to: "localhost"
   become: false
-  shell: "{{ item }}"
+  ansible.builtin.shell: "{{ item }}"
   loop:
     - "terraform destroy -var-file=terraform.tfvars -auto-approve"
   args:

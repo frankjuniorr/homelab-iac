@@ -3,16 +3,16 @@
 # Remove VM Template
 ##################################################################
 - name: "Check for locked VMs"
-  shell: find /etc/pve -type f -name '*.conf' -exec grep -H 'lock:' {} \; | wc -l
+  ansible.builtin.shell: find /etc/pve -type f -name '*.conf' -exec grep -H 'lock:' {} \; | wc -l
   register: vm_lock_check
   changed_when: false
 
 - name: "Unlock VM"
-  shell: qm unlock {{ cloud_init_template.vm_id }}
+  ansible.builtin.shell: qm unlock {{ cloud_init_template.vm_id }}
   when: vm_lock_check.stdout | int > 0
 
 - name: "Remove VM Template"
-  shell: "{{ item }}"
+  ansible.builtin.shell: "{{ item }}"
   loop:
     - "qm stop {{ cloud_init_template.vm_id }}"
     - "qm destroy {{ cloud_init_template.vm_id }}"
@@ -24,7 +24,7 @@
 # Remove User
 ##################################################################
 - name: "Remove User"
-  shell: "{{ item }}"
+  ansible.builtin.shell: "{{ item }}"
   loop:
     - "pveum user delete {{ iac_user }}"
     - "pveum role del {{ iac_role }}"
@@ -37,7 +37,7 @@
 # Remove Temporary folder
 ##################################################################
 - name: "Delete temporary folder and image file"
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: absent
   loop:

@@ -1,22 +1,22 @@
 ---
 
 - name: "Define ssh_public_key_file variable"
-  set_fact:
+  ansible.builtin.set_fact:
     vm_ssh_public_key: "{{ ssh_public_key_file }}"
 
 - name: "Copy ssh public key to remote server"
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   loop:
     - { src: "{{ vm_ssh_public_key }}", dest: "{{ config_cloud_image_directory }}/id_rsa_homelab.pub" }
 
 - name: "Define ssh_public_key_file variable"
-  set_fact:
+  ansible.builtin.set_fact:
     vm_ssh_public_key: "{{ config_cloud_image_directory }}/id_rsa_homelab.pub"
 
 - name: "Check if VM already exist"
-  shell: qm list | grep -q "{{ cloud_init_template.vm_id }}"
+  ansible.builtin.shell: qm list | grep -q "{{ cloud_init_template.vm_id }}"
   register: vm_exists
   failed_when: "vm_exists.rc == 1 and 'non-zero return code' in vm_exists.stderr"
   ignore_errors: yes
@@ -39,9 +39,9 @@
 # --citype nocloud: Set the Cloud-Init data source type to "nocloud". Cloud-Init is a system used to customize virtual machine instances in cloud environments, and the "nocloud" type indicates that configuration information is provided directly on the command line rather than using an external data source such as a cloud provider.
 # --ipconfig0 ip=dhcp: Define the network configuration for the virtual machine's network interface 0 (net0). In this case, the interface will be configured to obtain an IP address automatically through DHCP (Dynamic Host Configuration Protocol). This means that the instance will receive an IP address from the DHCP server configured on the network.
 # --serial0 socket --vga serial0: This command is necessary to be run to ensure the Proxmox GUI has console access to the VM. If not, you will likely not be able to see anything through the console page.
-# qm template: Transform in Vm Template
+# qm ansible.builtin.template: Transform in Vm Template
 - name: "Create Cloud Init VM Template"
-  shell: "{{ item }}"
+  ansible.builtin.shell: "{{ item }}"
   loop:
     - "qm create {{ cloud_init_template.vm_id }} --name {{ cloud_init_template.vm_template_name }} --memory 1024 --cores 1 --net0 virtio,bridge=vmbr0"
     - "qm set {{ cloud_init_template.vm_id }} --tags template"
@@ -62,6 +62,6 @@
   when: vm_exists.rc != 0
 
 - name: "Delete temporary folder"
-  file:
+  ansible.builtin.file:
     path: "{{ config_cloud_image_directory }}"
     state: absent

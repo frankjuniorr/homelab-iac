@@ -1,13 +1,13 @@
 ---
 
 - name: "Define HOME var"
-  set_fact:
+  ansible.builtin.set_fact:
     home_folder: "{{ lookup('ansible.builtin.env', 'HOME') }}"
 
 - name: "Clean {{ home_folder }}/.ssh/known_hosts"
   delegate_to: "localhost"
   become: false
-  shell: "echo > {{ item }}"
+  ansible.builtin.shell: "echo > {{ item }}"
   loop:
     - "{{ home_folder }}/.ssh/known_hosts"
     - "{{ home_folder }}/.ssh/config"

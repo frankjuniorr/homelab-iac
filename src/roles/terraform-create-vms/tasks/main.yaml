@@ -4,13 +4,13 @@
 - name: "Reading Proxmox user from local file"
   delegate_to: localhost
   become: no
-  shell: |
+  ansible.builtin.shell: |
     awk 'NR==4 {print $4;}' {{ user_token_output_file_localhost }}
     awk 'NR==8 {print $4;}' {{ user_token_output_file_localhost }}
   register: proxmox_user_token_values
 
 - name: "Define user and API Token variables"
-  set_fact:
+  ansible.builtin.set_fact:
     proxmox_token_id: "{{ proxmox_user_token_values.stdout_lines[0] }}"
     proxmox_token_secret: "{{ proxmox_user_token_values.stdout_lines[1] }}"
     proxmox_host: "{{ ansible_host }}"
@@ -18,7 +18,7 @@
   when: proxmox_user_token_values.stdout_lines is defined and proxmox_user_token_values.stdout_lines | length > 0
 
 - name: "Define proxmox_api_url variable"
-  set_fact:
+  ansible.builtin.set_fact:
     proxmox_api_url: "https://{{ proxmox_host }}:8006/api2/json"
 
 
@@ -27,7 +27,7 @@
 - name: "Generate Terraform code"
   delegate_to: "localhost"
   become: false
-  template:
+  ansible.builtin.template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   loop:
@@ -39,7 +39,7 @@
 - name: "Running terraform code"
   delegate_to: "localhost"
   become: false
-  shell: "{{ item }}"
+  ansible.builtin.shell: "{{ item }}"
   loop:
     - "terraform init"
     - "terraform fmt -recursive"

@@ -54,7 +54,7 @@ all:
       iac_role_permissions: "VM.Allocate VM.Clone VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Monitor VM.Audit VM.PowerMgmt Datastore.AllocateSpace Datastore.Audit SDN.Allocate SDN.Audit SDN.Use"
 
       # VM Template with cloud init image, config
-      cloud_init_template:
+      cloud_init_ansible.builtin.template:
         vm_id: ""
         vm_template_name: ""
         vm_storage: "local-lvm"
