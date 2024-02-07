@@ -8,7 +8,7 @@
 
 - name: "Add user to wheel group"
   become_user: root
-  ansible.builtin.shell: usermod -aG wheel {{ vm_user }}
+  ansible.builtin.shell: "usermod -aG wheel {{ vm_user }}"
   when: "inventory_hostname != 'proxmox'"
 
 - name: "Configure NOPASSWD for the wheel group"
@@ -18,4 +18,17 @@
     line: '%wheel ALL=(ALL) NOPASSWD: ALL'
     state: present
     validate: visudo -cf %s
+  when: "inventory_hostname != 'proxmox'"
+
+- name: "Change MOTD when ssh"
+  become_user: root
+  ansible.builtin.shell: "figlet -k $(hostname) > /etc/motd.d/10-welcome.motd"
+  when: "inventory_hostname != 'proxmox'"
+
+- name: "Enable and start the cockpit service"
+  become_user: root
+  ansible.builtin.systemd:
+    name: cockpit.socket
+    enabled: yes
+    state: started
   when: "inventory_hostname != 'proxmox'"
