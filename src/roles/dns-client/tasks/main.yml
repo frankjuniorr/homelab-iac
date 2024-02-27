@@ -1,0 +1,8 @@
+---
+- name: "Copy resolv.conf file to remote server"
+  become: yes
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: "resolv.conf.j2", dest: "/etc/resolv.conf" }

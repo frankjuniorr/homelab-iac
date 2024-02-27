@@ -6,12 +6,12 @@ all:
   #####################################################################
   vars:
     ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
-    ssh_public_key_file: ""
-    ssh_private_key_file: ""
+    ssh_public_key_file: "/home/frank/.ssh/id_rsa_homelab.pub"
+    ssh_private_key_file: "/home/frank/.ssh/id_rsa_homelab"
 
     ########################### K3s ###########################
     # k3s token, used by installation on master and joins nodes
-    k3s_token: ""
+    k3s_token: '@Jg_6_Ex6.PMicZRzym8fHTUgTM*@C'
 
     # flag to enable (or not) to master execute pods
     # Set to "true" if you want to master execute pods. Set to "false" otherwise
@@ -38,28 +38,28 @@ all:
     # Proxmox Nodes
     #####################################################################
     proxmox:
-      ansible_host: ""
+      ansible_host: 192.168.0.115
       ansible_user: root
-      root_password: ""
-      proxmox_target_node: ""
+      root_password: "Proxmox!@#$"
+      proxmox_target_node: "solarsystem01"
 
       # NFS storage
       nfs_storage_name: "NFS"
       nfs_mount_point: "/mnt/pve/{{ nfs_storage_name }}"
 
       # Proxmox user role config
-      iac_user: ""
-      iac_user_password: ""
+      iac_user: "terraform@pve"
+      iac_user_password: "Terraform!@#$"
       iac_role: "terraform-role"
       iac_role_permissions: "VM.Allocate VM.Clone VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Monitor VM.Audit VM.PowerMgmt Datastore.AllocateSpace Datastore.Audit SDN.Allocate SDN.Audit SDN.Use"
 
       # VM Template with cloud init image, config
-      cloud_init_ansible.builtin.template:
-        vm_id: ""
-        vm_template_name: ""
+      cloud_init_template:
+        vm_id: "900"
+        vm_template_name: "rocky8-cloud-init-template"
         vm_storage: "local-lvm"
-        vm_username: ""
-        vm_user_password: ""
+        vm_username: "devops"
+        vm_user_password: "devops"
 
       # auxiliar and temporary file
       user_token_output_file: "/tmp/terraform_user_token.txt"
@@ -77,88 +77,88 @@ all:
     #####################################################################
     ############# SINGLE VM: NFS
     nfs:
-      ansible_host:
-      ansible_user:
-      root_password:
-      vm_user:
-      vm_user_passwd:
+      ansible_host: 192.168.0.50
+      ansible_user: nfs
+      root_password: devops
+      vm_user: nfs
+      vm_user_passwd: devops
       nfs_folder: "/home/nfs/data"
 
       # values relative to VM in proxmox
-      proxmox_vm_id:
-      proxmox_cpu:
-      proxmox_memory:
-      proxmox_vm_name:
-      proxmox_vm_network_ip_suffix:
-      proxmox_vm_disk_size:
+      proxmox_vm_id: 300
+      proxmox_cpu: 2
+      proxmox_memory: 2048
+      proxmox_vm_name: "jupiter"
+      proxmox_vm_network_ip_suffix: 50
+      proxmox_vm_disk_size: "50G"
       proxmox_vm_tags: "nfs"
 
     ############# SINGLE VM: DNS
     dns:
-      ansible_host:
-      ansible_user:
-      root_password:
-      vm_user:
-      vm_user_passwd:
+      ansible_host: 192.168.0.51
+      ansible_user: pihole
+      root_password: devops
+      vm_user: pihole
+      vm_user_passwd: devops
 
       # values relative to VM in proxmox
-      proxmox_vm_id:
-      proxmox_cpu:
-      proxmox_memory:
-      proxmox_vm_name:
-      proxmox_vm_network_ip_suffix:
-      proxmox_vm_disk_size:
-      proxmox_vm_tags:
+      proxmox_vm_id: 301
+      proxmox_cpu: 2
+      proxmox_memory: 2048
+      proxmox_vm_name: "saturno"
+      proxmox_vm_network_ip_suffix: 51
+      proxmox_vm_disk_size: "20G"
+      proxmox_vm_tags: "dns"
 
       # External DNS (It can be Google DNS for example: 8.8.8.8)
       # This IP is only used in /etc/resolv.conf of DNS Server (Pihole in this case)
       external_dns_server: "8.8.8.8"
 
       # pihole admin password, in the browser
-      pihole_password:
+      pihole_password: admin
 
     ############# K8S CLUSTER: K8s Masters
     k8s-master:
-      ansible_host:
-      ansible_user:
-      root_password:
-      vm_user:
-      vm_user_passwd:
+      ansible_host: 192.168.0.60
+      ansible_user: k8s-master
+      root_password: devops
+      vm_user: k8s-master
+      vm_user_passwd: devops
 
       # Values relative to VM in proxmox
       # Just need to add these variables, in the first node.
-      proxmox_vm_id:
-      proxmox_cpu:
-      proxmox_vm_name: '["NAME_1", "NAME_2", "NAME_3"]'
-      proxmox_vm_network_ip_suffix:
-      proxmox_memory:
-      proxmox_vm_disk_size:
-      proxmox_vm_tags: "TAG_1,TAG_2"
+      proxmox_vm_id: 400
+      proxmox_cpu: 2
+      proxmox_vm_name: '["brahma", "shiva", "vishnu"]'
+      proxmox_vm_network_ip_suffix: 60
+      proxmox_memory: 5120
+      proxmox_vm_disk_size: "20G"
+      proxmox_vm_tags: "k8s,masters"
 
     ############# K8S CLUSTER: K8s Workers
     k8s-worker-1:
-      ansible_host:
-      ansible_user:
-      root_password:
-      vm_user:
-      vm_user_passwd:
+      ansible_host: 192.168.0.70
+      ansible_user: k8s-worker-1
+      root_password: devops
+      vm_user: k8s-worker-1
+      vm_user_passwd: devops
 
       # Values relative to VM in proxmox
       # Just need to add these variables, in the first node.
-      proxmox_vm_id:
-      proxmox_cpu:
-      proxmox_vm_name: '["NAME_1", "NAME_2", "NAME_3"]'
-      proxmox_vm_network_ip_suffix:
-      proxmox_memory:
-      proxmox_vm_disk_size:
-      proxmox_vm_tags: "TAG_1,TAG_2"
+      proxmox_vm_id: 500
+      proxmox_cpu: 2
+      proxmox_vm_name: '["ganesha", "krishna", "lakshmi"]'
+      proxmox_vm_network_ip_suffix: 70
+      proxmox_memory: 6144
+      proxmox_vm_disk_size: "20G"
+      proxmox_vm_tags: "k8s,workers"
 
     k8s-worker-2:
-      ansible_host:
-      ansible_user:
-      root_password:
-      vm_user:
-      vm_user_passwd:
+      ansible_host: 192.168.0.71
+      ansible_user: k8s-worker-2
+      root_password: devops
+      vm_user: k8s-worker-2
+      vm_user_passwd: devops
 
 
 #####################################################################

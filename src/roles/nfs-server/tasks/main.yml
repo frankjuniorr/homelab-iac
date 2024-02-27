@@ -1,0 +1,35 @@
+---
+- name: "Install NFS packages"
+  ansible.builtin.dnf:
+    name: nfs-utils
+    state: present
+
+- name: "Create 'data' folder which will be the NFS"
+  ansible.builtin.file:
+    path: "{{ nfs_folder }}"
+    state: directory
+    owner: "nobody"
+    group: "nobody"
+    mode: '0755'
+
+- name: "Configure NFS exports"
+  ansible.builtin.lineinfile:
+    path: /etc/exports
+    line: |
+      {{ nfs_folder }} *(rw,sync,no_subtree_check,no_root_squash)
+
+- name: "Start NFS service"
+  ansible.builtin.service:
+    name: nfs-server
+    state: started
+    enabled: yes
+
+- name: "Configure firewall"
+  command: firewall-cmd --permanent --add-service={{ item }}
+  loop:
+    - nfs
+    - mountd
+    - rpc-bind
+
+- name: "Reload firewall settings"
+  command: firewall-cmd --reload

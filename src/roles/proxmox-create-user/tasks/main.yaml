@@ -1,0 +1,34 @@
+---
+#  Check if user already exist in Proxmox
+- name: "Checking if User already exists"
+  ansible.builtin.shell: "pvesh get /access/users/{{ iac_user }}"
+  register: is_user_exists
+  failed_when: "'no such user' in is_user_exists.stdout"
+
+################### If user DON´T exist, create it ###################
+- name: "Creating Proxmox User"
+  ansible.builtin.shell: |
+    pveum role add {{ iac_role }} -privs "{{ iac_role_permissions }}"
+    pveum user add {{ iac_user }} --password {{ iac_user_password }}
+    pveum aclmod / -user {{ iac_user }} -role {{ iac_role }}
+    pveum user token add {{ iac_user }} terraform-token --privsep=0 > {{ user_token_output_file }}
+
+    awk 'NR==4 {print $4;}' {{ user_token_output_file }}
+    awk 'NR==8 {print $4;}' {{ user_token_output_file }}
+  register: proxmox_user_token_values
+  when: is_user_exists.rc != 0
+
+- name: "Bring user_token_file to localhost"
+  ansible.builtin.fetch:
+    src: "{{ user_token_output_file }}"
+    dest: "{{ user_token_output_file_localhost }}"
+    flat: yes
+  when: is_user_exists.rc != 0
+
+- name: "Delete temporary file: {{ user_token_output_file }}"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ user_token_output_file }}"
+  when: is_user_exists.rc != 0

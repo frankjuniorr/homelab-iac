@@ -1,0 +1,32 @@
+---
+- name: "Proxmox Destroy"
+  hosts: proxmox_nodes
+  gather_facts: no
+  become: yes
+
+  roles:
+    - role: proxmox-remove-nfs
+      tags: "destroy-infra"
+
+    - role: terraform-destroy-vms
+      tags: "destroy-infra"
+
+    - role: proxmox-reset
+      tags: "reset-proxmox"
+
+    - role: clean-local-files
+      tags: "reset-proxmox"
+
+##############################################
+# Desinstalando o k3s
+##############################################
+- name: "Uninstall o k3s"
+  hosts: k8s_cluster
+  become: true
+  gather_facts: no
+
+  roles:
+
+    - role: kubernetes-uninstall
+      tags:
+        - k3s-uninstall

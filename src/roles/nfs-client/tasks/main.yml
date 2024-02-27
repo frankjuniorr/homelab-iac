@@ -1,0 +1,14 @@
+---
+- name: "Install nfs-utils"
+  ansible.builtin.dnf:
+    name: nfs-utils
+    state: present
+  when: inventory_hostname != 'nfs'
+
+- name: "Mount NFS directory"
+  ansible.posix.mount:
+    src: "{{ hostvars['nfs']['ansible_host'] }}:/home/nfs/data"
+    path: "/mnt/nfs"
+    fstype: nfs
+    state: mounted
+  when: inventory_hostname != 'nfs'

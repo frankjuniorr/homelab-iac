@@ -1,5 +1,0 @@
----
-- name: "Install k3s on nodes"
-  shell: "{{ item }}"
-  loop:
-    - "{{ k3s_node_install_command }}"

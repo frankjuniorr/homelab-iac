@@ -1,0 +1,2 @@
+nameserver {{ hostvars['dns']['ansible_host'] if inventory_hostname != 'dns' else hostvars['dns']['external_dns_server'] }}
+

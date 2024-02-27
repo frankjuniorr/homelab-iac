@@ -1,0 +1,10 @@
+---
+- name: "Restart VM"
+  become: yes
+  ansible.builtin.reboot:
+    reboot_timeout: 50
+
+- name: "Wait for the VM to turn back on"
+  ansible.builtin.wait_for_connection:
+    delay: 5
+    timeout: 300

@@ -1,0 +1,8 @@
+---
+
+- name: "Identify uninstall script file"
+  ansible.builtin.set_fact:
+    k3s_uninstall_script: "{{ '/usr/local/bin/k3s-uninstall.sh' if inventory_hostname.startswith('k8s-master') else '/usr/local/bin/k3s-agent-uninstall.sh' }}"
+
+- name: "Run uninstall script"
+  ansible.builtin.shell: "bash {{ k3s_uninstall_script }}"

@@ -1,0 +1,154 @@
+---
+##############################################
+# Proxmox Init Configure
+##############################################
+- name: "Proxmox init-configure"
+  hosts: proxmox_nodes
+  gather_facts: no
+  become: yes
+
+  roles:
+    - role: proxmox-create-user
+      tags:
+        - proxmox-init
+
+    - role: proxmox-customize-rocky-linux-cloud-image
+      tags:
+        - proxmox-init
+
+    - role: proxmox-create-cloud-init-vm-template
+      tags:
+        - proxmox-init
+
+    - role: terraform-create-vms
+      tags:
+        - deploy-infra
+
+##############################################
+# Running in all hosts
+##############################################
+- name: "Creating the user and configuring ssh"
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - role: create-user
+      tags:
+        - deploy-infra
+
+    - role: create-ssh-config # atualiza o .ssh/config do meu client
+      tags:
+        - deploy-infra
+
+##############################################
+# Running only in 'nfs_server_hosts' group
+##############################################
+- name: "Configuring NFS Server"
+  hosts: nfs_server_hosts
+  become: yes
+  gather_facts: no
+
+  roles:
+    - role: nfs-server
+      tags:
+        - deploy-infra
+
+##############################################
+# Configuring NFS clients
+##############################################
+- name: "Configuring NFS on clients"
+  hosts: vms_all
+  become: yes
+  gather_facts: no
+
+  roles:
+    - role: nfs-client
+      tags:
+        - deploy-infra
+
+# #############################################
+# # Executing only in 'dns_server_hosts'
+# #############################################
+- name: "Configuring the DNS Server"
+  hosts: dns_server_hosts
+  remote_user: pihole
+  become: yes
+  gather_facts: no
+
+  roles:
+    - role: docker-install
+      tags:
+        - deploy-infra
+
+    - role: restart-machine
+      tags:
+        - deploy-infra
+
+    - role: dns-server
+      tags:
+        - deploy-infra
+
+##############################################
+# Configuring DNS on clients
+##############################################
+- name: "Configuring DNS on clients"
+  hosts: vms_all
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - role: dns-client
+      tags:
+        - deploy-infra
+
+##############################################
+# Opening 6443 port on cluster k8s Firewall
+##############################################
+- name: "Applying firewall settings to k8s cluster nodes"
+  hosts: k8s_cluster
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - role: kubernetes-firewall
+      tags:
+        - deploy-infra
+
+##############################################
+# Exporting NFS folder to Proxmox too
+##############################################
+- name: "Exporting NFS folder to Proxmox too"
+  hosts: proxmox
+  gather_facts: no
+  become: yes
+
+  roles:
+    - role: proxmox-create-nfs-storage
+      tags:
+        - deploy-infra
+
+##############################################
+# Instalando o k3s
+##############################################
+- name: "Installing k3s servers"
+  hosts: k8s_masters_nodes
+  become: true
+  gather_facts: no
+
+  roles:
+    - role: kubernetes-install-masters
+      tags:
+        - deploy-infra
+        - k3s-install
+
+- name: "Installing k3s nodes"
+  hosts: k8s_worker_nodes
+  become: true
+  gather_facts: no
+
+  roles:
+    - role: kubernetes-install-nodes
+      tags:
+        - deploy-infra
+        - k3s-install

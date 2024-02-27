@@ -1,8 +1,0 @@
----
-
-- name: "Identify uninstall script file"
-  set_fact:
-    k3s_uninstall_script: "{{ '/usr/local/bin/k3s-uninstall.sh' if inventory_hostname == 'k8s-master' else '/usr/local/bin/k3s-agent-uninstall.sh' }}"
-
-- name: "Run uninstall script"
-  shell: "bash {{ k3s_uninstall_script }}"

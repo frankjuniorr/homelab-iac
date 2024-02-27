@@ -1,0 +1,14 @@
+---
+
+- name: "Copy docker-compose.yaml"
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - {src: "docker-compose.yml.j2", dest: "/home/{{ vm_user }}/docker-compose.yml"}
+
+- name: Deploy docker-compose
+  ansible.builtin.shell: docker compose up -d
+  become: false
+  args:
+    chdir: "/home/{{ vm_user }}"

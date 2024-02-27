@@ -1,0 +1,21 @@
+---
+- name: "Defining specific variables"
+  ansible.builtin.set_fact:
+    host_ip: "{{ hostvars[inventory_hostname].ansible_host }}"
+    host_user: "{{ hostvars[inventory_hostname].vm_user | default(hostvars[inventory_hostname].ansible_user) }}"
+    ssh_config_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.ssh/config"
+
+- name: "Update file {{ ssh_config_file }}"
+  delegate_to: "localhost"
+  become: false
+  ansible.builtin.lineinfile:
+    path: "{{ ssh_config_file }}"
+    insertafter: EOF
+    line: |
+
+      # Host configurado automaticamente pelo script ansible
+      Host {{ inventory_hostname }}
+          StrictHostKeyChecking no
+          User {{ host_user }}
+          HostName {{ host_ip }}
+          IdentityFile {{ ssh_private_key_file }}

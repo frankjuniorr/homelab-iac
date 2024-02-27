@@ -1,0 +1,5 @@
+---
+- name: "Install k3s on nodes"
+  ansible.builtin.shell: "{{ item }}"
+  loop:
+    - "{{ k3s_node_install_command }}"
