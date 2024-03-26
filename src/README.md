@@ -21,7 +21,7 @@ So, a comment the content of this files:
 
 ### 2. [Improvment] Remove the pop-up "No Valid Subscription"
 
-![alt Proxmox pop-up no valid subscription](images/proxmox-no-valid-subscription.png "Proxmox pop-up no valid subscription")
+![alt Proxmox pop-up no valid subscription](../images/proxmox-no-valid-subscription.png "Proxmox pop-up no valid subscription")
 
 This modification is not necessary, is only improvment, to hide this pop-up in every login.
 So, just do this:
