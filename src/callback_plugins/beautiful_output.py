@@ -878,6 +878,18 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
                 the argument ``verbosity``, False otherwise.
         """
         result = {} if not result else result._result
+
+        # FRANK JUNIOR: FORÇA mostrar sempre stderr e exception
+        #######################################################
+        is_error = (
+            result.get("failed", False)
+            or result.get("unreachable", False)
+            or result.get("rc", 0) != 0
+        )
+        if is_error and ("exception" in result or "stderr" in result or "module_stderr" in result):
+            return True
+        #######################################################
+
         return (
             self._display.verbosity >= verbosity or "_ansible_verbose_always" in result
         ) and "_ansible_verbose_override" not in result
@@ -1127,7 +1139,7 @@ class CallbackModule(CallbackBase, FileSystemEventHandler):
             else:
                 item_name = u'JSON: "{0}"'.format(
                     stringtruncate(
-                        json.dumps(item_name, separators=(",", ":")), width=36
+                        json.dumps(item_name, separators=(",", ":")), width=0
                     )
                 )
         task_host = self._get_host_string(result, "@")

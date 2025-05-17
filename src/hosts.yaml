@@ -41,7 +41,7 @@ all:
       ansible_host: 192.168.0.115
       ansible_user: root
       root_password: "Proxmox!@#$"
-      proxmox_target_node: "solarsystem01"
+      proxmox_target_node: "hyperspace01"
 
       # NFS storage
       nfs_storage_name: "NFS"
@@ -51,7 +51,7 @@ all:
       iac_user: "terraform@pve"
       iac_user_password: "Terraform!@#$"
       iac_role: "terraform-role"
-      iac_role_permissions: "VM.Allocate VM.Clone VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Monitor VM.Audit VM.PowerMgmt Datastore.AllocateSpace Datastore.Audit SDN.Allocate SDN.Audit SDN.Use"
+      iac_role_permissions: "VM.Allocate VM.Clone VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Monitor VM.Audit VM.PowerMgmt Datastore.AllocateSpace Datastore.Audit SDN.Allocate SDN.Audit SDN.Use User.Modify"
 
       # VM Template with cloud init image, config
       cloud_init_template:
@@ -68,8 +68,8 @@ all:
 
       # Cloud init image config
       config_cloud_image_directory: "/root/config-cloud-image"
-      rocky_linux_cloud_image_url: "https://download.rockylinux.org/pub/rocky/8/images/x86_64/Rocky-8-GenericCloud-Base.latest.x86_64.qcow2"
-      rocky_linux_cloud_image_file: "/var/lib/vz/images/rocky8.qcow2"
+      rocky_linux_cloud_image_url: "https://download.rockylinux.org/pub/rocky/9.5/images/x86_64/Rocky-9-GenericCloud-Base.latest.x86_64.qcow2"
+      rocky_linux_cloud_image_file: "/var/lib/vz/images/rocky9.qcow2"
       rocky_linux_cloud_image_root_password: "RockyLinux"
 
     #####################################################################

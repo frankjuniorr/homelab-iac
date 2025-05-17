@@ -40,8 +40,9 @@
   ansible.builtin.shell: "{{ item }}"
   loop:
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --timezone \"America/Recife\""
-    # - "virt-customize -a {{ rocky_linux_cloud_image_file }} --update"
-    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --install qemu-guest-agent,nano,vim,wget,epel-release,firewalld,figlet"
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --update"
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --install epel-release"
+    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --install qemu-guest-agent,nano,vim,wget,firewalld,figlet"
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl enable qemu-guest-agent'"
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl unmask firewalld'"
     - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl start firewalld'"
