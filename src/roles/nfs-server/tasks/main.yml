@@ -1,8 +1,6 @@
 ---
 - name: "Install NFS packages"
-  ansible.builtin.dnf:
-    name: nfs-utils
-    state: present
+  ansible.builtin.raw: "dnf install -y nfs-utils"
 
 - name: "Create 'data' folder which will be the NFS"
   ansible.builtin.file:

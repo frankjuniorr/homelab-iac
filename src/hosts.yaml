@@ -9,6 +9,8 @@ all:
     ssh_public_key_file: "/home/frank/.ssh/id_rsa_homelab.pub"
     ssh_private_key_file: "/home/frank/.ssh/id_rsa_homelab"
 
+    network_gateway: "192.168.0.1"
+
     ########################### K3s ###########################
     # k3s token, used by installation on master and joins nodes
     k3s_token: '@Jg_6_Ex6.PMicZRzym8fHTUgTM*@C'
@@ -47,12 +49,6 @@ all:
       nfs_storage_name: "NFS"
       nfs_mount_point: "/mnt/pve/{{ nfs_storage_name }}"
 
-      # Proxmox user role config
-      iac_user: "terraform@pve"
-      iac_user_password: "Terraform!@#$"
-      iac_role: "terraform-role"
-      iac_role_permissions: "VM.Allocate VM.Clone VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Monitor VM.Audit VM.PowerMgmt Datastore.AllocateSpace Datastore.Audit SDN.Allocate SDN.Audit SDN.Use User.Modify"
-
       # VM Template with cloud init image, config
       cloud_init_template:
         vm_id: "900"
@@ -61,15 +57,10 @@ all:
         vm_username: "devops"
         vm_user_password: "devops"
 
-      # auxiliar and temporary file
-      user_token_output_file: "/tmp/terraform_user_token.txt"
-      # local copy of the file for future reference
-      user_token_output_file_localhost: "{{ playbook_dir }}/../config-files/my-configs/{{ user_token_output_file | basename }}"
-
       # Cloud init image config
       config_cloud_image_directory: "/root/config-cloud-image"
-      rocky_linux_cloud_image_url: "https://download.rockylinux.org/pub/rocky/9.5/images/x86_64/Rocky-9-GenericCloud-Base.latest.x86_64.qcow2"
-      rocky_linux_cloud_image_file: "/var/lib/vz/images/rocky9.qcow2"
+      rocky_linux_cloud_image_url: "https://download.rockylinux.org/pub/rocky/8/images/x86_64/Rocky-8-GenericCloud-Base.latest.x86_64.qcow2"
+      rocky_linux_cloud_image_file: "/var/lib/vz/images/rocky8.qcow2"
       rocky_linux_cloud_image_root_password: "RockyLinux"
 
     #####################################################################
@@ -89,9 +80,10 @@ all:
       proxmox_cpu: 2
       proxmox_memory: 2048
       proxmox_vm_name: "jupiter"
-      proxmox_vm_network_ip_suffix: 50
       proxmox_vm_disk_size: "50G"
       proxmox_vm_tags: "nfs"
+
+      ansible_python_interpreter: /usr/bin/python3.11
 
     ############# SINGLE VM: DNS
     dns:
@@ -106,7 +98,6 @@ all:
       proxmox_cpu: 2
       proxmox_memory: 2048
       proxmox_vm_name: "saturno"
-      proxmox_vm_network_ip_suffix: 51
       proxmox_vm_disk_size: "20G"
       proxmox_vm_tags: "dns"
 
@@ -116,6 +107,8 @@ all:
 
       # pihole admin password, in the browser
       pihole_password: admin
+
+      ansible_python_interpreter: /usr/bin/python3.11
 
     ############# K8S CLUSTER: K8s Masters
     k8s-master:
@@ -129,11 +122,13 @@ all:
       # Just need to add these variables, in the first node.
       proxmox_vm_id: 400
       proxmox_cpu: 2
-      proxmox_vm_name: '["brahma", "shiva", "vishnu"]'
-      proxmox_vm_network_ip_suffix: 60
+      # proxmox_vm_name: '["brahma", "shiva", "vishnu"]'
+      proxmox_vm_name: "brahma"
       proxmox_memory: 5120
       proxmox_vm_disk_size: "20G"
       proxmox_vm_tags: "k8s,masters"
+
+      ansible_python_interpreter: /usr/bin/python3.11
 
     ############# K8S CLUSTER: K8s Workers
     k8s-worker-1:
@@ -147,11 +142,13 @@ all:
       # Just need to add these variables, in the first node.
       proxmox_vm_id: 500
       proxmox_cpu: 2
-      proxmox_vm_name: '["ganesha", "krishna", "lakshmi"]'
-      proxmox_vm_network_ip_suffix: 70
+      # proxmox_vm_name: '["ganesha", "krishna", "lakshmi"]'
+      proxmox_vm_name: "ganesha"
       proxmox_memory: 6144
       proxmox_vm_disk_size: "20G"
       proxmox_vm_tags: "k8s,workers"
+
+      ansible_python_interpreter: /usr/bin/python3.11
 
     k8s-worker-2:
       ansible_host: 192.168.0.71
@@ -159,6 +156,15 @@ all:
       root_password: devops
       vm_user: k8s-worker-2
       vm_user_passwd: devops
+
+      proxmox_vm_name: "krishna"
+      proxmox_vm_id: 501
+      proxmox_cpu: 2
+      proxmox_memory: 6144
+      proxmox_vm_disk_size: "20G"
+      proxmox_vm_tags: "k8s,workers"
+
+      ansible_python_interpreter: /usr/bin/python3.11
 
 
 #####################################################################

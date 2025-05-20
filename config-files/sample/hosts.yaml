@@ -61,11 +61,6 @@ all:
         vm_username: ""
         vm_user_password: ""
 
-      # auxiliar and temporary file
-      user_token_output_file: "/tmp/terraform_user_token.txt"
-      # local copy of the file for future reference
-      user_token_output_file_localhost: "{{ playbook_dir }}/../config-files/my-configs/{{ user_token_output_file | basename }}"
-
       # Cloud init image config
       config_cloud_image_directory: "/root/config-cloud-image"
       rocky_linux_cloud_image_url: "https://download.rockylinux.org/pub/rocky/8/images/x86_64/Rocky-8-GenericCloud-Base.latest.x86_64.qcow2"

@@ -1,5 +1,33 @@
 ---
 ##################################################################
+# Destroy VMs
+##################################################################
+- name: "Check if VM exists"
+  ansible.builtin.command: "qm status {{ hostvars[item].proxmox_vm_id }}"
+  register: vm_check
+  failed_when: false
+  changed_when: false
+  loop: "{{ groups['vms_all'] }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+
+- name: "Build list of existing VMs"
+  ansible.builtin.set_fact:
+    existing_vms: >-
+      {{
+        existing_vms | default([]) +
+        [item.item] if item.rc == 0 else existing_vms | default([])
+      }}
+  loop: "{{ vm_check.results }}"
+
+- name: "Destroy VM if exists"
+  ansible.builtin.shell: |
+    qm stop {{ hostvars[item].proxmox_vm_id }}
+    sleep 5
+    qm destroy {{ hostvars[item].proxmox_vm_id }} --purge
+  loop: "{{ existing_vms }}"
+
+##################################################################
 # Remove VM Template
 ##################################################################
 - name: "Check for locked VMs"
@@ -19,19 +47,6 @@
   ignore_errors: yes
   register: vm_template_status
   failed_when: "'unable to find configuration file for VM' in vm_template_status.stderr and 'qm destroy' in item"
-
-##################################################################
-# Remove User
-##################################################################
-- name: "Remove User"
-  ansible.builtin.shell: "{{ item }}"
-  loop:
-    - "pveum user delete {{ iac_user }}"
-    - "pveum role del {{ iac_role }}"
-  register: delete_role_output
-  ignore_errors: yes
-  failed_when: "'delete role failed' in delete_role_output.stderr and ('pveum role del' in item and 'role' not in item)"
-
 
 ##################################################################
 # Remove Temporary folder

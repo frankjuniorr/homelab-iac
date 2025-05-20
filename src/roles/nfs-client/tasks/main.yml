@@ -1,8 +1,6 @@
 ---
 - name: "Install nfs-utils"
-  ansible.builtin.dnf:
-    name: nfs-utils
-    state: present
+  ansible.builtin.raw: "dnf install -y nfs-utils"
   when: inventory_hostname != 'nfs'
 
 - name: "Mount NFS directory"

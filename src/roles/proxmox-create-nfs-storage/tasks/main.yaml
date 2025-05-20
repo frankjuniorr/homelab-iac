@@ -13,6 +13,13 @@
     nfs_folder: "{{ nfs_folder_output.stdout_lines[0] }}"
   when: nfs_folder_output.stdout_lines | length > 0
 
+- name: "Check if NFS storage '{{ nfs_storage_name }}' already exists"
+  ansible.builtin.command: pvesm status
+  register: pvesm_status
+  changed_when: false
+
 - name: "Create NFS Storage"
   ansible.builtin.shell: pvesm add nfs "{{ nfs_storage_name }}" --server "{{ nfs_server_ip }}" --export "{{ nfs_folder }}"
-  when: nfs_folder is defined
+  when: >
+    nfs_folder is defined and
+    nfs_storage_name not in pvesm_status.stdout

@@ -4,14 +4,10 @@
 ##############################################
 - name: "Proxmox init-configure"
   hosts: proxmox_nodes
-  gather_facts: no
-  become: yes
+  gather_facts: false
+  become: true
 
   roles:
-    - role: proxmox-create-user
-      tags:
-        - proxmox-init
-
     - role: proxmox-customize-rocky-linux-cloud-image
       tags:
         - proxmox-init
@@ -20,7 +16,7 @@
       tags:
         - proxmox-init
 
-    - role: terraform-create-vms
+    - role: proxmox-create-vms
       tags:
         - deploy-infra
 
@@ -29,25 +25,25 @@
 ##############################################
 - name: "Creating the user and configuring ssh"
   hosts: all
-  become: yes
-  gather_facts: yes
+  become: true
+  gather_facts: false
 
   roles:
-    - role: create-user
+    - role: configure-vm-user
       tags:
         - deploy-infra
 
-    - role: create-ssh-config # atualiza o .ssh/config do meu client
-      tags:
-        - deploy-infra
+    # - role: create-ssh-config # atualiza o .ssh/config do meu client
+    #   tags:
+    #     - deploy-infra
 
 ##############################################
 # Running only in 'nfs_server_hosts' group
 ##############################################
 - name: "Configuring NFS Server"
   hosts: nfs_server_hosts
-  become: yes
-  gather_facts: no
+  become: true
+  gather_facts: false
 
   roles:
     - role: nfs-server
@@ -59,8 +55,8 @@
 ##############################################
 - name: "Configuring NFS on clients"
   hosts: vms_all
-  become: yes
-  gather_facts: no
+  become: true
+  gather_facts: false
 
   roles:
     - role: nfs-client
@@ -73,8 +69,8 @@
 - name: "Configuring the DNS Server"
   hosts: dns_server_hosts
   remote_user: pihole
-  become: yes
-  gather_facts: no
+  become: true
+  gather_facts: false
 
   roles:
     - role: docker-install
@@ -94,8 +90,8 @@
 ##############################################
 - name: "Configuring DNS on clients"
   hosts: vms_all
-  become: yes
-  gather_facts: yes
+  become: true
+  gather_facts: true
 
   roles:
     - role: dns-client
@@ -107,8 +103,8 @@
 ##############################################
 - name: "Applying firewall settings to k8s cluster nodes"
   hosts: k8s_cluster
-  become: yes
-  gather_facts: yes
+  become: true
+  gather_facts: true
 
   roles:
     - role: kubernetes-firewall
@@ -120,8 +116,8 @@
 ##############################################
 - name: "Exporting NFS folder to Proxmox too"
   hosts: proxmox
-  gather_facts: no
-  become: yes
+  gather_facts: false
+  become: true
 
   roles:
     - role: proxmox-create-nfs-storage
@@ -134,7 +130,7 @@
 - name: "Installing k3s servers"
   hosts: k8s_masters_nodes
   become: true
-  gather_facts: no
+  gather_facts: false
 
   roles:
     - role: kubernetes-install-masters
@@ -145,7 +141,7 @@
 - name: "Installing k3s nodes"
   hosts: k8s_worker_nodes
   become: true
-  gather_facts: no
+  gather_facts: false
 
   roles:
     - role: kubernetes-install-nodes

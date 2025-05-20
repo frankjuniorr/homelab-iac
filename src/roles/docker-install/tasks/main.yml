@@ -1,13 +1,17 @@
 ---
 - name: "Check for package updates"
-  ansible.builtin.dnf:
-    update_cache: yes
+  ansible.builtin.shell: dnf update -y
 
 - name: "Add repository"
   ansible.builtin.shell: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 
 - name: "Install Docker packages"
-  ansible.builtin.shell: dnf -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  ansible.builtin.shell: "dnf -y install {{ item }}"
+  loop:
+    - "docker-ce"
+    - "docker-ce-cli"
+    - "containerd.io"
+    - "docker-compose-plugin"
 
 - name: "Start Docker service"
   ansible.builtin.service:

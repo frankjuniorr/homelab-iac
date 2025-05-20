@@ -8,14 +8,11 @@
     - role: proxmox-remove-nfs
       tags: "destroy-infra"
 
-    - role: terraform-destroy-vms
-      tags: "destroy-infra"
-
     - role: proxmox-reset
       tags: "reset-proxmox"
 
-    - role: clean-local-files
-      tags: "reset-proxmox"
+    # - role: clean-local-files
+    #   tags: "reset-proxmox"
 
 ##############################################
 # Desinstalando o k3s

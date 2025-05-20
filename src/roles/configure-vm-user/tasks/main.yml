@@ -1,5 +1,13 @@
 ---
 
+- name: "install Python3 on Vms"
+  become: true
+  ansible.builtin.raw: "dnf install -y {{ item }}"
+  loop:
+    - "python3.11"
+    - "python3-dnf"
+  when: "inventory_hostname != 'proxmox'"
+
 - name: "Set user and password variables"
   ansible.builtin.set_fact:
     vm_user: "{{ hostvars[inventory_hostname].vm_user }}"

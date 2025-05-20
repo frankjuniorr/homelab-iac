@@ -1,0 +1,51 @@
+---
+- name: "Check if VMs already exists"
+  ansible.builtin.command: "qm status {{ hostvars[item].proxmox_vm_id }}"
+  register: vm_status_result
+  ignore_errors: true
+  loop: "{{ groups['vms_all'] }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+
+- name: "Clone VMs from template"
+  ansible.builtin.shell: |
+    qm clone {{ cloud_init_template.vm_id }} {{ hostvars[item].proxmox_vm_id }} \
+      --name {{ hostvars[item].proxmox_vm_name }} \
+      --full true \
+      --storage {{ cloud_init_template.vm_storage }}
+  loop: "{{ groups['vms_all'] }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+  when: vm_status_result is failed
+
+- name: "Configure VMs"
+  ansible.builtin.shell: |
+    qm set {{ hostvars[item].proxmox_vm_id }} \
+      --cores {{ hostvars[item].proxmox_cpu }} \
+      --memory {{ hostvars[item].proxmox_memory }} \
+      --ciuser {{ hostvars[item].vm_user }} \
+      --cipassword {{ hostvars[item].vm_user_passwd }} \
+      --ipconfig0 ip={{ hostvars[item].ansible_host }}/24,gw={{ hostvars[item].network_gateway }} \
+      --scsihw virtio-scsi-pci \
+      --onboot 1 \
+      --tags {{ hostvars[item].proxmox_vm_tags }}
+  loop: "{{ groups['vms_all'] }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+
+- name: "Check status of each VM"
+  ansible.builtin.command: "qm status {{ hostvars[item].proxmox_vm_id }}"
+  register: vm_status
+  failed_when: false
+  changed_when: false
+  loop: "{{ groups['vms_all'] }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+
+- name: "Start the VMs"
+  ansible.builtin.shell: |
+    qm start {{ hostvars[(item.item)].proxmox_vm_id }}
+  when: "'stopped' in item.stdout"
+  loop: "{{ vm_status.results }}"
+  loop_control:
+    label: "{{ hostvars[(item.item)].proxmox_vm_name }}"
