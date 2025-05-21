@@ -4,11 +4,13 @@ SHELL := /bin/bash
 # Variables
 MY_CONFIG_FILES = "config-files/my-configs"
 
+
 ##############################################################################################################
 # INITIAL CONFIGURATION
-install-dependencies:
-	pip3 install watchdog
-	ansible-galaxy install -r src/requirements.yml
+init:
+	@cd scripts && ./check_dependencies.sh
+	@ansible-galaxy install -r src/requirements.yml > /dev/null
+	@cd src && ansible-playbook --ask-become-pass -i hosts.yaml configure-ssh.yaml
 
 
 # Command to copy config-files/sample folder, to you fill yours settings

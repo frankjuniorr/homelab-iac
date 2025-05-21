@@ -1,0 +1,76 @@
+---
+# Set some variables
+#######################################################################
+- name: "Defining specific variables"
+  delegate_to: "localhost"
+  become: false
+  ansible.builtin.set_fact:
+    home_folder: "{{ lookup('ansible.builtin.env', 'HOME') }}"
+
+# creating ssh folders
+#######################################################################
+- name: "Ensure ~/.ssh directories exists with correct permissions"
+  delegate_to: "localhost"
+  become: false
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0700'
+  loop:
+    - "{{ home_folder }}/.ssh"
+    - "{{ home_folder }}/.ssh/servers"
+
+# get ssh keys from 1Password
+#######################################################################
+- name: "Get public key from 1Password"
+  delegate_to: "localhost"
+  become: false
+  ansible.builtin.command: op read "op://Homelab/Homelab SSH/public key"
+  register: public_key
+
+- name: "Get private key from 1Password"
+  delegate_to: "localhost"
+  become: false
+  ansible.builtin.command: op read "op://Homelab/Homelab SSH/private key"
+  register: private_key
+
+# Creating ssh keys on localhost
+#######################################################################
+- name: "Write ssh keys to ~/.ssh"
+  delegate_to: "localhost"
+  become: false
+  no_log: true
+  ansible.builtin.copy:
+    content: "{{ item.content }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.permission }}"
+  loop:
+    - { content: "{{ public_key.stdout }}", dest: "{{ ssh_public_key_file }}", permission: '0644' }
+    - { content: "{{ private_key.stdout }}", dest: "{{ ssh_private_key_file }}", permission: '0600' }
+
+- name: Copy SSH config file
+  delegate_to: "localhost"
+  become: false
+  ansible.builtin.copy:
+    src: config
+    dest: "{{ home_folder }}/.ssh/config"
+    mode: '0644'
+
+- name: "Generate SSH config file for Homelab hosts"
+  delegate_to: localhost
+  ansible.builtin.template:
+    src: homelab.conf.j2
+    dest: "{{ home_folder }}/.ssh/servers/homelab.conf"
+    mode: '0644'
+
+# Create /etc/hosts file
+#######################################################################
+- name: "Generate /etc/hosts from inventory"
+  delegate_to: "localhost"
+  become: true
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: '0644'

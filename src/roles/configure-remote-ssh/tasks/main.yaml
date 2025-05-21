@@ -1,0 +1,7 @@
+---
+- name: "Ensure SSH key is on remote host"
+  ssh_copy_key:
+    host: "{{ ansible_host }}"
+    user: "{{ ansible_user }}"
+    password: "{{ root_password }}"
+    public_key_file: "{{ ssh_public_key_file }}"

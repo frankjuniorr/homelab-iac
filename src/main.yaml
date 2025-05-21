@@ -33,10 +33,6 @@
       tags:
         - deploy-infra
 
-    # - role: create-ssh-config # atualiza o .ssh/config do meu client
-    #   tags:
-    #     - deploy-infra
-
 ##############################################
 # Running only in 'nfs_server_hosts' group
 ##############################################

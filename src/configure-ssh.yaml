@@ -1,0 +1,23 @@
+---
+##############################################
+# Running on localhost
+##############################################
+- name: "Configure SSH"
+  hosts: localhost
+  gather_facts: false
+  become: false
+
+  roles:
+    - role: configure-local-ssh
+
+##############################################
+# Running on Proxmox nodes
+##############################################
+- name: "Ensure SSH key is on all Proxmox hosts"
+  hosts: proxmox_nodes
+  connection: local
+  gather_facts: false
+  become: false
+
+  roles:
+    - role: configure-remote-ssh
