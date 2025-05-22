@@ -9,7 +9,7 @@ MY_CONFIG_FILES = "config-files/my-configs"
 # INITIAL CONFIGURATION
 init:
 	@cd scripts && ./check_dependencies.sh
-	@ansible-galaxy install -r src/requirements.yml > /dev/null
+	@ansible-galaxy install -r src/requirements.yml
 	@cd src && ansible-playbook --ask-become-pass -i hosts.yaml configure-ssh.yaml
 
 

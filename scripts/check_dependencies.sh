@@ -17,7 +17,7 @@ function python_ubuntu_install(){
 
 function python_arch_install(){
     local lib="$1"
-    sudo pacman -S --needed --noconfirm python3-${lib}
+    sudo pacman -S --needed --noconfirm python-${lib}
 }
 
 #########################################################################
@@ -36,8 +36,10 @@ os_commands=(
 )
 
 python_libs=(
-    "watchdog"   # Used by "beatiful_output.py"
-    "paramiko"   # Used by custom ansible library in "src/roles/configure-remote-ssh/library/ssh_copy_key.py"
+    "watchdog"    # Used by "beatiful_output.py"
+    "paramiko"    # Used by custom ansible library in "src/roles/configure-remote-ssh/library/ssh_copy_key.py"
+    "proxmoxer"   # Used by ansible-collection "community.general.proxmox_kvm"
+    "requests"    # Used by ansible-collection "community.general.proxmox_kvm"
 )
 
 for cmd in "${os_commands[@]}"; do
