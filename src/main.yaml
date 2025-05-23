@@ -59,9 +59,9 @@
       tags:
         - deploy-infra
 
-# #############################################
-# # Executing only in 'dns_server_hosts'
-# #############################################
+#############################################
+# Executing only in 'dns_server_hosts'
+#############################################
 - name: "Configuring the DNS Server"
   hosts: dns_server_hosts
   remote_user: pihole

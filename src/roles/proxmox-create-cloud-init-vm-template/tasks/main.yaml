@@ -1,19 +1,23 @@
 ---
 
+- name: "Create a temporary directory in root's home"
+  ansible.builtin.file:
+    path: "{{ config_cloud_image_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: "Define ssh_public_key_file variable"
   ansible.builtin.set_fact:
-    vm_ssh_public_key: "{{ ssh_public_key_file }}"
+    vm_ssh_public_key: "{{ config_cloud_image_directory }}/id_rsa_homelab.pub"
 
 - name: "Copy ssh public key to remote server"
   ansible.builtin.copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
   loop:
-    - { src: "{{ vm_ssh_public_key }}", dest: "{{ config_cloud_image_directory }}/id_rsa_homelab.pub" }
-
-- name: "Define ssh_public_key_file variable"
-  ansible.builtin.set_fact:
-    vm_ssh_public_key: "{{ config_cloud_image_directory }}/id_rsa_homelab.pub"
+    - { src: "{{ ssh_public_key_file }}", dest: "{{ vm_ssh_public_key }}" }
 
 - name: "Check if VM already exist"
   ansible.builtin.shell: qm list | grep -q "{{ cloud_init_template.vm_id }}"
@@ -41,24 +45,26 @@
 # --serial0 socket --vga serial0: This command is necessary to be run to ensure the Proxmox GUI has console access to the VM. If not, you will likely not be able to see anything through the console page.
 # qm ansible.builtin.template: Transform in Vm Template
 - name: "Create Cloud Init VM Template"
-  ansible.builtin.shell: "{{ item }}"
-  loop:
-    - "qm create {{ cloud_init_template.vm_id }} --name {{ cloud_init_template.vm_template_name }} --memory 1024 --cores 1 --net0 virtio,bridge=vmbr0"
-    - "qm set {{ cloud_init_template.vm_id }} --tags template"
-    - "qm disk import {{ cloud_init_template.vm_id }} {{ rocky_linux_cloud_image_file }} {{ cloud_init_template.vm_storage }} --format qcow2"
-    - "qm set {{ cloud_init_template.vm_id }} --scsihw virtio-scsi-pci"
-    - "qm set {{ cloud_init_template.vm_id }} --scsi0  {{ cloud_init_template.vm_storage }}:vm-{{ cloud_init_template.vm_id }}-disk-0,discard=on,ssd=on"
-    - "qm set {{ cloud_init_template.vm_id }} --boot c"
-    - "qm set {{ cloud_init_template.vm_id }} --bootdisk scsi0"
-    - "qm set {{ cloud_init_template.vm_id }} --ide2 {{ cloud_init_template.vm_storage }}:cloudinit"
-    - "qm set {{ cloud_init_template.vm_id }} --agent 1"
-    - "qm set {{ cloud_init_template.vm_id }} --sshkey '{{ vm_ssh_public_key }}'"
-    - "qm set {{ cloud_init_template.vm_id }} --ciuser {{ cloud_init_template.vm_username }}"
-    - "qm set {{ cloud_init_template.vm_id }} --cipassword {{ cloud_init_template.vm_user_password }}"
-    - "qm set {{ cloud_init_template.vm_id }} --citype nocloud"
-    - "qm set {{ cloud_init_template.vm_id }} --ipconfig0 ip=dhcp"
-    - "qm set {{ cloud_init_template.vm_id }} --serial0 socket --vga serial0"
-    - "qm template {{ cloud_init_template.vm_id }}"
+  ansible.builtin.shell: |
+    qm create {{ cloud_init_template.vm_id }} --name {{ cloud_init_template.vm_template_name }} --memory 1024 --cores 1 --net0 virtio,bridge=vmbr0
+    qm disk import {{ cloud_init_template.vm_id }} {{ rocky_linux_cloud_image_file }} {{ cloud_init_template.vm_storage }} --format qcow2
+
+    qm set {{ cloud_init_template.vm_id }} \
+      --tags template \
+      --scsihw virtio-scsi-pci \
+      --scsi0  {{ cloud_init_template.vm_storage }}:vm-{{ cloud_init_template.vm_id }}-disk-0,discard=on,ssd=on \
+      --boot c \
+      --bootdisk scsi0 \
+      --ide2 {{ cloud_init_template.vm_storage }}:cloudinit \
+      --agent 1 \
+      --sshkey {{ vm_ssh_public_key }} \
+      --ciuser {{ cloud_init_template.vm_username }} \
+      --cipassword {{ cloud_init_template.vm_user_password }} \
+      --citype nocloud \
+      --ipconfig0 ip=dhcp \
+      --serial0 socket --vga serial0
+
+      qm template {{ cloud_init_template.vm_id }}
   when: vm_exists.rc != 0
 
 - name: "Delete temporary folder"

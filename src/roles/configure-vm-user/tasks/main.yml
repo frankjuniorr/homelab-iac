@@ -1,5 +1,9 @@
 ---
 
+- name: "Pause to wait VMs to be ready"
+  ansible.builtin.pause:
+    seconds: 20
+
 - name: "install Python3 on Vms"
   become: true
   ansible.builtin.raw: "dnf install -y {{ item }}"

@@ -51,11 +51,11 @@
 ##################################################################
 # Remove Temporary folder
 ##################################################################
-- name: "Delete temporary folder and image file"
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
-  loop:
-    - "{{ config_cloud_image_directory }}"
+# - name: "Delete temporary folder and image file"
+#   ansible.builtin.file:
+#     path: "{{ item }}"
+#     state: absent
+#   loop:
+#     - "{{ config_cloud_image_directory }}"
     # - "{{ rocky_linux_cloud_image_file }}"
     # - "{{ rocky_linux_cloud_image_file_sha }}"
