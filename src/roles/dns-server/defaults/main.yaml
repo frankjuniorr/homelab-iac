@@ -1,0 +1,3 @@
+adguard_url: https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.107.72/AdGuardHome_linux_amd64.tar.gz
+adguard_archive: /tmp/AdGuardHome_linux_amd64.tar.gz
+adguard_extract_dir: /tmp

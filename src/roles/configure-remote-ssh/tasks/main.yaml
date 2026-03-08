@@ -1,5 +1,7 @@
 ---
 - name: "Ensure SSH key is on remote host"
+  delegate_to: localhost
+  become: false
   ssh_copy_key:
     host: "{{ ansible_host }}"
     user: "{{ ansible_user }}"

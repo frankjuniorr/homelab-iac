@@ -66,8 +66,3 @@
 
       qm template {{ cloud_init_template.vm_id }}
   when: vm_exists.rc != 0
-
-- name: "Delete temporary folder"
-  ansible.builtin.file:
-    path: "{{ config_cloud_image_directory }}"
-    state: absent

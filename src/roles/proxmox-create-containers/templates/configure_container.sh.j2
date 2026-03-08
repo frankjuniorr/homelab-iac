@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+# Cria o usuário
+useradd -m -s /bin/bash {{ vm_user }}
+echo "{{ vm_user }}:{{ vm_user_passwd }}" | chpasswd
+
+# Atualiza e instala pacotes
+dnf update -y
+dnf install -y epel-release
+dnf install -y openssh-server figlet cockpit python3.11 python3-dnf unzip tar
+
+# Habilita serviços
+systemctl enable sshd
+systemctl start sshd
+systemctl enable --now cockpit.socket
+
+# Configura SSH
+test ! -d /home/{{ vm_user }}/.ssh && mkdir -p /home/{{ vm_user }}/.ssh
+chmod 700 /home/{{ vm_user }}/.ssh
+touch /home/{{ vm_user }}/.ssh/authorized_keys
+chmod 600 /home/{{ vm_user }}/.ssh/authorized_keys
+chown -R {{ vm_user }}:{{ vm_user }} /home/{{ vm_user }}/.ssh
+
+# Permite sudo sem senha
+usermod -aG wheel {{ vm_user }}
+echo "%wheel ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
+
+# Banner
+figlet -k $(hostname) >/etc/motd.d/10-welcome.motd

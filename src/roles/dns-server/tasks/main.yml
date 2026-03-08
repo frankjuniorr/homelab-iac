@@ -1,14 +1,20 @@
 ---
+- name: Download AdGuardHome archive
+  ansible.builtin.get_url:
+    url: "{{ adguard_url }}"
+    dest: "{{ adguard_archive }}"
+    mode: "0644"
 
-- name: "Copy docker-compose.yaml"
-  ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-  loop:
-    - {src: "docker-compose.yml.j2", dest: "/home/{{ vm_user }}/docker-compose.yml"}
+- name: Extract AdGuardHome
+  ansible.builtin.unarchive:
+    src: "{{ adguard_archive }}"
+    dest: "{{ adguard_extract_dir }}"
+    remote_src: true
+    creates: "/tmp/AdGuardHome/AdGuardHome"
 
-- name: Deploy docker-compose
-  ansible.builtin.shell: docker compose up -d
-  become: false
+- name: Run AdGuardHome installer
+  ansible.builtin.command: ./AdGuardHome -s install
   args:
-    chdir: "/home/{{ vm_user }}"
+    chdir: /tmp/AdGuardHome
+  register: adguard_install
+  changed_when: "'installed' in adguard_install.stdout or adguard_install.rc == 0"

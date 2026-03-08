@@ -1,7 +1,7 @@
 ########################## My files ##########################
 
 # Main file with all variables
-src/hosts.yaml
+/src/hosts.yaml
 
 # Terraform code
 src/roles/terraform-create-vms/files.terraform.lock.hcl
@@ -222,5 +222,3 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
-
-# End of https://www.toptal.com/developers/gitignore/api/python,terraform
