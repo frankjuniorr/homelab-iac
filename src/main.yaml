@@ -9,21 +9,22 @@
 
   roles:
     
-    # - role: proxmox-customize-rocky-linux-cloud-image
-    #   tags:
-    #     - proxmox-init
+    - role: proxmox-customize-rocky-linux-cloud-image
+      tags:
+        - proxmox-init
 
-    # - role: proxmox-create-cloud-init-vm-template
-    #   tags:
-    #     - proxmox-init
-
-    # - role: proxmox-create-vms
-    #   tags:
-    #     - proxmox-init
+    - role: proxmox-create-cloud-init-vm-template
+      tags:
+        - proxmox-init
 
     - role: proxmox-create-containers
       tags:
         - proxmox-init
+
+    - role: proxmox-create-vms
+      tags:
+        - proxmox-init
+
 
 ##############################################
 # Running in all hosts
@@ -53,14 +54,6 @@
   gather_facts: false
 
   roles:
-
-    # - role: configure-remote-ssh
-    #   tags:
-    #     - deploy-infra
-
-    # - role: docker-install
-    #   tags:
-    #     - deploy-infra
 
 #     - role: restart-machine
 #       tags:
