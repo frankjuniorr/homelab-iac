@@ -5,8 +5,8 @@
   become: yes
 
   roles:
-    - role: proxmox-remove-nfs
-      tags: "destroy-infra"
+    # - role: proxmox-remove-nfs
+    #   tags: "destroy-infra"
 
     - role: proxmox-reset
       tags: "reset-proxmox"

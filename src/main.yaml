@@ -8,6 +8,7 @@
   become: true
 
   roles:
+    
     # - role: proxmox-customize-rocky-linux-cloud-image
     #   tags:
     #     - proxmox-init
@@ -32,19 +33,14 @@
   become: true
   gather_facts: false
 
-  tasks:
-  - name: Reset known_hosts entry
-    become: false
-    command: ssh-keygen -R {{ ansible_host }}
-    delegate_to: localhost
-    changed_when: false
-    tags:
-      - proxmox-init
-#
-#   roles:
-#     - role: configure-vm-user
-#       tags:
-#         - deploy-infra
+  roles:
+    - role: configure-remote-ssh
+      tags:
+        - deploy-infra
+
+    - role: configure-vm-user
+      tags:
+        - deploy-infra
 
 # ##############################################
 # # Running only in 'nfs_server_hosts' group
@@ -83,9 +79,9 @@
 
   roles:
 
-    - role: configure-remote-ssh
-      tags:
-        - deploy-infra
+    # - role: configure-remote-ssh
+    #   tags:
+    #     - deploy-infra
 
     # - role: docker-install
     #   tags:
@@ -102,15 +98,15 @@
 ##############################################
 # Configuring DNS on clients
 ##############################################
-- name: "Configuring DNS on clients"
-  hosts: vms_all
-  become: true
-  gather_facts: true
-
-  roles:
-    - role: dns-client
-      tags:
-        - deploy-infra
+# - name: "Configuring DNS on clients"
+#   hosts: vms_all
+#   become: true
+#   gather_facts: true
+#
+#   roles:
+#     - role: dns-client
+#       tags:
+#         - deploy-infra
 
 # ##############################################
 # # Opening 6443 port on cluster k8s Firewall

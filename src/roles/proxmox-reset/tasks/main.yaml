@@ -28,6 +28,33 @@
   loop: "{{ existing_vms }}"
 
 ##################################################################
+# Destroy LXC Containers
+##################################################################
+- name: "Check if Container exists"
+  ansible.builtin.command: "pct status {{ hostvars[item].proxmox_vm_id }}"
+  register: container_check
+  failed_when: false
+  changed_when: false
+  loop: "{{ groups['containers_lxc'] | default([]) }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+
+- name: "Build list of existing Containers"
+  ansible.builtin.set_fact:
+    existing_containers: >-
+      {{
+        existing_containers | default([]) +
+        [item.item] if item.rc == 0 else existing_containers | default([])
+      }}
+  loop: "{{ container_check.results }}"
+
+- name: "Destroy Container if exists"
+  ansible.builtin.shell: |
+    pct stop {{ hostvars[item].proxmox_vm_id }}
+    pct destroy {{ hostvars[item].proxmox_vm_id }} --purge
+  loop: "{{ existing_containers }}"
+
+##################################################################
 # Remove VM Template
 ##################################################################
 - name: "Check for locked VMs"
