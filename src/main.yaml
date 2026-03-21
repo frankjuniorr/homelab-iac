@@ -42,31 +42,6 @@
       tags:
         - deploy-infra
 
-# ##############################################
-# # Running only in 'nfs_server_hosts' group
-# ##############################################
-# - name: "Configuring NFS Server"
-#   hosts: nfs_server_hosts
-#   become: true
-#   gather_facts: false
-
-#   roles:
-#     - role: nfs-server
-#       tags:
-#         - deploy-infra
-
-# ##############################################
-# # Configuring NFS clients
-# ##############################################
-# - name: "Configuring NFS on clients"
-#   hosts: vms_all
-#   become: true
-#   gather_facts: false
-
-#   roles:
-#     - role: nfs-client
-#       tags:
-#         - deploy-infra
 
 # #############################################
 # # Executing only in 'dns_server_hosts'
@@ -118,19 +93,6 @@
 
 #   roles:
 #     - role: kubernetes-firewall
-#       tags:
-#         - deploy-infra
-
-# ##############################################
-# # Exporting NFS folder to Proxmox too
-# ##############################################
-# - name: "Exporting NFS folder to Proxmox too"
-#   hosts: proxmox
-#   gather_facts: false
-#   become: true
-
-#   roles:
-#     - role: proxmox-create-nfs-storage
 #       tags:
 #         - deploy-infra
 

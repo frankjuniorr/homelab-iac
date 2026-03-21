@@ -55,7 +55,6 @@ proxmox-reset:
 # - Start the Terraform code to deploy al necessary VMs
 # - Start the playbook to configure all VMs
 # - Start the playbook that make post-config Proxmox:
-#		- Create the NFS Storage
 deploy-infra:
 	@cd src && ansible-playbook -i hosts.yaml main.yaml --tags "deploy-infra"
 

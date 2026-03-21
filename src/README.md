@@ -80,5 +80,4 @@ Take a look in Makefile
 
 - `main.yaml`: principal playbook that make all this things and run the initial proxmox configure
 - `proxmox-post-config.yaml`: Playbook to run **after** Terraform code (`create-vms` folder) to finalizing the configurations in Proxmox.
-- `reset-nfs.yaml`: PLaybok to reset NFS storage on Proxmox.
 - `reset.yaml`: Playbook that undo all configurations.
