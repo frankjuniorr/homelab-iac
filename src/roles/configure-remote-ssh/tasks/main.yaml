@@ -1,4 +1,11 @@
 ---
+
+- name: Reset known_hosts entry
+  become: false
+  command: ssh-keygen -R {{ ansible_host }}
+  delegate_to: localhost
+  changed_when: false
+
 - name: "Ensure SSH key is on remote host"
   delegate_to: localhost
   become: false

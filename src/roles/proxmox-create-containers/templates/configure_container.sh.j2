@@ -9,7 +9,7 @@ echo "{{ vm_user }}:{{ vm_user_passwd }}" | chpasswd
 # Atualiza e instala pacotes
 dnf update -y
 dnf install -y epel-release
-dnf install -y openssh-server figlet cockpit python3.11 python3-dnf unzip tar
+dnf install -y openssh-server figlet cockpit python3.11 python3-dnf unzip tar vim rsync
 
 # Habilita serviços
 systemctl enable sshd

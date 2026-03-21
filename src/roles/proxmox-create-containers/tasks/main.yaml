@@ -24,10 +24,11 @@
         --net0 name=eth0,bridge=vmbr0,ip={{ hostvars[item].ansible_host }}/24,gw={{ hostvars[item].network_gateway }} \
         --password {{ hostvars[item].root_password }} \
         --ssh-public-keys /root/.ssh/id_rsa.pub \
-        --start 1
+        --start 1 \
+        --onboot 1
   args:
     creates: "/etc/pve/lxc/{{ hostvars[item].proxmox_vm_id }}.conf"
-  loop: "{{ groups['dns_server_hosts'] }}"
+  loop: "{{ groups['containers_lxc'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
   register: container_creation
@@ -43,7 +44,7 @@
     src: configure_container.sh.j2
     dest: "/tmp/configure_container_{{ hostvars[item].proxmox_vm_id }}.sh"
     mode: '0755'
-  loop: "{{ groups['dns_server_hosts'] }}"
+  loop: "{{ groups['containers_lxc'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
   vars:
