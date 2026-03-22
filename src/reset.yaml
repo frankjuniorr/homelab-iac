@@ -12,19 +12,19 @@
     - role: proxmox-reset
       tags: "reset-proxmox"
 
-    # - role: clean-local-files
-    #   tags: "reset-proxmox"
+    - role: clean-local-files
+      tags: "reset-proxmox"
 
 ##############################################
 # Desinstalando o k3s
 ##############################################
-# - name: "Uninstall o k3s"
-#   hosts: k8s_cluster
-#   become: true
-#   gather_facts: no
+- name: "Uninstall o k3s"
+  hosts: k8s_cluster
+  become: true
+  gather_facts: no
 
-#   roles:
+  roles:
 
-#     - role: kubernetes-uninstall
-#       tags:
-#         - k3s-uninstall
+    - role: kubernetes-uninstall
+      tags:
+        - k3s-uninstall
