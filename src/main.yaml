@@ -9,13 +9,13 @@
 
   roles:
     
-    # Cria os Containers
+    # Create Containers
     - role: proxmox-create-containers
       tags:
         - proxmox-init
 
 
-    # Cria as VMs
+    # Create VMs
     - role: proxmox-customize-rocky-linux-cloud-image
       tags:
         - proxmox-init
@@ -103,7 +103,7 @@
         - deploy-infra
 
 ##############################################
-# Instalando o k3s
+# Installing k3s
 ##############################################
 - name: "Installing k3s servers"
   hosts: k8s_masters_nodes

@@ -1,10 +1,10 @@
-# Essa versão é a última tag do Github
+# This version is the latest tag from GitHub
 adguard_version: "v0.107.72"
-adguard_donwload_file: "AdGuardHome_linux_amd64.tar.gz"
+adguard_download_file: "AdGuardHome_linux_amd64.tar.gz"
 
-# Donwload das releases do Github
-adguard_url: "https://github.com/AdguardTeam/AdGuardHome/releases/download/{{ adguard_version }}/{{ adguard_donwload_file }}"
+# Download from GitHub releases
+adguard_url: "https://github.com/AdguardTeam/AdGuardHome/releases/download/{{ adguard_version }}/{{ adguard_download_file }}"
 
-# Local padrão de instalação do Adguard
+# Default AdGuard installation location
 adguard_installation_dir: "/opt"
-adguard_archive: "{{ adguard_installation_dir }}/{{ adguard_donwload_file }}"
+adguard_archive: "{{ adguard_installation_dir }}/{{ adguard_download_file }}"

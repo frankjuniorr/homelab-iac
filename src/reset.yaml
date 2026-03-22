@@ -16,7 +16,7 @@
       tags: "reset-proxmox"
 
 ##############################################
-# Desinstalando o k3s
+# Uninstalling k3s
 ##############################################
 - name: "Uninstall k3s"
   hosts: k8s_cluster

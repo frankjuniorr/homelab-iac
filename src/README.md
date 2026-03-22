@@ -1,83 +1,51 @@
-# Proxmox Config
+# Ansible Proxmox Orchestration
 
 ## Description
-Project to make initial configuration on Proxmox and create all the environment.
+This directory contains the Ansible code responsible for the initial configuration of Proxmox and the complete deployment of the environment.
 
-This project is responsable to:
+The project automates the following:
+- **Proxmox Initialization:** Configures storage and creates the necessary infrastructure for guests.
+- **Rocky Linux Customization:** Downloads the **Rocky Linux 8** Generic Cloud image and uses `virt-customize` to inject configurations (SSH, SELinux, etc.).
+- **VM Template Creation:** Creates a Cloud-Init VM template on Proxmox.
+- **Resource Provisioning:** Creates both LXC Containers and Virtual Machines directly via Ansible (no Terraform required).
+- **Environment Configuration:** Sets up users, SSH keys, DNS (AdGuardHome), and system packages across all nodes.
+- **Kubernetes Deployment:** Installs a **K3s** cluster (masters and nodes) automatically.
 
-- Create user in Proxmox and generate APi Token (this user will be used by terraform code)
-- Donwload and customize Cloud Image **Rocky Linux 8**
-- Create a Cloud Init Template Vm on Proxmox
+## Troubleshooting & Manual Fixes
+While the goal is full automation, some initial Proxmox tweaks might be necessary for a smoother experience:
 
-## Troubleshooting
-First of all, I had to made some modifications **manually**:
-
-### 1. [ERROR] `apt-get update` with error:
-I need to comments two repositories in Proxmox, relative of a enterprise version on it.
-
-So, a comment the content of this files:
+### 1. Proxmox Subscription Nag & Repositories
+By default, Proxmox comes with enterprise repositories that require a subscription. You might need to comment them out to avoid `apt-get update` errors:
 - `/etc/apt/sources.list.d/ceph.list`
 - `/etc/apt/sources.list.d/pve-enterprise.list`
 
-### 2. [Improvment] Remove the pop-up "No Valid Subscription"
+### 2. Remove "No Valid Subscription" Pop-up
+To hide the subscription nag when logging into the Proxmox UI:
 
-![alt Proxmox pop-up no valid subscription](../images/proxmox-no-valid-subscription.png "Proxmox pop-up no valid subscription")
+1.  Open `/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js`.
+2.  Search for the check that triggers the pop-up (usually checking if `status !== 'active'`).
+3.  Modify the logic to `if (false)` to bypass it.
+4.  Restart the proxy service: `systemctl restart pveproxy.service`.
 
-This modification is not necessary, is only improvment, to hide this pop-up in every login.
-So, just do this:
-
-open the correct file like the example, and search for this peace of code:
-```javascript
-if (res === null || res === undefined || !res || res
-.data.status.toLowerCase() !== 'active') {
-    // The pop-up show here
-}
-```
-
-so, make this change
-```javascript
-if (false) {
-    // The pop-up show here
-}
-```
-
-The full code:
-```bash
-# install vim
-apt-get update && apt-get install vim -y && export EDITOR=vim
-
-# create a backup of a file:
-cd /usr/share/javascript/proxmox-widget-toolkit
-cp proxmoxlib.js proxmoxlib.js.bkp
-vim proxmoxlib.js
-
-# restart service
-systemctl restart pveproxy.service
-```
-
-## Run the code
-
-Review the files `hosts.yaml`,  `group_vars/all.yaml` and `group_vars/vm_template_config.yaml`
+## Usage
+Ensure your `hosts.yaml` is correctly configured in the root's `config-files/my-configs/` folder and installed via `just install-config-files`.
 
 ```bash
+# Full deployment (Proxmox init + VM/LXC creation + K3s install)
+just proxmox-build
 
-# full deploy
-make proxmox-build
-
-# or
-
-# to full destroy
-make proxmox-reset
+# Destroy everything (VMs, Containers, and VM templates)
+just proxmox-reset
 ```
 
-## Output
-This code generate a credentials proxmox file, and send to terraform code in `create-vms/modules/proxmox_vms` called `proxmox-variables.tfvars`
+## Main Playbooks
 
-## Playbooks
+- `main.yaml`: The primary entry point. It triggers the entire lifecycle: Proxmox init, image customization, VM/LXC creation, user configuration, and K3s installation.
+- `configure-ssh.yaml`: Used for the initial SSH key exchange with the Proxmox host.
+- `reset.yaml`: Orchestrates the destruction of the environment to return to a clean state.
+- `save-data.yaml`: Handles backups of critical data (e.g., AdGuardHome configurations) to your local machine.
 
-Here in code have 3 playbooks files, that are triggered in different moments:
-Take a look in Makefile
-
-- `main.yaml`: principal playbook that make all this things and run the initial proxmox configure
-- `proxmox-post-config.yaml`: Playbook to run **after** Terraform code (`create-vms` folder) to finalizing the configurations in Proxmox.
-- `reset.yaml`: Playbook that undo all configurations.
+## Structure
+- `roles/`: Contains modular tasks for each part of the infrastructure (e.g., `proxmox-create-vms`, `kubernetes-install-masters`).
+- `library/`: Custom Ansible modules (e.g., `ssh_copy_key.py`).
+- `callback_plugins/`: Custom plugins for better output formatting.
