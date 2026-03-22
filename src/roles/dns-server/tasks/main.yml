@@ -24,9 +24,16 @@
     remote_src: true
     creates: "{{ adguard_installation_dir }}/AdGuardHome/AdGuardHome"
 
-- name: Run AdGuardHome installer
+- name: Check if AdGuardHome service is running
+  ansible.builtin.command: systemctl is-active AdGuardHome
+  register: adguard_status
+  changed_when: false
+  failed_when: false
+
+- name: "Run AdGuardHome installer"
   ansible.builtin.command: ./AdGuardHome -s install
   args:
     chdir: "{{ adguard_installation_dir }}/AdGuardHome"
   register: adguard_install
   changed_when: "'installed' in adguard_install.stdout or adguard_install.rc == 0"
+  when: adguard_status.stdout != 'active'

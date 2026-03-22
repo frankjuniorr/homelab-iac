@@ -49,3 +49,7 @@
   loop: "{{ vm_status.results }}"
   loop_control:
     label: "{{ hostvars[(item.item)].proxmox_vm_name }}"
+
+- name: "Pause to wait VMs to be ready"
+  ansible.builtin.pause:
+    seconds: 20

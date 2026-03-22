@@ -9,15 +9,18 @@
 
   roles:
     
+    # Cria os Containers
+    - role: proxmox-create-containers
+      tags:
+        - proxmox-init
+
+
+    # Cria as VMs
     - role: proxmox-customize-rocky-linux-cloud-image
       tags:
         - proxmox-init
 
     - role: proxmox-create-cloud-init-vm-template
-      tags:
-        - proxmox-init
-
-    - role: proxmox-create-containers
       tags:
         - proxmox-init
 
@@ -39,11 +42,6 @@
       tags:
         - deploy-infra
 
-    - role: configure-vm-user
-      tags:
-        - deploy-infra
-
-
 # #############################################
 # # Executing only in 'dns_server_hosts'
 # #############################################
@@ -54,62 +52,63 @@
   gather_facts: false
 
   roles:
-
-#     - role: restart-machine
-#       tags:
-#         - deploy-infra
-
     - role: dns-server
       tags:
         - deploy-infra
 
+
 ##############################################
-# Configuring DNS on clients
+# Running in all hosts
 ##############################################
-# - name: "Configuring DNS on clients"
-#   hosts: vms_all
-#   become: true
-#   gather_facts: true
-#
-#   roles:
-#     - role: dns-client
-#       tags:
-#         - deploy-infra
+- name: "Configure all VMs"
+  hosts: vms_all
+  become: true
+  gather_facts: false
 
-# ##############################################
-# # Opening 6443 port on cluster k8s Firewall
-# ##############################################
-# - name: "Applying firewall settings to k8s cluster nodes"
-#   hosts: k8s_cluster
-#   become: true
-#   gather_facts: true
+  roles:
+    - role: configure-vm-user
+      tags:
+        - deploy-infra
 
-#   roles:
-#     - role: kubernetes-firewall
-#       tags:
-#         - deploy-infra
+    - role: dns-client
+      tags:
+        - deploy-infra
 
-# ##############################################
-# # Instalando o k3s
-# ##############################################
-# - name: "Installing k3s servers"
-#   hosts: k8s_masters_nodes
-#   become: true
-#   gather_facts: false
 
-#   roles:
-#     - role: kubernetes-install-masters
-#       tags:
-#         - deploy-infra
-#         - k3s-install
+##############################################
+# Opening 6443 port on cluster k8s Firewall
+##############################################
+- name: "Applying firewall settings to k8s cluster nodes"
+  hosts: k8s_cluster
+  become: true
+  gather_facts: true
 
-# - name: "Installing k3s nodes"
-#   hosts: k8s_worker_nodes
-#   become: true
-#   gather_facts: false
+  roles:
+    - role: kubernetes-firewall
+      tags:
+        - deploy-infra
 
-#   roles:
-#     - role: kubernetes-install-nodes
-#       tags:
-#         - deploy-infra
-#         - k3s-install
+##############################################
+# Instalando o k3s
+##############################################
+- name: "Installing k3s servers"
+  hosts: k8s_masters_nodes
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: kubernetes-install-masters
+      tags:
+        - deploy-infra
+        - k3s-install
+
+- name: "Installing k3s nodes"
+  hosts: k8s_worker_nodes
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: kubernetes-install-nodes
+      tags:
+        - deploy-infra
+        - k3s-install

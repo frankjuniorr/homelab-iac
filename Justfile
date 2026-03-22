@@ -30,9 +30,9 @@ init:
 
 # TODO: Pensar de vale a pena deixar o backup aqui ou não
 # Realiza backup dos servidores para o localhost
-servers-backup:
-    bash scripts/install-scripts-dependencies.sh && clear
-    python3 scripts/servers-backup.py {{servers_host_file}}
+# servers-backup:
+#     bash scripts/install-scripts-dependencies.sh && clear
+#     python3 scripts/servers-backup.py {{servers_host_file}}
 
 
 
