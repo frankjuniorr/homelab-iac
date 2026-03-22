@@ -53,3 +53,4 @@
 - name: "Pause to wait VMs to be ready"
   ansible.builtin.pause:
     seconds: 20
+  when: vm_status.results | selectattr('stdout', 'search', 'stopped') | list | length > 0

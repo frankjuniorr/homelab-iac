@@ -1,0 +1,12 @@
+---
+# Local directory to store backups (outside roles, in src/data)
+backup_local_dir: "{{ playbook_dir }}/data"
+
+# Prefix for backup filenames
+backup_prefix: "adguardhome-backup"
+
+# Host to backup (must be in inventory)
+backup_dns_host: "dns"
+
+# AdGuardHome installation directory on the remote host
+adguard_dir: "/opt/AdGuardHome"

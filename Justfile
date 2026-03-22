@@ -28,11 +28,9 @@ init:
     ansible-galaxy install -r src/requirements.yml
     cd src && ansible-playbook --ask-become-pass -i hosts.yaml configure-ssh.yaml
 
-# TODO: Pensar de vale a pena deixar o backup aqui ou não
 # Realiza backup dos servidores para o localhost
-# servers-backup:
-#     bash scripts/install-scripts-dependencies.sh && clear
-#     python3 scripts/servers-backup.py {{servers_host_file}}
+save-data:
+    cd src && ansible-playbook save-data.yaml
 
 
 

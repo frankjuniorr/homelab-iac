@@ -15,6 +15,9 @@ src/roles/terraform-create-vms/files/modules/proxmox_vms/variables.tf
 
 config-files/my-configs
 
+# Proxmox save data
+src/data/*
+
 ########################## Python ##########################
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,4 +1,24 @@
 ---
+# Check se o Adguard está disponível
+# Essa checagem é importante porque o DNS dessas máquinas apontam pro container do Adguard
+# Se ele não tievr disponível, a instalação do k3s logo abaixo não funciona o "curl""
+- name: "Check if AdGuardHome is responding on port 80"
+  delegate_to: localhost
+  become: false
+  ansible.builtin.wait_for:
+    host: "{{ hostvars['dns']['ansible_host'] }}"
+    port: 80
+    timeout: 5
+  register: adguard_status
+
+
+- name: "Wait for manual AdGuardHome configuration"
+  delegate_to: localhost
+  become: false
+  ansible.builtin.pause:
+    prompt: "Configure o Adguard, acesse: http://{{ hostvars[backup_dns_host]['ansible_host'] }}:3000 . Pressione ENTER quando terminar para seguir com o backup."
+  when: adguard_status is failed
+
 - name: "Install k3s on masters"
   ansible.builtin.shell: "{{ k3s_server_install_command }}"
 

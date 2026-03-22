@@ -6,6 +6,9 @@
 
   roles:
 
+    - role: proxmox-save-data
+      tags: "reset-proxmox"
+
     - role: proxmox-reset
       tags: "reset-proxmox"
 
