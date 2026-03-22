@@ -28,6 +28,20 @@
       tags:
         - proxmox-init
 
+    - role: proxmox-write-notes
+      vars:
+        proxmox_guest_group: "{{ groups['vms_all'] }}"
+        proxmox_guest_type: "vm"
+      tags:
+        - proxmox-init
+
+    - role: proxmox-write-notes
+      vars:
+        proxmox_guest_group: "{{ groups['containers_lxc'] }}"
+        proxmox_guest_type: "container"
+      tags:
+        - proxmox-init
+
 
 ##############################################
 # Running in all hosts

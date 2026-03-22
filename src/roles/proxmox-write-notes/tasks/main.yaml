@@ -1,0 +1,14 @@
+- name: "Apply Notes to Proxmox guests"
+  ansible.builtin.shell: |
+    {{ (proxmox_guest_type == 'vm') | ternary('qm', 'pct') }} set {{ hostvars[item].proxmox_vm_id }} --description "{{ lookup('template', 'notes.md.j2') }}"
+  loop: "{{ proxmox_guest_group }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+  vars:
+    # Garante que o template use as variáveis do host sendo processado no loop
+    proxmox_cpu: "{{ hostvars[item].proxmox_cpu }}"
+    proxmox_memory: "{{ hostvars[item].proxmox_memory }}"
+    proxmox_vm_disk_size: "{{ hostvars[item].proxmox_vm_disk_size }}"
+    proxmox_vm_user: "{{ hostvars[item].vm_user }}"
+    proxmox_vm_name: "{{ hostvars[item].proxmox_vm_name }}"
+    note_icon_url: "{{ hostvars[item].note_icon_url | default('') }}"
