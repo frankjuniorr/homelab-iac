@@ -39,7 +39,7 @@ save-data:
 # Comandos de criação e Deploy
 ############################################################################
 # Deploy completo no Proxmox
-proxmox-build:
+homelab-build:
     cd src && ansible-playbook -i hosts.yaml main.yaml --tags "proxmox-init,deploy-infra"
 
 # Deploy apenas da infraestrutura
@@ -56,7 +56,7 @@ k3s-install:
 # DESTROY
 # Comandos de Destroy
 ############################################################################
-proxmox-reset:
+homelab-reset:
     cd src && ansible-playbook -i hosts.yaml reset.yaml --tags "destroy-infra,reset-proxmox"
 
 # Destruição apenas da infraestrutura
@@ -66,3 +66,16 @@ destroy-infra:
 # Desinstalação apenas do K3s
 k3s-uninstall:
     cd src && ansible-playbook -i hosts.yaml reset.yaml --tags "k3s-uninstall"
+
+
+############################################################################
+# Power Management
+# Comandos de Ligar/Desligar
+############################################################################
+# Inicia todas as VMs e Containers
+homelab-start:
+    cd src && ansible-playbook -i hosts.yaml power-management.yaml --tags "start"
+
+# Desliga todas as VMs e Containers
+homelab-stop:
+    cd src && ansible-playbook -i hosts.yaml power-management.yaml --tags "stop"

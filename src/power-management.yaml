@@ -1,0 +1,8 @@
+---
+- name: "Proxmox Power Management (Start/Stop)"
+  hosts: proxmox_nodes
+  gather_facts: false
+  become: true
+
+  roles:
+    - role: proxmox-power-management

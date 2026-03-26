@@ -1,0 +1,65 @@
+---
+##################################################################
+# GET STATUS
+##################################################################
+- name: "Check status of LXC Containers"
+  ansible.builtin.command: "pct status {{ hostvars[item].proxmox_vm_id }}"
+  register: lxc_status
+  failed_when: false
+  changed_when: false
+  loop: "{{ groups['containers_lxc'] | default([]) }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+  tags: [stop, start]
+
+- name: "Check status of VMs"
+  ansible.builtin.command: "qm status {{ hostvars[item].proxmox_vm_id }}"
+  register: vm_status
+  failed_when: false
+  changed_when: false
+  loop: "{{ groups['vms_all'] | default([]) }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+  tags: [stop, start]
+
+##################################################################
+# STOP TASKS
+##################################################################
+- name: "Stop all LXC Containers"
+  ansible.builtin.shell: "pct stop {{ hostvars[item.item].proxmox_vm_id }}"
+  loop: "{{ lxc_status.results }}"
+  loop_control:
+    label: "{{ hostvars[item.item].proxmox_vm_name }}"
+  when: "'status: running' in item.stdout"
+  tags: stop
+  failed_when: false
+
+- name: "Stop all VMs"
+  ansible.builtin.shell: "qm stop {{ hostvars[item.item].proxmox_vm_id }}"
+  loop: "{{ vm_status.results }}"
+  loop_control:
+    label: "{{ hostvars[item.item].proxmox_vm_name }}"
+  when: "'status: running' in item.stdout"
+  tags: stop
+  failed_when: false
+
+##################################################################
+# START TASKS
+##################################################################
+- name: "Start all LXC Containers"
+  ansible.builtin.shell: "pct start {{ hostvars[item.item].proxmox_vm_id }}"
+  loop: "{{ lxc_status.results }}"
+  loop_control:
+    label: "{{ hostvars[item.item].proxmox_vm_name }}"
+  when: "'status: stopped' in item.stdout"
+  tags: start
+  failed_when: false
+
+- name: "Start all VMs"
+  ansible.builtin.shell: "qm start {{ hostvars[item.item].proxmox_vm_id }}"
+  loop: "{{ vm_status.results }}"
+  loop_control:
+    label: "{{ hostvars[item.item].proxmox_vm_name }}"
+  when: "'status: stopped' in item.stdout"
+  tags: start
+  failed_when: false
