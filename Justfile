@@ -39,7 +39,7 @@ save-data:
 # Comandos de criação e Deploy
 ############################################################################
 # Deploy completo no Proxmox
-homelab-build:
+homelab-build: init
     cd src && ansible-playbook -i hosts.yaml main.yaml --tags "proxmox-init,deploy-infra"
 
 # Deploy apenas da infraestrutura
@@ -79,3 +79,19 @@ homelab-start:
 # Desliga todas as VMs e Containers
 homelab-stop:
     cd src && ansible-playbook -i hosts.yaml power-management.yaml --tags "stop"
+
+
+############################################################################
+# UTILS
+############################################################################
+# Liga/Desliga o plugin de saída estética (uso: just plugin on | just plugin off)
+plugin state:
+    @if [ "{{state}}" == "on" ]; then \
+        sed -i '/^# *stdout_callback = beautiful_output/s/^# *//' src/ansible.cfg; \
+        echo "Plugin 'beautiful_output' ATIVADO."; \
+    elif [ "{{state}}" == "off" ]; then \
+        sed -i '/^stdout_callback = beautiful_output/s/^/# /' src/ansible.cfg; \
+        echo "Plugin 'beautiful_output' DESATIVADO."; \
+    else \
+        echo "Use: just plugin on ou just plugin off"; \
+    fi
