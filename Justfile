@@ -50,6 +50,10 @@ deploy-infra:
 k3s-install:
     cd src && ansible-playbook -i hosts.yaml main.yaml --tags "k3s-install"
 
+# Atualiza todos os sistemas operacionais (VMs e Containers)
+homelab-update:
+    cd src && ansible-playbook -i hosts.yaml update-os.yaml
+
 
 
 ############################################################################

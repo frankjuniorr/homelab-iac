@@ -32,10 +32,10 @@ Ensure your `hosts.yaml` is correctly configured in the root's `config-files/my-
 
 ```bash
 # Full deployment (Proxmox init + VM/LXC creation + K3s install)
-just proxmox-build
+just homelab-build
 
 # Destroy everything (VMs, Containers, and VM templates)
-just proxmox-reset
+just homelab-reset
 ```
 
 ## Main Playbooks

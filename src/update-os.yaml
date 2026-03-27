@@ -1,0 +1,28 @@
+---
+##############################################
+# Update all Rocky Linux Hosts (VMs and Containers)
+##############################################
+- name: "Update OS packages on all Rocky Linux guests"
+  hosts: all:!proxmox_nodes
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: update-os
+      tags:
+        - update-guests
+        - update-all
+
+##############################################
+# Update Proxmox Nodes (Debian/Apt)
+##############################################
+- name: "Update OS packages on all Proxmox nodes"
+  hosts: proxmox_nodes
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: update-proxmox
+      tags:
+        - update-proxmox
+        - update-all

@@ -1,0 +1,26 @@
+---
+- name: "Update all packages to the latest version"
+  become: true
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_cache: yes
+
+- name: "Cleanup dnf cache and unused packages"
+  become: true
+  ansible.builtin.command: dnf clean all
+  changed_when: false
+
+- name: "Check if reboot is required"
+  become: true
+  ansible.builtin.command: needs-restarting -r
+  register: reboot_required
+  ignore_errors: true
+  changed_when: false
+  failed_when: false
+
+- name: "Restart machine if kernel was updated"
+  ansible.builtin.reboot:
+    msg: "Rebooting to apply kernel updates"
+    reboot_timeout: 300
+  when: reboot_required.rc == 1

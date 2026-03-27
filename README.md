@@ -103,10 +103,13 @@ The `Justfile` provides a simplified interface for all operations.
 | Command | Description |
 | :--- | :--- |
 | `just init` | Full initialization: checks dependencies, installs galaxy roles, and configures Proxmox SSH. |
-| `just proxmox-build` | **Full Deploy:** Creates VMs/Containers, configures users, and installs K3s. |
+| `just homelab-build` | **Full Deploy:** Creates VMs/Containers, configures users, and installs K3s. |
 | `just deploy-infra` | Deploys only the infrastructure (VMs and Containers) and configures them. |
 | `just k3s-install` | Installs the K3s cluster on already existing nodes. |
-| `just proxmox-reset` | **Full Cleanup:** Destroys all VMs, Containers, and resets Proxmox settings. |
+| `just homelab-update` | **Full Update:** Updates OS packages on Proxmox nodes, VMs, and Containers. |
+| `just homelab-update-guests` | Updates OS packages only on VMs and Containers (Rocky Linux). |
+| `just homelab-update-proxmox` | Updates OS packages only on Proxmox host nodes (Debian). |
+| `just homelab-reset` | **Full Cleanup:** Destroys all VMs, Containers, and resets Proxmox settings. |
 | `just destroy-infra` | Destroys only the VMs and Containers. |
 | `just k3s-uninstall` | Removes K3s from the nodes without destroying the VMs. |
 | `just save-data` | Performs a backup of critical services (like AdGuardHome) to localhost. |
