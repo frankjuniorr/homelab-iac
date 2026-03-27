@@ -19,8 +19,33 @@ The **Homelab IaC** project is a fully automated solution for deploying and mana
 ### Proposal:
 - **Reproducibility:** Rebuild the entire infrastructure from scratch in minutes.
 - **Consistency:** Ensure all VMs and Containers follow the same configuration standards.
-- **Security:** Integrate with 1Password for secret management and automate SSH key distribution.
+- **Security:** Use SOPS + Age for secret management and automate SSH key distribution.
 - **Modern Stack:** Leverage Rocky Linux (Cloud-Init), K3s for lightweight Kubernetes, and Ansible for orchestration.
+
+---
+
+## Prerequisites & Dependencies
+
+The project relies on several tools and libraries. While the `just init` command attempts to install Python libraries automatically, the core binaries must be present on your system.
+
+### 1. Mandatory System Binaries
+Ensure these are installed and available in your `$PATH`:
+
+| Tool | Purpose |
+| :--- | :--- |
+| [Just](https://github.com/casey/just) | Command runner for all project tasks. |
+| [Ansible](https://www.ansible.com/) | Core orchestration and deployment engine. |
+| [SOPS](https://github.com/getsops/sops) | Secret encryption/decryption. |
+| [Age](https://github.com/FiloSottile/age) | Modern encryption tool (backend for SOPS). |
+| [1Password CLI](https://developer.1password.com/docs/cli/) | Secure retrieval of SSH keys and tokens. |
+| **Python 3 & Pip3** | Required for Ansible and auxiliary scripts. |
+
+### 2. Python Libraries
+These are automatically checked and installed during `just init`:
+- `watchdog`: Used for the aesthetic output plugin.
+- `paramiko`: Required for custom SSH key management modules.
+- `proxmoxer`: Interface for Proxmox API.
+- `requests`: HTTP library for API communications.
 
 ---
 
@@ -30,8 +55,8 @@ The **Homelab IaC** project is a fully automated solution for deploying and mana
 graph TD
     subgraph Localhost ["Local Machine (Control Node)"]
         J[Justfile] --> A[Ansible Playbooks]
-        C[Config files/hosts.yaml] --> A
-        OP[1Password CLI] -.-> A
+        H[src/hosts.sops.yaml] --> A
+        AGE[Age Key] --> A
     end
 
     subgraph ProxmoxHost ["Proxmox Server"]
@@ -52,67 +77,113 @@ graph TD
 
 ---
 
-## Prerequisites
+## Lifecycle Workflow
 
-Before starting, ensure you have the following installed on your control machine:
+The following diagram illustrates the recommended sequence of commands to get your homelab up and running:
 
-- **Just:** Command runner (alternative to Make).
-- **Ansible:** Core orchestration engine.
-- **Python 3 & Pip:** Required for Ansible collections and local scripts.
-- **1Password CLI (`op`):** For secure secret retrieval.
-
-### Python Dependencies:
-The project uses `proxmoxer`, `requests`, `paramiko`, and `watchdog`. You can install them manually or let the init script handle it.
+```mermaid
+stateDiagram-v2
+    [*] --> FirstUse: Clone Repository
+    
+    state FirstUse {
+        direction LR
+        A: just init-hosts
+        B: just secrets-keygen
+        C: just secrets-edit
+        A --> B
+        B --> C
+    }
+    
+    FirstUse --> Initialization: Environment Ready
+    
+    state Initialization {
+        D: just init
+    }
+    
+    Initialization --> Deployment: Build Lab
+    
+    state Deployment {
+        E: just homelab-build
+        F: just deploy-infra
+        G: just k3s-install
+        E --> [*]
+    }
+    
+    state Maintenance {
+        H: just homelab-update
+        I: just save-data
+        J: just homelab-start/stop
+    }
+    
+    state Teardown {
+        K: just homelab-reset
+    }
+    
+    Deployment --> Maintenance: Operations
+    Maintenance --> Deployment: Re-deploy / Scale
+    Maintenance --> Teardown: Clean start
+    Teardown --> [*]
+```
 
 ---
 
-## Installation & Setup
+## Secrets Management (SOPS + age)
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/frankjuniorr/homelab-iac.git
-   cd homelab-iac
-   ```
+To keep the repository public and secure, this project uses **SOPS** with **age**. This allows the `src/hosts.sops.yaml` file to remain in Git version control while keeping all sensitive values encrypted.
 
-2. **Initialize configuration files:**
-   This command copies the sample configuration to a private folder.
-   ```bash
-   just init-config-files
-   ```
+### 1. Installation
+Ensure you have [sops](https://github.com/getsops/sops) and [age](https://github.com/FiloSottile/age) installed on your control machine.
 
-3. **Edit your configuration:**
-   Open `config-files/my-configs/hosts.yaml` and adjust it to your Proxmox environment (IPs, node names, storage IDs, VM IDs).
+### 2. Initial Setup
+1.  **Generate your private key:** `just secrets-keygen`.
+2.  **Prepare your hosts file:** `just init-hosts`.
+3.  **Encrypt and Edit:** `just secrets-edit`.
 
-4. **Install configurations:**
-   ```bash
-   just install-config-files
-   ```
-
-5. **Initialize the project:**
-   This will check dependencies, install Ansible roles, and configure SSH on Proxmox.
-   ```bash
-   just init
-   ```
+Always use `just secrets-edit` to manage your variables.
 
 ---
 
 ## Usage (Justfile Commands)
 
-The `Justfile` provides a simplified interface for all operations.
+### 1. First Use & Initialization
+*Commands to prepare the environment and dependencies.*
 
 | Command | Description |
 | :--- | :--- |
-| `just init` | Full initialization: checks dependencies, installs galaxy roles, and configures Proxmox SSH. |
-| `just homelab-build` | **Full Deploy:** Creates VMs/Containers, configures users, and installs K3s. |
-| `just deploy-infra` | Deploys only the infrastructure (VMs and Containers) and configures them. |
-| `just k3s-install` | Installs the K3s cluster on already existing nodes. |
+| `just init-hosts` | Initializes `src/hosts.sops.yaml` from the sample template. |
+| `just secrets-keygen` | Generates a new Age key pair for SOPS in `~/.config/sops/age/keys.txt`. |
+| `just secrets-edit` | Decrypts, opens in your editor, and re-encrypts the hosts file on save. |
+| `just init` | Installs git hooks, checks dependencies, installs Ansible roles, and configures Proxmox SSH. |
+
+### 2. Deployment
+*Commands to provision and configure the infrastructure.*
+
+| Command | Description |
+| :--- | :--- |
+| `just homelab-build` | **Full Deploy:** Full initialization + VM/LXC creation + K3s installation. |
+| `just deploy-infra` | Provisions only the VMs and Containers and configures basic services. |
+| `just k3s-install` | Installs or updates the K3s cluster on existing nodes. |
+
+### 3. Maintenance & Operations
+*Commands for daily management and updates.*
+
+| Command | Description |
+| :--- | :--- |
 | `just homelab-update` | **Full Update:** Updates OS packages on Proxmox nodes, VMs, and Containers. |
 | `just homelab-update-guests` | Updates OS packages only on VMs and Containers (Rocky Linux). |
 | `just homelab-update-proxmox` | Updates OS packages only on Proxmox host nodes (Debian). |
-| `just homelab-reset` | **Full Cleanup:** Destroys all VMs, Containers, and resets Proxmox settings. |
-| `just destroy-infra` | Destroys only the VMs and Containers. |
-| `just k3s-uninstall` | Removes K3s from the nodes without destroying the VMs. |
-| `just save-data` | Performs a backup of critical services (like AdGuardHome) to localhost. |
+| `just save-data` | Backs up critical application data (e.g., AdGuardHome) to your local machine. |
+| `just homelab-start` | Powers on all VMs and Containers in the Proxmox host. |
+| `just homelab-stop` | Gracefully shuts down all VMs and Containers. |
+
+### 4. Teardown
+*Commands to clean up the environment.*
+
+| Command | Description |
+| :--- | :--- |
+| `just homelab-reset` | **Full Cleanup:** Destroys all guests and resets Proxmox to a clean state. |
+| `just destroy-infra` | Destroys only the VMs and Containers without affecting Proxmox host config. |
+| `just k3s-uninstall` | Removes Kubernetes from the nodes without destroying the VMs. |
 
 ---
 
@@ -120,7 +191,7 @@ The `Justfile` provides a simplified interface for all operations.
 
 - `src/`: Contains all Ansible playbooks, roles, and configuration.
 - `config-files/`: Templates and user-specific configurations.
-- `scripts/`: Auxiliary bash scripts for environment checks.
+- `scripts/`: Auxiliary bash scripts for environment checks and git hooks.
 - `images/`: Documentation assets and diagrams.
 
 ---

@@ -1,7 +1,6 @@
 ########################## My files ##########################
 
-# Main file with all variables
-/src/hosts.yaml
+.sops.yaml
 
 # Terraform code
 src/roles/terraform-create-vms/files.terraform.lock.hcl

@@ -1,4 +1,3 @@
-
 all:
 
   #####################################################################
@@ -6,8 +5,10 @@ all:
   #####################################################################
   vars:
     ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
-    ssh_public_key_file: ""
-    ssh_private_key_file: ""
+    ssh_public_key_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.ssh/id_rsa_homelab.pub"
+    ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.ssh/id_rsa_homelab"
+
+    network_gateway: ""
 
     ########################### K3s ###########################
     # k3s token, used by installation on master and joins nodes
@@ -21,15 +22,11 @@ all:
     # generic script to install k3s
     k3s_install_script: "curl -sfL https://get.k3s.io | K3S_TOKEN={{ k3s_token }} sh -s -"
 
-    #############################################
     # K3s Server installation
-    #############################################
     k3s_server_install_parameters: "{{ node_taint }} --write-kubeconfig-mode=644 --disable servicelb --disable traefik"
     k3s_server_install_command: "{{ k3s_install_script }} server {{ k3s_server_install_parameters }}"
 
-    #############################################
     # K3s Agent installation
-    #############################################
     k3s_node_install_parameters: "--server https://{{ hostvars[groups['k8s_masters_nodes'][0]]['ansible_host'] }}:6443"
     k3s_node_install_command: "{{ k3s_install_script }} agent {{ k3s_node_install_parameters }}"
 
@@ -39,22 +36,12 @@ all:
     #####################################################################
     proxmox:
       ansible_host: ""
-      ansible_user: root
+      ansible_user: "root"
       root_password: ""
       proxmox_target_node: ""
 
-      # NFS storage
-      nfs_storage_name: "NFS"
-      nfs_mount_point: "/mnt/pve/{{ nfs_storage_name }}"
-
-      # Proxmox user role config
-      iac_user: ""
-      iac_user_password: ""
-      iac_role: "terraform-role"
-      iac_role_permissions: "VM.Allocate VM.Clone VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Monitor VM.Audit VM.PowerMgmt Datastore.AllocateSpace Datastore.Audit SDN.Allocate SDN.Audit SDN.Use"
-
       # VM Template with cloud init image, config
-      cloud_init_ansible.builtin.template:
+      cloud_init_template:
         vm_id: ""
         vm_template_name: ""
         vm_storage: "local-lvm"
@@ -68,92 +55,84 @@ all:
       rocky_linux_cloud_image_root_password: "RockyLinux"
 
     #####################################################################
-    #  VMs
+    # VMs and Containers LXC
     #####################################################################
-    ############# SINGLE VM: NFS
-    nfs:
-      ansible_host:
-      ansible_user:
-      root_password:
-      vm_user:
-      vm_user_passwd:
-      nfs_folder: "/home/nfs/data"
 
-      # values relative to VM in proxmox
-      proxmox_vm_id:
-      proxmox_cpu:
-      proxmox_memory:
-      proxmox_vm_name:
-      proxmox_vm_network_ip_suffix:
-      proxmox_vm_disk_size:
-      proxmox_vm_tags: "nfs"
-
-    ############# SINGLE VM: DNS
+    ############# Container: DNS
     dns:
-      ansible_host:
-      ansible_user:
-      root_password:
-      vm_user:
-      vm_user_passwd:
+      ansible_host: ""
+      ansible_user: ""
+      root_password: ""
+      vm_user: ""
+      vm_user_passwd: ""
 
       # values relative to VM in proxmox
-      proxmox_vm_id:
-      proxmox_cpu:
-      proxmox_memory:
-      proxmox_vm_name:
-      proxmox_vm_network_ip_suffix:
-      proxmox_vm_disk_size:
-      proxmox_vm_tags:
+      proxmox_vm_id: 
+      proxmox_cpu: 1
+      proxmox_memory: 1024
+      proxmox_vm_name: ""
+      proxmox_vm_disk_size: "20G"
+      proxmox_vm_tags: "dns"
 
-      # External DNS (It can be Google DNS for example: 8.8.8.8)
-      # This IP is only used in /etc/resolv.conf of DNS Server (Pihole in this case)
-      external_dns_server: "8.8.8.8"
+      ansible_python_interpreter: /usr/bin/python3.11
+      note_icon_url: ""
 
-      # pihole admin password, in the browser
-      pihole_password:
-
-    ############# K8S CLUSTER: K8s Masters
+    ############# VMS: K8s Cluster: K8s Masters
     k8s-master:
-      ansible_host:
-      ansible_user:
-      root_password:
-      vm_user:
-      vm_user_passwd:
+      ansible_host: ""
+      ansible_user: ""
+      root_password: ""
+      vm_user: ""
+      vm_user_passwd: ""
 
       # Values relative to VM in proxmox
       # Just need to add these variables, in the first node.
-      proxmox_vm_id:
-      proxmox_cpu:
-      proxmox_vm_name: '["NAME_1", "NAME_2", "NAME_3"]'
-      proxmox_vm_network_ip_suffix:
-      proxmox_memory:
-      proxmox_vm_disk_size:
-      proxmox_vm_tags: "TAG_1,TAG_2"
+      proxmox_vm_id: 
+      proxmox_cpu: 2
+      proxmox_vm_name: ""
+      proxmox_memory: 6144
+      proxmox_vm_disk_size: "20G"
+      proxmox_vm_tags: "k8s,masters"
+
+      ansible_python_interpreter: /usr/bin/python3.11
+      note_icon_url: ""
 
     ############# K8S CLUSTER: K8s Workers
     k8s-worker-1:
-      ansible_host:
-      ansible_user:
-      root_password:
-      vm_user:
-      vm_user_passwd:
+      ansible_host: ""
+      ansible_user: ""
+      root_password: ""
+      vm_user: ""
+      vm_user_passwd: ""
 
       # Values relative to VM in proxmox
       # Just need to add these variables, in the first node.
-      proxmox_vm_id:
-      proxmox_cpu:
-      proxmox_vm_name: '["NAME_1", "NAME_2", "NAME_3"]'
-      proxmox_vm_network_ip_suffix:
-      proxmox_memory:
-      proxmox_vm_disk_size:
-      proxmox_vm_tags: "TAG_1,TAG_2"
+      proxmox_vm_id: 
+      proxmox_cpu: 2
+      proxmox_vm_name: ""
+      proxmox_memory: 8192
+      proxmox_vm_disk_size: "20G"
+      proxmox_vm_tags: "k8s,workers"
+
+      ansible_python_interpreter: /usr/bin/python3.11
+      note_icon_url: ""
 
     k8s-worker-2:
-      ansible_host:
-      ansible_user:
-      root_password:
-      vm_user:
-      vm_user_passwd:
+      ansible_host: ""
+      ansible_user: ""
+      root_password: ""
+      vm_user: ""
+      vm_user_passwd: ""
+
+      proxmox_vm_name: ""
+      proxmox_vm_id: 
+      proxmox_cpu: 2
+      proxmox_memory: 8192
+      proxmox_vm_disk_size: "20G"
+      proxmox_vm_tags: "k8s,workers"
+
+      ansible_python_interpreter: /usr/bin/python3.11
+      note_icon_url: ""
 
 
 #####################################################################
@@ -171,10 +150,10 @@ all:
       hosts:
         dns:
 
-    # NFS Servers
-    nfs_server_hosts:
+    # LXC Containers
+    containers_lxc:
       hosts:
-        nfs:
+        dns:
 
     # K8s Masters nodes
     k8s_masters_nodes:
@@ -197,11 +176,8 @@ all:
     vms_all:
       children:
         k8s_cluster:
-        dns_server_hosts:
-        nfs_server_hosts:
 
     # All Vms EXCEPT k8s cluster vms
     single_vms:
       children:
         dns_server_hosts:
-        nfs_server_hosts:
