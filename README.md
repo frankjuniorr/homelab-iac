@@ -56,7 +56,7 @@ These are automatically checked and installed during `just init`:
 graph TD
     subgraph Localhost ["Local Machine (Control Node)"]
         J[Justfile] --> A[Ansible Playbooks]
-        H[src/hosts.sops.yaml] --> A
+        H["src/hosts.sops.yaml"] --> A
         AGE[Age Key] --> A
     end
 
@@ -71,10 +71,10 @@ graph TD
     end
 
     subgraph Outputs ["Automated Outputs"]
-        A -- Updates --> SC[~/.ssh/config]
-        A -- Updates --> AC[~/.aws]
-        A -- Updates --> EH[/etc/hosts]
-        A -- Fetches --> KC[~/.kube/config.k3s]
+        A -- Updates --> SC["~/.ssh/config"]
+        A -- Updates --> AC["~/.aws"]
+        A -- Updates --> EH["/etc/hosts"]
+        A -- Fetches --> KC["~/.kube/config.k3s"]
     end
 ```
 

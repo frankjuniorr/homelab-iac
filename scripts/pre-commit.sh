@@ -23,6 +23,19 @@ check_encrypt_host_file() {
   fi
 }
 
+# Função: ensure_plugin_on
+# Objetivo: Garante que o plugin estético do Ansible esteja ativado ao commitar.
+ensure_plugin_on() {
+  if command -v just >/dev/null 2>&1; then
+    just plugin on
+  else
+    # Fallback caso o just não esteja no PATH (ex: ambientes de CI ou hooks restritos)
+    # O comando abaixo faz o mesmo que o 'just plugin on' faz no Justfile
+    sed -i '/^# *stdout_callback = beautiful_output/s/^# *//' src/ansible.cfg
+    echo "Plugin 'beautiful_output' ATIVADO via fallback (sed)."
+  fi
+}
+
 # Função: add_git_files
 # Objetivo: Garante que os arquivos modificados e adicionados ao stage sejam processadas corretamente.
 add_git_files() {
@@ -34,6 +47,7 @@ add_git_files() {
 
 # Execução das verificações de forma sequencial
 check_encrypt_host_file
+ensure_plugin_on
 add_git_files
 
 exit 0
