@@ -1,9 +1,33 @@
 ---
+- name: Check if Garage configuration exists
+  ansible.builtin.stat:
+    path: "{{ garage_config_dir }}/garage.toml"
+  register: garage_config_file
+
+- name: Read existing Garage secrets
+  ansible.builtin.shell: |
+    grep "{{ item.pattern }}" {{ garage_config_dir }}/garage.toml | cut -d'"' -f2
+  loop:
+    - { pattern: 'rpc_secret =', var: 'garage_rpc_secret' }
+    - { pattern: 'admin_token =', var: 'garage_admin_token' }
+  register: existing_secrets
+  when: garage_config_file.stat.exists
+  changed_when: false
+  failed_when: false
+
+- name: Set existing secret facts
+  ansible.builtin.set_fact:
+    "{{ item.item.var }}": "{{ item.stdout }}"
+  loop: "{{ existing_secrets.results }}"
+  when: garage_config_file.stat.exists and item.stdout | length > 0 and (hostvars[inventory_hostname][item.item.var] is not defined)
+
 - name: Generate Garage RPC secret dynamically
   ansible.builtin.shell: "openssl rand -hex 32"
   register: generated_rpc_secret
   changed_when: false
   run_once: true
+  delegate_to: localhost
+  become: false
   when: garage_rpc_secret is not defined
 
 - name: Generate Garage Admin token dynamically
@@ -11,9 +35,11 @@
   register: generated_admin_token
   changed_when: false
   run_once: true
+  delegate_to: localhost
+  become: false
   when: garage_admin_token is not defined
 
-- name: Set Garage secret facts
+- name: Set Garage secret facts (generated)
   ansible.builtin.set_fact:
     garage_rpc_secret: "{{ generated_rpc_secret.stdout | default(garage_rpc_secret) }}"
     garage_admin_token: "{{ generated_admin_token.stdout | default(garage_admin_token) }}"
@@ -180,18 +206,32 @@
   when: garage_access_key is defined and garage_secret_key is defined
 
 ################################################
-# Create Buckets
+# Manage Buckets
 ################################################
-- name: List buckets
+- name: List existing buckets
   ansible.builtin.command: /usr/local/bin/garage bucket list
-  register: garage_buckets_existing
+  register: garage_buckets_list
   changed_when: false
 
-- name: Create buckets if not exists
+- name: Extract existing bucket names
+  ansible.builtin.set_fact:
+    existing_bucket_names: "{{ garage_buckets_list.stdout_lines
+      | select('search', '^[0-9a-f]{64}')
+      | map('split')
+      | map('last')
+      | list }}"
+
+- name: Create missing buckets
   ansible.builtin.command: >
     /usr/local/bin/garage bucket create {{ item.name }}
   loop: "{{ garage_buckets }}"
-  when: "item.name not in garage_buckets_existing.stdout"
+  when: "item.name not in existing_bucket_names"
+
+- name: Delete removed buckets
+  ansible.builtin.command: >
+    /usr/local/bin/garage bucket delete --yes --purge {{ item }}
+  loop: "{{ existing_bucket_names }}"
+  when: "item not in (garage_buckets | map(attribute='name') | list)"
 
 - name: Apply bucket permissions
   ansible.builtin.command: >
@@ -201,3 +241,20 @@
     --key {{ garage_access_key }}
   loop: "{{ garage_buckets }}"
   when: garage_access_key is defined
+
+################################################
+# Static Website
+################################################
+- name: Ensure s3-web bucket exists
+  ansible.builtin.command: /usr/local/bin/garage bucket create s3-web
+  register: s3_web_bucket_create
+  failed_when: false
+  changed_when: "'Created bucket' in s3_web_bucket_create.stdout"
+
+- name: Upload index.html to s3-web bucket
+  ansible.builtin.shell: >
+    aws s3 cp {{ role_path }}/files/index.html s3://s3-web/index.html
+    --profile garage --endpoint-url http://{{ ansible_host }}:3900
+  delegate_to: localhost
+  become: false
+  changed_when: true

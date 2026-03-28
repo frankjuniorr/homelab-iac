@@ -38,6 +38,7 @@ Ensure these are installed and available in your `$PATH`:
 | [SOPS](https://github.com/getsops/sops) | Secret encryption/decryption. |
 | [Age](https://github.com/FiloSottile/age) | Modern encryption tool (backend for SOPS). |
 | [1Password CLI](https://developer.1password.com/docs/cli/) | Secure retrieval of SSH keys and tokens. |
+| [AWS CLI](https://aws.amazon.com/cli/) | Required to interact with Garage S3 buckets. |
 | **Python 3 & Pip3** | Required for Ansible and auxiliary scripts. |
 
 ### 2. Python Libraries

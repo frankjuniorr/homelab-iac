@@ -70,6 +70,7 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 ### 4. Configuration
 - The source of truth for inventory is `src/hosts.yaml` (managed via SOPS).
 - Template files should use `.j2` extension and reside in role `templates/` folders.
+- **Garage Buckets:** The array `garage_buckets` in `src/roles/garage-s3/defaults/main.yaml` is the source of truth for S3 buckets. Ansible will create missing buckets AND delete any buckets not present in this array.
 
 
 ### 5. Naming
@@ -107,6 +108,11 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 
 ### Utils
 - just plugin <state>: Turn ON/OFF the aesthetic plugin
+
+---
+
+## Debugging & Troubleshooting
+- **Aesthetic Plugin:** For better debugging and visibility into exact Ansible errors, it is RECOMMENDED to disable the aesthetic plugin by running `just plugin off`. Once the issue is resolved, you can reactivate it using `just plugin on`.
 
 ---
 
