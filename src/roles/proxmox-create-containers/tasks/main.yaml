@@ -44,7 +44,7 @@
 
 - name: "Pause to wait VMs to be ready"
   ansible.builtin.pause:
-    seconds: 20
+    seconds: 40
   when: container_creation.changed
 
 

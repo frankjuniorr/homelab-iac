@@ -1,5 +1,11 @@
 ---
+- name: "Check if k3s is already installed"
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: k3s_binary
+
 - name: "Install k3s on nodes"
   ansible.builtin.shell: "{{ item }}"
   loop:
     - "{{ k3s_node_install_command }}"
+  when: not k3s_binary.stat.exists

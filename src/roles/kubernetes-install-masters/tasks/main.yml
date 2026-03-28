@@ -2,6 +2,11 @@
 # Check if AdGuard is available
 # This check is important because the DNS of these machines points to the AdGuard container
 # If it is not available, the k3s installation below will fail during the "curl" command
+- name: "Check if k3s is already installed"
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: k3s_binary
+
 - name: "Check if AdGuardHome is responding on port 80"
   delegate_to: localhost
   become: false
@@ -10,17 +15,18 @@
     port: 80
     timeout: 5
   register: adguard_status
-
+  when: not k3s_binary.stat.exists
 
 - name: "Wait for manual AdGuardHome configuration"
   delegate_to: localhost
   become: false
   ansible.builtin.pause:
     prompt: "Configure o Adguard, acesse: http://{{ hostvars[backup_dns_host]['ansible_host'] }}:3000 . Pressione ENTER quando terminar para seguir com o backup."
-  when: adguard_status is failed
+  when: not k3s_binary.stat.exists and adguard_status is failed
 
 - name: "Install k3s on masters"
   ansible.builtin.shell: "{{ k3s_server_install_command }}"
+  when: not k3s_binary.stat.exists
 
 ####################### Traz o kubeconfig pra máquina local
 - name: "Transfer kubernetes config file to localhost"
@@ -28,6 +34,7 @@
     src: /etc/rancher/k3s/k3s.yaml
     dest: "{{ lookup('ansible.builtin.env', 'HOME') }}/.kube/config.k3s"
     flat: yes
+  when: not k3s_binary.stat.exists
 
 - name: "Define cluster variables"
   ansible.builtin.set_fact:
@@ -35,6 +42,7 @@
     cluster_name: 'cerebro'
     cluster_username: 'k3s'
     k8s_ip: "{{ hostvars['k8s-master']['ansible_host'] }}"
+  when: not k3s_binary.stat.exists
 
 ####################### Atualiza o IP do server no arquivo, de '127.0.0.1' para o IP do k8s_master
 - name: "Change .kube/config file values"
@@ -58,3 +66,4 @@
     # change the User name
     - { regex: '^(\s+user:\s+)default$', replace: '\1{{ cluster_username }}' }
     - { regex: '^(-\s+name:\s+)default$', replace: '\1{{ cluster_username }}' }
+  when: not k3s_binary.stat.exists
