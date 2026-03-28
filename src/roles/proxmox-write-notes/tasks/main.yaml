@@ -9,6 +9,6 @@
     proxmox_cpu: "{{ hostvars[item].proxmox_cpu }}"
     proxmox_memory: "{{ hostvars[item].proxmox_memory }}"
     proxmox_vm_disk_size: "{{ hostvars[item].proxmox_vm_disk_size }}"
-    proxmox_vm_user: "{{ hostvars[item].vm_user }}"
+    proxmox_vm_user: "{{ hostvars[item].vm_user | default(hostvars[item].ansible_user) }}"
     proxmox_vm_name: "{{ hostvars[item].proxmox_vm_name }}"
     note_icon_url: "{{ hostvars[item].note_icon_url | default('') }}"
