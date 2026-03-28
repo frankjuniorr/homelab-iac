@@ -24,6 +24,7 @@
         --net0 name=eth0,bridge=vmbr0,ip={{ hostvars[item].ansible_host }}/24,gw={{ hostvars[item].network_gateway }} \
         --password {{ hostvars[item].root_password }} \
         --ssh-public-keys /root/.ssh/id_rsa.pub \
+        --tags "{{ hostvars[item].proxmox_vm_tags | default('') }}" \
         --start 1 \
         --onboot 1
   args:
@@ -32,6 +33,14 @@
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
   register: container_creation
+
+- name: "Update tags for LXC containers"
+  ansible.builtin.shell: |
+    pct set {{ hostvars[item].proxmox_vm_id }} --tags "{{ hostvars[item].proxmox_vm_tags | default('') }}"
+  loop: "{{ groups['containers_lxc'] }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+  changed_when: false
 
 - name: "Pause to wait VMs to be ready"
   ansible.builtin.pause:
