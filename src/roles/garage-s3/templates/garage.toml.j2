@@ -1,0 +1,26 @@
+metadata_dir = "{{ garage_meta_dir }}"
+data_dir = "{{ garage_data_storage_dir }}"
+db_engine = "lmdb"
+
+replication_factor = 1
+
+rpc_bind_addr = "{{ garage_rpc_bind_addr }}"
+rpc_public_addr = "{{ ansible_host }}:3901"
+rpc_secret = "{{ garage_rpc_secret | default('placeholder_rpc_secret_change_me') }}"
+
+[s3_api]
+api_bind_addr = "{{ garage_s3_api_bind_addr }}"
+s3_region = "{{ garage_s3_region }}"
+root_domain = ".s3.garage"
+
+[s3_web]
+bind_addr = "[::]:3902"
+root_domain = ".web.garaje"
+index = "index.html"
+
+[k2v_api]
+api_bind_addr = "[::]:3904"
+
+[admin]
+api_bind_addr = "{{ garage_admin_api_bind_addr }}"
+admin_token = "{{ garage_admin_token | default('placeholder_admin_token_change_me') }}"

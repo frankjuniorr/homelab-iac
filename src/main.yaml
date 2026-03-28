@@ -57,16 +57,30 @@
         - deploy-infra
 
 # #############################################
-# # Executing only in 'dns_server_hosts'
+# # Executing only in 'dns' host
 # #############################################
 - name: "Configuring the DNS Server"
-  hosts: dns_server_hosts
+  hosts: dns
   remote_user: adguard
   become: true
   gather_facts: false
 
   roles:
     - role: dns-server
+      tags:
+        - deploy-infra
+
+
+# #############################################
+# # Executing only in 's3' host
+# #############################################
+- name: "Configuring the Garage S3 Server"
+  hosts: s3
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: garage-s3
       tags:
         - deploy-infra
 

@@ -77,6 +77,24 @@ all:
       ansible_python_interpreter: /usr/bin/python3.11
       note_icon_url: ""
 
+    ############# Container: Storage (Garage S3)
+    s3:
+      ansible_host: ""
+      ansible_user: ""
+      root_password: ""
+      vm_user: ""
+      vm_user_passwd: ""
+
+      proxmox_vm_id: 
+      proxmox_cpu: 1
+      proxmox_memory: 1024
+      proxmox_vm_name: "jupiter"
+      proxmox_vm_disk_size: "40G"
+      proxmox_vm_tags: "storage,s3,backup"
+
+      ansible_python_interpreter: /usr/bin/python3.11
+      note_icon_url: ""
+
     ############# VMS: K8s Cluster: K8s Masters
     k8s-master:
       ansible_host: ""
@@ -150,10 +168,16 @@ all:
       hosts:
         dns:
 
+    # Garage Storage
+    garage_hosts:
+      hosts:
+        s3:
+
     # LXC Containers
     containers_lxc:
       hosts:
         dns:
+        s3:
 
     # K8s Masters nodes
     k8s_masters_nodes:
@@ -181,3 +205,4 @@ all:
     single_vms:
       children:
         dns_server_hosts:
+        garage_hosts:

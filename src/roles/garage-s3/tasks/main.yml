@@ -1,0 +1,203 @@
+---
+- name: Generate Garage RPC secret dynamically
+  ansible.builtin.shell: "openssl rand -hex 32"
+  register: generated_rpc_secret
+  changed_when: false
+  run_once: true
+  when: garage_rpc_secret is not defined
+
+- name: Generate Garage Admin token dynamically
+  ansible.builtin.shell: "openssl rand -hex 32"
+  register: generated_admin_token
+  changed_when: false
+  run_once: true
+  when: garage_admin_token is not defined
+
+- name: Set Garage secret facts
+  ansible.builtin.set_fact:
+    garage_rpc_secret: "{{ generated_rpc_secret.stdout | default(garage_rpc_secret) }}"
+    garage_admin_token: "{{ generated_admin_token.stdout | default(garage_admin_token) }}"
+
+# - name: Create garage group
+#   ansible.builtin.group:
+#     name: garage
+#     state: present
+
+# - name: Create garage user
+#   ansible.builtin.user:
+#     name: garage
+#     group: garage
+#     shell: /sbin/nologin
+#     create_home: false
+#     state: present
+
+- name: Create garage directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: garage
+    group: garage
+    mode: '0750'
+  loop:
+    - "{{ garage_config_dir }}"
+    - "{{ garage_data_dir }}"
+    - "{{ garage_meta_dir }}"
+    - "{{ garage_data_storage_dir }}"
+
+- name: Download garage binary
+  ansible.builtin.get_url:
+    url: "{{ garage_binary_url }}"
+    dest: /usr/local/bin/garage
+    mode: '0755'
+    owner: root
+    group: root
+  notify: Restart garage
+
+- name: Create garage configuration
+  ansible.builtin.template:
+    src: garage.toml.j2
+    dest: "{{ garage_config_dir }}/garage.toml"
+    owner: garage
+    group: garage
+    mode: '0640'
+  notify: Restart garage
+
+- name: Create garage systemd service
+  ansible.builtin.template:
+    src: garage.service.j2
+    dest: /etc/systemd/system/garage.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart garage
+
+- name: Ensure garage service is started and enabled
+  ansible.builtin.systemd:
+    name: garage
+    state: started
+    enabled: true
+    daemon_reload: true
+
+################################################
+# Configure Garage
+################################################
+- name: Get Garage status
+  ansible.builtin.command: /usr/local/bin/garage status
+  register: garage_status
+
+- name: Extract node ID
+  ansible.builtin.set_fact:
+    garage_node_id: "{{ garage_status.stdout_lines
+      | select('search', ansible_hostname)
+      | map('split')
+      | map('first')
+      | list
+      | first }}"
+
+- name: Check layout
+  ansible.builtin.command: /usr/local/bin/garage layout show
+  register: garage_layout
+
+- name: Assign layout if not configured
+  ansible.builtin.command: >
+    /usr/local/bin/garage layout assign
+    -z dc1 -c 10000000000 {{ garage_node_id }}
+  when: "'NO ROLE ASSIGNED' in garage_status.stdout"
+
+- name: Apply layout if needed
+  ansible.builtin.command: >
+    /usr/local/bin/garage layout apply --version 1
+  when: "'NO ROLE ASSIGNED' in garage_status.stdout"
+
+- name: List Garage keys
+  ansible.builtin.command: /usr/local/bin/garage key list
+  register: garage_keys
+  changed_when: false
+
+- name: Create key if not exists
+  ansible.builtin.command: /usr/local/bin/garage key create homelab-iac-key
+  when: "'homelab-iac-key' not in garage_keys.stdout"
+  register: garage_key_created
+
+- name: Get existing key details
+  ansible.builtin.command: /usr/local/bin/garage key info homelab-iac-key
+  register: garage_key_info
+  when: "'homelab-iac-key' in garage_keys.stdout"
+  changed_when: false
+
+- name: Extract Garage credentials (from created key)
+  ansible.builtin.set_fact:
+    garage_access_key: "{{ garage_key_created.stdout_lines
+      | select('search', 'Key ID:')
+      | map('split')
+      | map('last')
+      | list
+      | first }}"
+    garage_secret_key: "{{ garage_key_created.stdout_lines
+      | select('search', 'Secret key:')
+      | map('split')
+      | map('last')
+      | list
+      | first }}"
+  when: garage_key_created is defined and garage_key_created.stdout is defined
+
+- name: Extract Garage credentials (from existing key)
+  ansible.builtin.set_fact:
+    garage_access_key: "{{ garage_key_info.stdout_lines
+      | select('search', 'Key ID:')
+      | map('split')
+      | map('last')
+      | list
+      | first }}"
+    # Note: Secret key can't be recovered with 'info', it's only shown on creation.
+    # We should ideally have this in hosts.yaml if already created.
+    # For now we'll only update credentials if created or if we have them.
+  when: garage_key_info is defined and garage_key_info.stdout is defined and garage_access_key is not defined
+
+################################################
+# Configure aws-cli localhost
+################################################
+- name: Ensure .aws directory exists (local)
+  ansible.builtin.file:
+    path: "~/.aws"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  become: false
+
+- name: Configure AWS credentials (local)
+  ansible.builtin.ini_file:
+    path: "~/.aws/credentials"
+    section: garage
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+    mode: '0600'
+  loop:
+    - { key: "aws_access_key_id", value: "{{ garage_access_key }}" }
+    - { key: "aws_secret_access_key", value: "{{ garage_secret_key }}" }
+  delegate_to: localhost
+  become: false
+  when: garage_access_key is defined and garage_secret_key is defined
+
+################################################
+# Create Buckets
+################################################
+- name: List buckets
+  ansible.builtin.command: /usr/local/bin/garage bucket list
+  register: garage_buckets_existing
+  changed_when: false
+
+- name: Create buckets if not exists
+  ansible.builtin.command: >
+    /usr/local/bin/garage bucket create {{ item.name }}
+  loop: "{{ garage_buckets }}"
+  when: "item.name not in garage_buckets_existing.stdout"
+
+- name: Apply bucket permissions
+  ansible.builtin.command: >
+    /usr/local/bin/garage bucket allow
+    {{ item.permissions | map('regex_replace', '^', '--') | join(' ') }}
+    {{ item.name }}
+    --key {{ garage_access_key }}
+  loop: "{{ garage_buckets }}"
+  when: garage_access_key is defined

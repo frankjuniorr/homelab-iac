@@ -5,14 +5,14 @@ export SOPS_AGE_KEY_FILE := home_dir() + "/.config/sops/age/keys.txt"
 
 # Helper para rodar ansible com inventário descriptografado em memória (via process substitution)
 # Usamos o caminho absoluto para o arquivo de hosts para evitar problemas de navegação de diretório
-ansible_cmd := "ansible-playbook -i <(sops -d " + quote(invocation_directory() + "/src/hosts.sops.yaml") + ")"
+ansible_cmd := "ansible-playbook -i <(sops -d " + quote(invocation_directory() + "/src/hosts.yaml") + ")"
 
 ############################################################################
 # FIRST USE
 ############################################################################
 # Inicializa o arquivo de hosts a partir do sample (apenas se não existir)
 init-hosts:
-    @test ! -f src/hosts.sops.yaml && cp -v config-files/sample/hosts.yaml src/hosts.sops.yaml || echo "src/hosts.sops.yaml already exists"
+    @test ! -f src/hosts.yaml && cp -v config-files/sample/hosts.yaml src/hosts.yaml || echo "src/hosts.yaml already exists"
 
 ############################################################################
 # INIT
@@ -39,7 +39,7 @@ save-data:
 # Deploy
 ############################################################################
 # Deploy completo no Proxmox
-homelab-build: init
+homelab-build: secrets-encrypt init
     cd src && {{ansible_cmd}} main.yaml --tags "proxmox-init,deploy-infra"
 
 # Deploy apenas da infraestrutura
@@ -75,21 +75,27 @@ secrets-keygen:
 
 # Criptografa o arquivo de hosts inicial
 secrets-encrypt:
-    @sops --encrypt --in-place src/hosts.sops.yaml
-    @echo "src/hosts.sops.yaml encrypt"
+    @if ! grep -q "sops:" src/hosts.yaml; then \
+        sops --encrypt --in-place src/hosts.yaml && echo "src/hosts.yaml encrypted"; \
+    else \
+        echo "src/hosts.yaml is already encrypted"; \
+    fi
 
 # Edita o arquivo de hosts descriptografado no editor
 secrets-edit:
-    sops src/hosts.sops.yaml
+    sops src/hosts.yaml
 
 # Descriptografa o arquivo de hosts (in-place)
 secrets-decrypt:
-    @sops --decrypt --in-place src/hosts.sops.yaml
-    @echo "src/hosts.sops.yaml encrypt"
+    @if grep -q "sops:" src/hosts.yaml; then \
+        sops --decrypt --in-place src/hosts.yaml && echo "src/hosts.yaml decrypted"; \
+    else \
+        echo "src/hosts.yaml is already decrypted"; \
+    fi
 
 # Descriptografa o arquivo de hosts para visualização
 secrets-view:
-    sops -d src/hosts.sops.yaml
+    sops -d src/hosts.yaml
 
 ############################################################################
 # DESTROY

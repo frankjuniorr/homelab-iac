@@ -56,8 +56,10 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 
 ### 2. Secret Management (SOPS + age)
 - **Never hardcode secrets.** Use SOPS for `src/hosts.yaml` with `age` keys.
+- **Hosts File Management:** ALWAYS use `just secrets-decrypt` before editing and `just secrets-encrypt` after editing `src/hosts.yaml`. NEVER leave the file decrypted in the repository.
+- **Sync Sample:** Whenever `src/hosts.yaml` is updated, you MUST also update `config-files/sample/hosts.yaml` with the same structure (but empty/placeholder values) to keep it in sync.
 - Ensure the public key is configured in `.sops.yaml` (if applicable) and the private key remains in `~/.config/sops/age/keys.txt`.
-- For editing, always use `just secrets-edit`.
+- For editing, you can also use `just secrets-edit`.
 
 ### 3. Ansible Best Practices
 - **Roles:** Keep logic modular within `src/roles/`.
@@ -68,6 +70,7 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 ### 4. Configuration
 - The source of truth for inventory is `src/hosts.yaml` (managed via SOPS).
 - Template files should use `.j2` extension and reside in role `templates/` folders.
+
 
 ### 5. Naming
 - Kubernetes VMs - Master Nodes: Every VM that is part of the Kubernetes cluster is named after a Hindu mythology deity. The Kubernetes master nodes are named after the main Hindu trinity: Brahma, Vishnu, Shiva.
