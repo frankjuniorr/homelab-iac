@@ -191,16 +191,19 @@
   delegate_to: localhost
   become: false
 
-- name: Configure AWS credentials (local)
-  ansible.builtin.ini_file:
-    path: "~/.aws/credentials"
-    section: garage
-    option: "{{ item.key }}"
-    value: "{{ item.value }}"
+- name: Configure AWS config (local)
+  ansible.builtin.template:
+    src: aws_config.j2
+    dest: "~/.aws/config"
     mode: '0600'
-  loop:
-    - { key: "aws_access_key_id", value: "{{ garage_access_key }}" }
-    - { key: "aws_secret_access_key", value: "{{ garage_secret_key }}" }
+  delegate_to: localhost
+  become: false
+
+- name: Configure AWS credentials (local)
+  ansible.builtin.template:
+    src: aws_credentials.j2
+    dest: "~/.aws/credentials"
+    mode: '0600'
   delegate_to: localhost
   become: false
   when: garage_access_key is defined and garage_secret_key is defined
@@ -219,6 +222,7 @@
       | select('search', '^[0-9a-f]{64}')
       | map('split')
       | map('last')
+      | map('trim')
       | list }}"
 
 - name: Create missing buckets
@@ -226,6 +230,14 @@
     /usr/local/bin/garage bucket create {{ item.name }}
   loop: "{{ garage_buckets }}"
   when: "item.name not in existing_bucket_names"
+  register: bucket_creation
+  failed_when:
+    - bucket_creation.rc != 0
+    - "'already exists' not in bucket_creation.stderr"
+    - "'already exists' not in bucket_creation.stdout"
+  changed_when:
+    - bucket_creation.rc == 0
+    - "'Created bucket' in bucket_creation.stdout"
 
 - name: Delete removed buckets
   ansible.builtin.command: >
@@ -251,10 +263,3 @@
   failed_when: false
   changed_when: "'Created bucket' in s3_web_bucket_create.stdout"
 
-- name: Upload index.html to s3-web bucket
-  ansible.builtin.shell: >
-    aws s3 cp {{ role_path }}/files/index.html s3://s3-web/index.html
-    --profile garage --endpoint-url http://{{ ansible_host }}:3900
-  delegate_to: localhost
-  become: false
-  changed_when: true

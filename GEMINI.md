@@ -64,7 +64,7 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 ### 3. Ansible Best Practices
 - **Roles:** Keep logic modular within `src/roles/`.
 - **Tags:** Rigorously use tags (`proxmox-init`, `deploy-infra`, `k3s-install`, `destroy-infra`, `update-all`) to allow granular execution.
-- **Idempotency:** Ensure all roles and tasks are idempotent.
+- **Idempotency:** ALWAYS ensure all roles and tasks are idempotent. Idempotency is a core requirement; tasks must be designed to be safe to run multiple times without causing errors or unnecessary changes.
 - **OS Support:** Focus on Rocky Linux compatibility for guests and Debian for Proxmox nodes.
 
 ### 4. Configuration
@@ -121,5 +121,12 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 - **Verification:** When modifying roles, verify against `src/main.yaml` to ensure tags and host groups are correctly targeted.
 - **Testing:** New features should include a corresponding role or task in a playbook, ideally verified with a dry-run (`--check`) if applicable.
 - **Documentation:** Update `README.md` or role-specific READMEs if architectural changes are made.
-
 - README file: The README file should always be written in English
+
+## 🤖 Model Selection Guidelines
+To optimize quota usage and ensure efficiency, follow these prioritization rules:
+
+`gemini-2.5-flash-lite` Model:
+Use for: Conceptual doubts, quick explanations, term translations, or "Yes/No" questions.
+
+Triggers: Questions starting with "o que é...", "como funciona...", "Explique...", "Dúvida: ....".

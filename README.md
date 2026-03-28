@@ -72,9 +72,20 @@ graph TD
 
     subgraph Outputs ["Automated Outputs"]
         A -- Updates --> SC[~/.ssh/config]
-        A -- Fetches --> KC[~/.kube/config]
+        A -- Updates --> AC[~/.aws]
+        A -- Updates --> EH[/etc/hosts]
+        A -- Fetches --> KC[~/.kube/config.k3s]
     end
 ```
+
+### Local Files Management
+
+To provide a seamless experience, the project automatically manages several configuration files on your **Local Machine (Control Node)**:
+
+1.  **`~/.ssh/config`**: Configures SSH access to all homelab nodes, including 1Password agent integration.
+2.  **`~/.aws/`**: Generates `config` and `credentials` for the AWS CLI to interact with the Garage S3 API.
+3.  **`/etc/hosts`**: Maps the IP addresses of all VMs and Containers to their respective hostnames for local resolution.
+4.  **`~/.kube/config.k3s`**: Fetches and updates the Kubernetes configuration to allow `kubectl` to manage the K3s cluster.
 
 ---
 
