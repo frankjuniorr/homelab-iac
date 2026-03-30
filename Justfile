@@ -40,7 +40,7 @@ save-data:
 ############################################################################
 # Deploy completo no Proxmox
 homelab-build: secrets-encrypt init
-    cd src && {{ansible_cmd}} main.yaml --tags "proxmox-init,deploy-infra"
+    cd src && {{ansible_cmd}} --ask-become-pass main.yaml --tags "proxmox-init,deploy-infra"
 
 # Deploy apenas da infraestrutura
 deploy-infra:

@@ -1,0 +1,9 @@
+#!/bin/bash
+# Sync Garage metadata and data to Google Drive
+# Managed by "homelab-iac"
+
+# Backing up the filesystem paths of Garage
+rclone sync {{ garage_s3_remote_name }}: {{ gdrive_remote_name }}: \
+  --progress \
+  --transfers 8 \
+  --checkers 16

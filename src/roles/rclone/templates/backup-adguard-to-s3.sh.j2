@@ -1,0 +1,10 @@
+#!/bin/bash
+# Sync AdGuard data to Garage S3
+# Managed by "homelab-iac"
+
+rclone sync /opt/AdGuardHome/ {{ garage_s3_remote_name }}:{{ adguard_bucket_name }} \
+  --include "/AdGuardHome.yaml" \
+  --include "/data/**" \
+  --progress \
+  --transfers 8 \
+  --checkers 16

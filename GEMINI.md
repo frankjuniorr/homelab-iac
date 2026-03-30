@@ -117,6 +117,9 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 ---
 
 ## Development Guidelines for Gemini
+- **Technical Rationale:** ALWAYS provide a technical explanation of the logic behind any change BEFORE performing it.
+- **Proactive Strategy:** If a user request is suboptimal or technically questionable, you MUST provide your professional opinion and suggest a better alternative or strategy before proceeding.
+- **Git Hooks:** ALWAYS run `just install-hooks` after modifying `scripts/pre-commit.sh` to ensure the local `.git/hooks/pre-commit` is updated.
 - **Documentation Sync:** ALWAYS update `GEMINI.md` and `README.md` when new commands or major changes are added to the `Justfile`.
 - **Verification:** When modifying roles, verify against `src/main.yaml` to ensure tags and host groups are correctly targeted.
 - **Testing:** New features should include a corresponding role or task in a playbook, ideally verified with a dry-run (`--check`) if applicable.

@@ -7,6 +7,7 @@ garage_config_dir: "/etc"
 garage_data_dir: "/var/lib/garage"
 garage_meta_dir: "/var/lib/garage/meta"
 garage_data_storage_dir: "/var/lib/garage/data"
+garage_key_name: "homelab-iac-key"
 
 garage_rpc_bind_addr: "[::]:3901"
 garage_s3_api_bind_addr: "[::]:3900"

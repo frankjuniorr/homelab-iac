@@ -42,39 +42,3 @@
   changed_when: "'installed' in adguard_install.stdout or adguard_install.rc == 0"
   when: adguard_status.stdout != 'active'
 
-##################################################################
-# Backup/Recovery Logic (AdGuardHome Data)
-##################################################################
-- name: "Find the backup file in src/data"
-  delegate_to: localhost
-  become: false
-  ansible.builtin.find:
-    paths: "{{ playbook_dir }}/data"
-    patterns: "*.tar.gz"
-  register: local_backups
-
-- name: "Recover AdGuardHome data if backup exists"
-  when: 
-    - local_backups.matched > 0
-    - adguard_install is changed
-  block:
-    - name: "Transfer backup to DNS server"
-      ansible.builtin.copy:
-        src: "{{ local_backups.files[0].path }}"
-        dest: "/tmp/adguard_restore.tar.gz"
-        mode: '0644'
-
-    - name: "Stop AdGuardHome, extract backup and restart"
-      ansible.builtin.shell: |
-        systemctl stop AdGuardHome
-        tar -xzf /tmp/adguard_restore.tar.gz -C {{ adguard_installation_dir }}
-        systemctl start AdGuardHome
-      register: recovery_process
-      changed_when: recovery_process.rc == 0
-
-- name: "Initial Data Save (if no backup exists)"
-  ansible.builtin.include_role:
-    name: proxmox-save-data
-  when:
-    - local_backups.matched == 0
-    - adguard_install is changed

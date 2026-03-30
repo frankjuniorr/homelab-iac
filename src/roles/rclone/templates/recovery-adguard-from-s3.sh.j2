@@ -1,0 +1,16 @@
+#!/bin/bash
+# Sync AdGuard data to Garage S3
+# Managed by "homelab-iac"
+
+# Stop Adguard service before recovery data/ folder
+systemctl stop AdGuardHome
+
+rclone copy {{ garage_s3_remote_name }}:{{ adguard_bucket_name }} /opt/AdGuardHome/ \
+  --include "/AdGuardHome.yaml" \
+  --include "/data/**" \
+  --progress \
+  --transfers 8 \
+  --checkers 16
+
+# Start Adguard service before recovery data/ folder
+systemctl start AdGuardHome
