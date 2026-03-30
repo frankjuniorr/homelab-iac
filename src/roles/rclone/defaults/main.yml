@@ -6,11 +6,15 @@ rclone_backup_scripts_dir: "/home/{{ hostvars[inventory_hostname]['ansible_user'
 # AdGuard Home Configs
 adguard_data_path: "/opt/AdGuardHome/data"
 adguard_bucket_name: "adguard-bucket"
+adguard_backup_cron_minute: "0"
+adguard_backup_cron_hour: "2"
 
 # Garage S3 Configs
 garage_data_dir: "/var/lib/garage"
 garage_s3_remote_name: "s3"
 garage_s3_endpoint: "http://{{ hostvars['s3']['ansible_host'] }}:3900"
+garage_backup_cron_minute: "30"
+garage_backup_cron_hour: "2"
 
 # Google Drive Configs
 gdrive_remote_name: "gdrive"

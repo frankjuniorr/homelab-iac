@@ -7,3 +7,6 @@
 
 - name: Recovery Data
   ansible.builtin.import_tasks: recovery.yml
+
+- name: Schedule Backups
+  ansible.builtin.import_tasks: cron.yml
