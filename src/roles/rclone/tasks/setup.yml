@@ -1,0 +1,38 @@
+---
+- name: "Install RClone"
+  ansible.builtin.shell: "curl -sS https://rclone.org/install.sh | bash"
+  become: true
+  args:
+    creates: /usr/bin/rclone
+
+- name: "Ensure RClone configuration directory exists"
+  ansible.builtin.file:
+    path: "{{ rclone_config_dir }}"
+    state: directory
+    mode: '0700'
+  when: inventory_hostname != 'localhost'
+
+- name: "Configure RClone"
+  ansible.builtin.template:
+    src: "rclone_{{ inventory_hostname }}.conf.j2"
+    dest: "{{ rclone_config_file }}"
+    mode: '0600'
+  when:
+    - inventory_hostname != 'localhost'
+
+- name: "Ensure RClone configuration directory exists for root"
+  become: true
+  ansible.builtin.file:
+    path: "/root/.config/rclone"
+    state: directory
+    mode: '0700'
+  when: inventory_hostname != 'localhost'
+
+- name: "Copy RClone config to root"
+  become: true
+  ansible.builtin.copy:
+    src: "/home/{{ hostvars[inventory_hostname]['ansible_user'] }}/.config/rclone/rclone.conf"
+    dest: "/root/.config/rclone/rclone.conf"
+    remote_src: true
+    mode: '0600'
+  when: inventory_hostname != 'localhost'

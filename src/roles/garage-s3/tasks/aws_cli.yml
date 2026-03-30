@@ -1,0 +1,25 @@
+---
+- name: Ensure .aws directory exists (local)
+  ansible.builtin.file:
+    path: "~/.aws"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  become: false
+
+- name: Configure AWS config (local)
+  ansible.builtin.template:
+    src: aws_config.j2
+    dest: "~/.aws/config"
+    mode: '0600'
+  delegate_to: localhost
+  become: false
+
+- name: Configure AWS credentials (local)
+  ansible.builtin.template:
+    src: aws_credentials.j2
+    dest: "~/.aws/credentials"
+    mode: '0600'
+  delegate_to: localhost
+  become: false
+  when: garage_access_key is defined and garage_secret_key is defined

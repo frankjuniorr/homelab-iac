@@ -1,0 +1,29 @@
+---
+- name: "Check if Adguard already have configured"
+  become: true
+  ansible.builtin.stat:
+    path: /opt/AdGuardHome/AdGuardHome.yaml
+  register: adguard_conf
+  when: inventory_hostname == 'dns'
+
+- name: "Check if adguard-bucket are empty"
+  become: true
+  ansible.builtin.command: >
+    rclone lsjson {{ garage_s3_remote_name }}:{{ adguard_bucket_name }}
+  register: bucket_content
+  changed_when: false
+  when: inventory_hostname == 's3'
+
+- name: "Recovery Garage Buckets from Google Drive"
+  become: true
+  ansible.builtin.shell: "bash {{ rclone_backup_scripts_dir }}/recovery-gdrive-from-s3.sh"
+  when:
+    - inventory_hostname == 's3'
+    - (bucket_content.stdout | from_json) | length == 0
+
+- name: "Recovery Adguard data from S3"
+  become: true
+  ansible.builtin.shell: "bash {{ rclone_backup_scripts_dir }}/recovery-adguard-from-s3.sh"
+  when:
+    - inventory_hostname == 'dns'
+    - not adguard_conf.stat.exists

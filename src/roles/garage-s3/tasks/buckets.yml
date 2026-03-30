@@ -1,0 +1,43 @@
+---
+- name: List existing buckets
+  ansible.builtin.shell: /usr/local/bin/garage bucket list
+  register: garage_buckets_list
+  changed_when: false
+
+- name: Extract existing bucket names
+  ansible.builtin.set_fact:
+    existing_bucket_names: "{{ garage_buckets_list.stdout_lines
+      | select('search', '^[0-9a-f]{64}')
+      | map('split')
+      | map('last')
+      | map('trim')
+      | list }}"
+
+- name: Create missing buckets
+  ansible.builtin.shell: >
+    /usr/local/bin/garage bucket create {{ item.name }}
+  loop: "{{ garage_buckets }}"
+  when: "item.name not in existing_bucket_names"
+  register: bucket_creation
+  failed_when:
+    - bucket_creation.rc != 0
+    - "'already exists' not in bucket_creation.stderr"
+    - "'already exists' not in bucket_creation.stdout"
+  changed_when:
+    - bucket_creation.rc == 0
+    - "'Created bucket' in bucket_creation.stdout"
+
+- name: Delete removed buckets
+  ansible.builtin.shell: >
+    /usr/local/bin/garage bucket delete --yes --purge {{ item }}
+  loop: "{{ existing_bucket_names }}"
+  when: "item not in (garage_buckets | map(attribute='name') | list)"
+
+- name: Apply bucket permissions
+  ansible.builtin.shell: >
+    /usr/local/bin/garage bucket allow
+    {{ item.permissions | map('regex_replace', '^', '--') | join(' ') }}
+    {{ item.name }}
+    --key {{ garage_access_key }}
+  loop: "{{ garage_buckets }}"
+  when: garage_access_key is defined

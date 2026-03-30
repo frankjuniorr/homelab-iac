@@ -1,0 +1,27 @@
+---
+- name: "Create backup scripts directory"
+  ansible.builtin.file:
+    path: "{{ rclone_backup_scripts_dir }}"
+    state: directory
+    mode: '0755'
+  when: inventory_hostname != 'localhost'
+
+- name: "Create AdGuard sync script (DNS Container)"
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ rclone_backup_scripts_dir }}/{{ item.dest }}"
+    mode: '0755'
+  loop:
+    - { src: "backup-adguard-to-s3.sh.j2", dest: "backup-adguard-to-s3.sh" }
+    - { src: "recovery-adguard-from-s3.sh.j2", dest: "recovery-adguard-from-s3.sh" }
+  when: inventory_hostname == 'dns'
+
+- name: "Create Garage sync script (S3 Container)"
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ rclone_backup_scripts_dir }}/{{ item.dest }}"
+    mode: '0755'
+  loop:
+    - { src: "backup-s3-to-gdrive.sh.j2", dest: "backup-s3-to-gdrive.sh" }
+    - { src: "recovery-gdrive-from-s3.sh.j2", dest: "recovery-gdrive-from-s3.sh" }
+  when: inventory_hostname == 's3'
