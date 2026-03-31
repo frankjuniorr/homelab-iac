@@ -13,6 +13,7 @@
     - role: proxmox-create-containers
       tags:
         - proxmox-init
+        - lxc
 
     - role: proxmox-write-notes
       vars:
@@ -20,19 +21,23 @@
         proxmox_guest_type: "container"
       tags:
         - proxmox-init
+        - lxc
 
     # Create VMs
     - role: proxmox-customize-rocky-linux-cloud-image
       tags:
         - proxmox-init
+        - vms
 
     - role: proxmox-create-cloud-init-vm-template
       tags:
         - proxmox-init
+        - vms
 
     - role: proxmox-create-vms
       tags:
         - proxmox-init
+        - vms
 
     - role: proxmox-write-notes
       vars:
@@ -40,6 +45,7 @@
         proxmox_guest_type: "vm"
       tags:
         - proxmox-init
+        - vms
 
 ##############################################
 # Running in all hosts
@@ -53,6 +59,8 @@
     - role: configure-remote-ssh
       tags:
         - deploy-infra
+        - lxc
+        - vms
 
 # #############################################
 # # Executing only in 'dns' host
@@ -67,6 +75,7 @@
     - role: dns-server
       tags:
         - deploy-infra
+        - lxc
 
 
 # #############################################
@@ -81,6 +90,7 @@
     - role: garage-s3
       tags:
         - deploy-infra
+        - lxc
 
 
 ##############################################
@@ -95,6 +105,7 @@
     - role: rclone
       tags:
         - deploy-infra
+        - lxc
 
 ##############################################
 # Running in all hosts
@@ -108,10 +119,12 @@
     - role: configure-vm-user
       tags:
         - deploy-infra
+        - vms
 
     - role: dns-client
       tags:
         - deploy-infra
+        - vms
 
 
 ##############################################
@@ -126,6 +139,7 @@
     - role: kubernetes-firewall
       tags:
         - deploy-infra
+        - vms
 
 ##############################################
 # Installing k3s
@@ -140,6 +154,7 @@
       tags:
         - deploy-infra
         - k3s-install
+        - vms
 
 - name: "Installing k3s nodes"
   hosts: k8s_worker_nodes
@@ -151,4 +166,5 @@
       tags:
         - deploy-infra
         - k3s-install
+        - vms
 

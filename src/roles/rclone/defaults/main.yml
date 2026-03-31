@@ -18,3 +18,6 @@ garage_backup_cron_hour: "2"
 
 # Google Drive Configs
 gdrive_remote_name: "gdrive"
+
+# Logging Configs
+rclone_log_dir: "/var/log/rclone"

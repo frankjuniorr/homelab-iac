@@ -2,6 +2,15 @@
 # Sync AdGuard data to Garage S3
 # Managed by "homelab-iac"
 
+# Ensure common paths are in PATH for cron and user flexibility
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# Check if rclone is available
+if ! command -v rclone &> /dev/null; then
+    echo "Error: rclone not found in PATH." >&2
+    exit 1
+fi
+
 # Stop Adguard service before recovery data/ folder
 systemctl stop AdGuardHome
 

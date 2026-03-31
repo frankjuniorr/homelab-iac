@@ -20,6 +20,29 @@
   when:
     - inventory_hostname != 'localhost'
 
+- name: "Ensure RClone log directory exists"
+  become: true
+  ansible.builtin.file:
+    path: "{{ rclone_log_dir }}"
+    state: directory
+    mode: '0755'
+  when: inventory_hostname != 'localhost'
+
+- name: "Ensure Logrotate is installed"
+  become: true
+  ansible.builtin.package:
+    name: logrotate
+    state: present
+  when: inventory_hostname != 'localhost'
+
+- name: "Configure Logrotate for RClone logs"
+  become: true
+  ansible.builtin.template:
+    src: logrotate.j2
+    dest: /etc/logrotate.d/rclone
+    mode: '0644'
+  when: inventory_hostname != 'localhost'
+
 - name: "Ensure RClone configuration directory exists for root"
   become: true
   ansible.builtin.file:

@@ -2,6 +2,15 @@
 # Sync Garage metadata and data to Google Drive
 # Managed by "homelab-iac"
 
+# Ensure common paths are in PATH for cron and user flexibility
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# Check if rclone is available
+if ! command -v rclone &> /dev/null; then
+    echo "Error: rclone not found in PATH." >&2
+    exit 1
+fi
+
 # Backing up the filesystem paths of Garage
 rclone copy {{ gdrive_remote_name }}: {{ garage_s3_remote_name }}: \
   --progress \

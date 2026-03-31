@@ -56,6 +56,7 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 
 ### 2. Secret Management (SOPS + age)
 - **Never hardcode secrets.** Use SOPS for `src/hosts.yaml` with `age` keys.
+- **Agent Instruction:** If you need to read `src/hosts.yaml` and it is encrypted (contains SOPS metadata), you MUST use `just secrets-decrypt` before proceeding.
 - **Hosts File Management:** ALWAYS use `just secrets-decrypt` before editing and `just secrets-encrypt` after editing `src/hosts.yaml`. NEVER leave the file decrypted in the repository.
 - **Sync Sample:** Whenever `src/hosts.yaml` is updated, you MUST also update `config-files/sample/hosts.yaml` with the same structure (but empty/placeholder values) to keep it in sync.
 - Ensure the public key is configured in `.sops.yaml` (if applicable) and the private key remains in `~/.config/sops/age/keys.txt`.
@@ -91,6 +92,8 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 ### Infrastructure Deployment
 - `just homelab-build`: Full infrastructure deployment (VMs + Containers + K3s).
 - `just deploy-infra`: Provision VMs/Containers and configure basic services.
+- `just deploy-lxc`: Provisions and configures only the LXC Containers (DNS, S3).
+- `just deploy-vms`: Provisions and configures only the Virtual Machines (K3s).
 - `just k3s-install`: Specifically install or update the K3s cluster.
 
 ### Cleanup & Maintenance
@@ -113,6 +116,25 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 
 ## Debugging & Troubleshooting
 - **Aesthetic Plugin:** For better debugging and visibility into exact Ansible errors, it is RECOMMENDED to disable the aesthetic plugin by running `just plugin off`. Once the issue is resolved, you can reactivate it using `just plugin on`.
+
+---
+
+## Remote Access & Debugging
+
+### SSH Configuration
+- The SSH configuration is managed by this project (see `src/roles/configure-local-ssh/`).
+- The main config file is `~/.ssh/config`, which includes individual server configurations from `~/.ssh/servers/*.conf`.
+- Gemini can use these configurations to connect to any host defined in the inventory.
+
+### Connecting to Hosts
+- To execute commands on a remote host, use `ssh <hostname> "<command>"`.
+- The hostnames are defined in `src/hosts.yaml` (e.g., `proxmox`, `dns`, `s3`, `k8s-master`).
+- **Example:** `ssh dns "systemctl status AdGuardHome"`
+
+### Debugging & Testing
+- Use standard Linux tools (`journalctl`, `systemctl`, `df -h`, `ip a`) via SSH to investigate issues on guest nodes.
+- For Ansible-specific issues, you can run tasks with increased verbosity if needed, but the primary method for ad-hoc debugging should be direct SSH command execution.
+- If a script (like those in `rclone` role) is failing, you can run it manually via SSH to see immediate output: `ssh dns "/bin/bash ~/backups/backup-adguard-to-s3.sh"`
 
 ---
 

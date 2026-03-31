@@ -2,8 +2,24 @@
 # Sync AdGuard data to Garage S3
 # Managed by "homelab-iac"
 
-rclone sync /opt/AdGuardHome/ {{ garage_s3_remote_name }}:{{ adguard_bucket_name }} \
-  --include "/AdGuardHome.yaml" \
-  --progress \
-  --transfers 8 \
-  --checkers 16
+# Ensure common paths are in PATH for cron and user flexibility
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# Check if rclone is available
+if ! command -v rclone &> /dev/null; then
+    echo "Error: rclone not found in PATH." >&2
+    exit 1
+fi
+
+LOG_FILE="{{ rclone_log_dir }}/adguard-backup.log"
+
+{
+  echo "--- Backup Started at $(date) ---"
+  rclone sync /opt/AdGuardHome/ {{ garage_s3_remote_name }}:{{ adguard_bucket_name }} \
+    --include "/AdGuardHome.yaml" \
+    --use-json-log \
+    --log-level INFO \
+    --transfers 8 \
+    --checkers 16
+  echo "--- Backup Finished at $(date) ---"
+} >> "$LOG_FILE" 2>&1

@@ -44,7 +44,15 @@ homelab-build: secrets-encrypt init
 
 # Deploy apenas da infraestrutura
 deploy-infra:
-    cd src && {{ansible_cmd}} main.yaml --tags "deploy-infra"
+    cd src && {{ansible_cmd}} --ask-become-pass main.yaml --tags "deploy-infra"
+
+# Deploy e configuração apenas dos Containers LXC
+deploy-lxc:
+    cd src && {{ansible_cmd}} --ask-become-pass main.yaml --tags "lxc"
+
+# Deploy e configuração apenas das VMs
+deploy-vms:
+    cd src && {{ansible_cmd}} main.yaml --tags "vms"
 
 # Instalação apenas do K3s
 k3s-install:

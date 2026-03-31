@@ -174,6 +174,8 @@ Always use `just secrets-edit` to manage your variables.
 | :--- | :--- |
 | `just homelab-build` | **Full Deploy:** Full initialization + VM/LXC creation + K3s installation. |
 | `just deploy-infra` | Provisions only the VMs and Containers and configures basic services. |
+| `just deploy-lxc` | **LXC Only:** Provisions and configures only the LXC Containers (DNS, S3). |
+| `just deploy-vms` | **VMs Only:** Provisions and configures only the Virtual Machines (K3s). |
 | `just k3s-install` | Installs or updates the K3s cluster on existing nodes. |
 
 ### 3. Maintenance & Operations

@@ -3,7 +3,7 @@
   become: true
   ansible.builtin.cron:
     name: "AdGuard daily backup to S3"
-    job: "/bin/bash {{ rclone_backup_scripts_dir }}/backup-adguard-to-s3.sh > /dev/null 2>&1"
+    job: "/bin/bash {{ rclone_backup_scripts_dir }}/backup-adguard-to-s3.sh"
     minute: "{{ adguard_backup_cron_minute }}"
     hour: "{{ adguard_backup_cron_hour }}"
     day: "*"
@@ -16,7 +16,7 @@
   become: true
   ansible.builtin.cron:
     name: "Garage daily backup to Google Drive"
-    job: "/bin/bash {{ rclone_backup_scripts_dir }}/backup-s3-to-gdrive.sh > /dev/null 2>&1"
+    job: "/bin/bash {{ rclone_backup_scripts_dir }}/backup-s3-to-gdrive.sh"
     minute: "{{ garage_backup_cron_minute }}"
     hour: "{{ garage_backup_cron_hour }}"
     day: "*"
