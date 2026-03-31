@@ -1,0 +1,42 @@
+---
+# Main Orchestrator for VM management
+# Separation of responsibilities by task file
+
+- name: "Step 1: Customize Rocky Linux Cloud Image"
+  ansible.builtin.include_tasks: 1-prepare-image.yml
+  when: inventory_hostname in groups['proxmox_nodes']
+  tags:
+    - proxmox-init
+    - vms
+
+- name: "Step 2: Create Cloud Init VM Template"
+  ansible.builtin.include_tasks: 2-create-template.yml
+  when: inventory_hostname in groups['proxmox_nodes']
+  tags:
+    - proxmox-init
+    - vms
+
+- name: "Step 3: Provision VMs (Clone and Configure)"
+  ansible.builtin.include_tasks: 3-provision-vms.yml
+  when: inventory_hostname in groups['proxmox_nodes']
+  tags:
+    - proxmox-init
+    - vms
+
+- name: "Step 4: Setup Guest Environment"
+  ansible.builtin.include_tasks: 4-setup-guest.yml
+  when: inventory_hostname in groups['vms_all']
+  tags:
+    - deploy-infra
+    - vms
+
+- name: "Step 5: Write Proxmox Notes for VMs"
+  ansible.builtin.include_role:
+    name: proxmox-write-notes
+  vars:
+    proxmox_guest_group: "{{ groups['vms_all'] }}"
+    proxmox_guest_type: "vm"
+  when: inventory_hostname in groups['proxmox_nodes']
+  tags:
+    - proxmox-init
+    - vms

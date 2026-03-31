@@ -119,6 +119,19 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 
 ---
 
+## VM Management (Refactoring)
+
+### Consolidated Role: `create-proxmox-vms`
+To improve maintainability and reduce redundancy, the following roles were consolidated into a single orchestrator:
+- `proxmox-customize-rocky-linux-cloud-image` -> `tasks/1-prepare-image.yml`
+- `proxmox-create-cloud-init-vm-template` -> `tasks/2-create-template.yml`
+- `proxmox-create-vms` -> `tasks/3-provision-vms.yml`
+- `configure-vm-user` -> `tasks/4-setup-guest.yml`
+
+**Operational Note:** This role handles the entire VM lifecycle. It uses `ansible.builtin.include_tasks` to run specific stages based on the host group (`proxmox_nodes` for infrastructure tasks and `vms_all` for guest configuration).
+
+---
+
 ## Remote Access & Debugging
 
 ### SSH Configuration

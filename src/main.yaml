@@ -15,34 +15,8 @@
         - proxmox-init
         - lxc
 
-    - role: proxmox-write-notes
-      vars:
-        proxmox_guest_group: "{{ groups['containers_lxc'] }}"
-        proxmox_guest_type: "container"
-      tags:
-        - proxmox-init
-        - lxc
-
-    # Create VMs
-    - role: proxmox-customize-rocky-linux-cloud-image
-      tags:
-        - proxmox-init
-        - vms
-
-    - role: proxmox-create-cloud-init-vm-template
-      tags:
-        - proxmox-init
-        - vms
-
-    - role: proxmox-create-vms
-      tags:
-        - proxmox-init
-        - vms
-
-    - role: proxmox-write-notes
-      vars:
-        proxmox_guest_group: "{{ groups['vms_all'] }}"
-        proxmox_guest_type: "vm"
+    # Provision VMs (Customize Image, Template and Clone)
+    - role: create-proxmox-vms
       tags:
         - proxmox-init
         - vms
@@ -116,7 +90,7 @@
   gather_facts: false
 
   roles:
-    - role: configure-vm-user
+    - role: create-proxmox-vms
       tags:
         - deploy-infra
         - vms

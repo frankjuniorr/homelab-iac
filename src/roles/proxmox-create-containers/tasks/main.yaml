@@ -81,3 +81,13 @@
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
   when: container_creation.changed
+
+- name: "Write Proxmox Notes for Containers"
+  ansible.builtin.include_role:
+    name: proxmox-write-notes
+  vars:
+    proxmox_guest_group: "{{ groups['containers_lxc'] }}"
+    proxmox_guest_type: "container"
+  tags:
+    - proxmox-init
+    - lxc
