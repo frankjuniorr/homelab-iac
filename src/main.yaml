@@ -36,6 +36,27 @@
         - lxc
         - vms
 
+
+##############################################
+# Base Guest OS Configuration
+##############################################
+- name: "Configure Guest OS"
+  hosts: vms_all,containers_lxc
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: configure-guest-os
+      tags:
+        - deploy-infra
+        - lxc
+        - vms
+
+    - role: dns-client
+      tags:
+        - deploy-infra
+        - vms
+
 # #############################################
 # # Executing only in 'dns' host
 # #############################################
@@ -51,7 +72,6 @@
         - deploy-infra
         - lxc
 
-
 # #############################################
 # # Executing only in 's3' host
 # #############################################
@@ -66,7 +86,6 @@
         - deploy-infra
         - lxc
 
-
 ##############################################
 # RClone Configuration
 ##############################################
@@ -80,26 +99,6 @@
       tags:
         - deploy-infra
         - lxc
-
-##############################################
-# Running in all hosts
-##############################################
-- name: "Configure all VMs"
-  hosts: vms_all
-  become: true
-  gather_facts: false
-
-  roles:
-    - role: create-proxmox-vms
-      tags:
-        - deploy-infra
-        - vms
-
-    - role: dns-client
-      tags:
-        - deploy-infra
-        - vms
-
 
 ##############################################
 # Opening 6443 port on cluster k8s Firewall

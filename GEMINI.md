@@ -64,6 +64,7 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 
 ### 3. Ansible Best Practices
 - **Roles:** Keep logic modular within `src/roles/`.
+- **Module Prioritization:** ALWAYS prioritize native Ansible modules over the `shell` or `command` modules. Only use `shell` when a specialized module does not exist or cannot fulfill the task's requirements.
 - **Tags:** Rigorously use tags (`proxmox-init`, `deploy-infra`, `k3s-install`, `destroy-infra`, `update-all`) to allow granular execution.
 - **Idempotency:** ALWAYS ensure all roles and tasks are idempotent. Idempotency is a core requirement; tasks must be designed to be safe to run multiple times without causing errors or unnecessary changes.
 - **OS Support:** Focus on Rocky Linux compatibility for guests and Debian for Proxmox nodes.
@@ -126,9 +127,14 @@ To improve maintainability and reduce redundancy, the following roles were conso
 - `proxmox-customize-rocky-linux-cloud-image` -> `tasks/1-prepare-image.yml`
 - `proxmox-create-cloud-init-vm-template` -> `tasks/2-create-template.yml`
 - `proxmox-create-vms` -> `tasks/3-provision-vms.yml`
-- `configure-vm-user` -> `tasks/4-setup-guest.yml`
 
-**Operational Note:** This role handles the entire VM lifecycle. It uses `ansible.builtin.include_tasks` to run specific stages based on the host group (`proxmox_nodes` for infrastructure tasks and `vms_all` for guest configuration).
+### Consolidated Role: `configure-guest-os`
+A unified role to configure the internal operating system for both VMs and Containers:
+- Replaced the old `configure_container.sh.j2` shell script and `configure-vm-user` role.
+- Handles bootstrapping (Python/DNF), package installation, user management, sudoers, MOTD, and base services.
+- Uses `ansible.builtin.raw` for initial bootstrapping on minimal environments.
+
+**Operational Note:** These roles ensure a consistent and idempotent guest environment across all infrastructure nodes.
 
 ---
 

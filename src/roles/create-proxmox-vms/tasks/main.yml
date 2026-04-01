@@ -23,13 +23,6 @@
     - proxmox-init
     - vms
 
-- name: "Step 4: Setup Guest Environment"
-  ansible.builtin.include_tasks: 4-setup-guest.yml
-  when: inventory_hostname in groups['vms_all']
-  tags:
-    - deploy-infra
-    - vms
-
 - name: "Step 5: Write Proxmox Notes for VMs"
   ansible.builtin.include_role:
     name: proxmox-write-notes

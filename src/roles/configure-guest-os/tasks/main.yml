@@ -1,0 +1,81 @@
+---
+# Bootstrap and Base Configuration for Guest OS (VMs and Containers)
+# Prioritizing Ansible modules over shell scripts
+
+- name: "Bootstrap: Install Python 3.11 (Raw)"
+  ansible.builtin.raw: "dnf install -y python3.11"
+  become: true
+  changed_when: false
+  vars:
+    # O raw não usa o wrapper do Ansible, então o 3.6 ainda funciona aqui
+    ansible_python_interpreter: /usr/libexec/platform-python
+
+- name: "Ensure EPEL release is installed (Command)"
+  ansible.builtin.command: "dnf install -y epel-release"
+  become: true
+  changed_when: false
+  # Usamos command para evitar o conflito do wrapper do módulo dnf com o Python 3.6
+
+- name: "Install base packages (Command)"
+  ansible.builtin.command: "dnf install -y openssh-server figlet cockpit unzip tar vim rsync"
+  become: true
+  changed_when: false
+
+- name: "Set user and password variables"
+  ansible.builtin.set_fact:
+    vm_user: "{{ hostvars[inventory_hostname].vm_user }}"
+    vm_user_passwd: "{{ hostvars[inventory_hostname].vm_user_passwd }}"
+
+- name: "Ensure the guest user exists"
+  become: true
+  ansible.builtin.user:
+    name: "{{ vm_user }}"
+    shell: /bin/bash
+    groups: wheel
+    append: yes
+    state: present
+
+- name: "Set user password (chpasswd)"
+  become: true
+  ansible.builtin.shell: "echo '{{ vm_user }}:{{ vm_user_passwd }}' | chpasswd"
+  changed_when: false
+
+- name: "Configure NOPASSWD for the wheel group"
+  become: true
+  ansible.builtin.lineinfile:
+    dest: /etc/sudoers
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    state: present
+    validate: visudo -cf %s
+
+- name: "Configure SSH directory for the user"
+  become: true
+  ansible.builtin.file:
+    path: "/home/{{ vm_user }}/.ssh"
+    state: directory
+    owner: "{{ vm_user }}"
+    group: "{{ vm_user }}"
+    mode: '0700'
+
+- name: "Inject SSH public key"
+  become: true
+  ansible.builtin.authorized_key:
+    user: "{{ vm_user }}"
+    state: present
+    key: "{{ lookup('file', ssh_public_key_file) }}"
+
+- name: "Change MOTD (Welcome Banner)"
+  become: true
+  ansible.builtin.shell: "figlet -k $(hostname) > /etc/motd.d/10-welcome.motd"
+  changed_when: false
+
+- name: "Enable and start base services"
+  become: true
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  loop:
+    - sshd
+    - cockpit.socket

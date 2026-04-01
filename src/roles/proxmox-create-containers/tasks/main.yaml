@@ -42,45 +42,25 @@
     label: "{{ hostvars[item].proxmox_vm_name }}"
   changed_when: false
 
-- name: "Pause to wait VMs to be ready"
-  ansible.builtin.pause:
-    seconds: 20
-  when: container_creation.changed
-
-
-- name: "Render container configuration script"
-  ansible.builtin.template:
-    src: configure_container.sh.j2
-    dest: "/tmp/configure_container_{{ hostvars[item].proxmox_vm_id }}.sh"
-    mode: '0755'
-  loop: "{{ groups['containers_lxc'] }}"
-  loop_control:
-    label: "{{ hostvars[item].proxmox_vm_name }}"
-  vars:
-    vm_user: "{{ hostvars[item].vm_user }}"
-    vm_user_passwd: "{{ hostvars[item].vm_user_passwd }}"
-    vm_ssh_public_key: "{{ hostvars[item].ssh_public_key_file }}"
-  when: container_creation.changed
-
-- name: "Copy script into the container"
+- name: "Bootstrap: Basic configuration via pct exec (LXC only)"
   ansible.builtin.shell: |
-    pct push {{ hostvars[item].proxmox_vm_id }} /tmp/configure_container_{{ hostvars[item].proxmox_vm_id }}.sh /root/configure_container.sh --perms 0755
-  become: true
+    pct exec {{ hostvars[item].proxmox_vm_id }} -- bash -c "
+      dnf install -y python3.11 python3-dnf openssh-server && 
+      useradd -m -s /bin/bash {{ hostvars[item].vm_user }} || true && 
+      echo '{{ hostvars[item].vm_user }}:{{ hostvars[item].vm_user_passwd }}' | chpasswd &&
+      usermod -aG wheel {{ hostvars[item].vm_user }} &&
+      echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel &&
+      chmod 440 /etc/sudoers.d/wheel &&
+      sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config &&
+      systemctl enable --now sshd
+    "
   loop: "{{ groups['containers_lxc'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
   when: container_creation.changed
-
-- name: "Execute script inside the container"
-  ansible.builtin.shell: |
-    pct exec {{ hostvars[item].proxmox_vm_id }} -- bash /root/configure_container.sh
-    pct exec {{ hostvars[item].proxmox_vm_id }} -- bash -c \
-        "echo '{{ lookup('file', ssh_public_key_file) }}' >> /home/{{ hostvars[item].vm_user }}/.ssh/authorized_keys"
-  become: true
-  loop: "{{ groups['containers_lxc'] }}"
-  loop_control:
-    label: "{{ hostvars[item].proxmox_vm_name }}"
-  when: container_creation.changed
+  tags:
+    - proxmox-init
+    - lxc
 
 - name: "Write Proxmox Notes for Containers"
   ansible.builtin.include_role:
