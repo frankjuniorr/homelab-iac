@@ -21,7 +21,7 @@
 - name: "Customize Cloud Init Image"
   ansible.builtin.shell: |
     virt-customize -a {{ ubuntu_cloud_image_file }} \
-      --timezone "America/Recife" \
+      --timezone "{{ timezone }}" \
       --install qemu-guest-agent,nano,vim,wget,figlet \
       --run-command "systemctl enable qemu-guest-agent" \
       --run-command "sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config" \
