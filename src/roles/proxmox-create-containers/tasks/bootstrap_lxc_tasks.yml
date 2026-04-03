@@ -1,0 +1,14 @@
+- name: "Generate bootstrap script for container: {{ hostvars[item].proxmox_vm_name }}"
+  ansible.builtin.template:
+    src: bootstrap_lxc.sh.j2
+    dest: "/tmp/bootstrap_{{ hostvars[item].proxmox_vm_id }}.sh"
+    mode: '0755'
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: "Push and execute bootstrap script in container: {{ hostvars[item].proxmox_vm_name }}"
+  ansible.builtin.shell: |
+    pct push {{ hostvars[item].proxmox_vm_id }} /tmp/bootstrap_{{ hostvars[item].proxmox_vm_id }}.sh /tmp/bootstrap.sh
+    pct exec {{ hostvars[item].proxmox_vm_id }} -- bash /tmp/bootstrap.sh
+    rm /tmp/bootstrap_{{ hostvars[item].proxmox_vm_id }}.sh
+  delegate_to: "{{ inventory_hostname }}"
+  changed_when: true

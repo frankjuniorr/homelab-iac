@@ -1,0 +1,31 @@
+#!/bin/bash
+# Bootstrap script for LXC Container: {{ hostvars[item].proxmox_vm_name }}
+
+set -e
+
+echo "Starting bootstrap for {{ hostvars[item].proxmox_vm_name }}..."
+
+# Update and install base packages
+apt-get update
+apt-get install -y python3 python3-pip openssh-server figlet cockpit sudo curl
+
+# Create user if it doesn't exist
+if ! id -u "{{ hostvars[item].vm_user }}" >/dev/null 2>&1; then
+  useradd -m -s /bin/bash "{{ hostvars[item].vm_user }}"
+  echo "User {{ hostvars[item].vm_user }} created."
+fi
+
+# Set user password
+echo "{{ hostvars[item].vm_user }}:{{ hostvars[item].vm_user_passwd }}" | chpasswd
+
+# Configure Sudo
+usermod -aG sudo "{{ hostvars[item].vm_user }}"
+echo "%sudo ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/sudo
+chmod 440 /etc/sudoers.d/sudo
+
+# Configure SSH
+sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+systemctl enable --now ssh
+
+echo "Bootstrap finished successfully!"

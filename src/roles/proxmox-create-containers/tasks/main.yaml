@@ -27,29 +27,10 @@
     creates: "/var/lib/vz/template/cache/{{ container_image.stdout }}"
 
 - name: "Create and Configure LXC Containers (Shell Mode)"
-  ansible.builtin.shell: |
-    if ! pct list | grep -q "^{{ hostvars[item].proxmox_vm_id }} "; then
-      pct create {{ hostvars[item].proxmox_vm_id }} "local:vztmpl/{{ container_image.stdout }}" \
-        --hostname {{ hostvars[item].proxmox_vm_name }} \
-        --password {{ hostvars[item].root_password }} \
-        --rootfs {{ cloud_init_template.vm_storage }}:{{ hostvars[item].proxmox_vm_disk_size | default('8G') | replace('G', '') }} \
-        --cores {{ hostvars[item].proxmox_cpu }} \
-        --memory {{ hostvars[item].proxmox_memory }} \
-        --net0 name=eth0,bridge=vmbr0,ip={{ hostvars[item].ansible_host }}/24,gw={{ network_gateway }} \
-        --onboot 1 \
-        --unprivileged 1 \
-        --features nesting=1
-      
-      # Adicionar chave SSH do root
-      mkdir -p /tmp/ssh_keys_{{ hostvars[item].proxmox_vm_id }}
-      cp {{ vm_ssh_public_key | default('/root/.ssh/id_rsa_homelab.pub') }} /tmp/ssh_keys_{{ hostvars[item].proxmox_vm_id }}/authorized_keys
-      pct push {{ hostvars[item].proxmox_vm_id }} /tmp/ssh_keys_{{ hostvars[item].proxmox_vm_id }}/authorized_keys /root/.ssh/authorized_keys
-      rm -rf /tmp/ssh_keys_{{ hostvars[item].proxmox_vm_id }}
-    fi
+  ansible.builtin.include_tasks: create_lxc_tasks.yml
   loop: "{{ groups['containers_lxc'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
-  changed_when: true
 
 - name: "Ensure Containers are started"
   ansible.builtin.shell: "pct start {{ hostvars[item].proxmox_vm_id }} || true"
@@ -62,18 +43,8 @@
   ansible.builtin.pause:
     seconds: 15
 
-- name: "Bootstrap: Basic configuration via pct exec (LXC only)"
-  ansible.builtin.shell: |
-    pct exec {{ hostvars[item].proxmox_vm_id }} -- bash -c "
-      apt-get update && apt-get install -y python3 python3-pip openssh-server figlet cockpit && 
-      useradd -m -s /bin/bash {{ hostvars[item].vm_user }} || true && 
-      echo '{{ hostvars[item].vm_user }}:{{ hostvars[item].vm_user_passwd }}' | chpasswd &&
-      usermod -aG sudo {{ hostvars[item].vm_user }} &&
-      echo '%sudo ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/sudo &&
-      chmod 440 /etc/sudoers.d/sudo &&
-      sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config &&
-      systemctl enable --now ssh
-    "
+- name: "Bootstrap: Basic configuration via script (LXC only)"
+  ansible.builtin.include_tasks: bootstrap_lxc_tasks.yml
   loop: "{{ groups['containers_lxc'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"

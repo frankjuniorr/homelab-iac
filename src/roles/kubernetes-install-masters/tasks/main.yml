@@ -17,13 +17,6 @@
   register: adguard_status
   when: not k3s_binary.stat.exists
 
-- name: "Wait for manual AdGuardHome configuration"
-  delegate_to: localhost
-  become: false
-  ansible.builtin.pause:
-    prompt: "Configure o Adguard, acesse: http://{{ hostvars[backup_dns_host]['ansible_host'] }}:3000 . Pressione ENTER quando terminar para seguir com o backup."
-  when: not k3s_binary.stat.exists and adguard_status is failed
-
 - name: "Install k3s on masters"
   ansible.builtin.shell: "{{ k3s_server_install_command }}"
   when: not k3s_binary.stat.exists

@@ -1,0 +1,13 @@
+- name: "Generate creation script for container: {{ hostvars[item].proxmox_vm_name }}"
+  ansible.builtin.template:
+    src: create_lxc.sh.j2
+    dest: "/tmp/create_lxc_{{ hostvars[item].proxmox_vm_id }}.sh"
+    mode: '0755'
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: "Execute creation script on Proxmox host for: {{ hostvars[item].proxmox_vm_name }}"
+  ansible.builtin.shell: |
+    /bin/bash "/tmp/create_lxc_{{ hostvars[item].proxmox_vm_id }}.sh"
+    rm "/tmp/create_lxc_{{ hostvars[item].proxmox_vm_id }}.sh"
+  delegate_to: "{{ inventory_hostname }}"
+  changed_when: true

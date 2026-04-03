@@ -25,7 +25,7 @@
   failed_when: false
   ignore_errors: true
 
-- name: "Create Cloud Init VM Template (Ubuntu 24.04 optimized)"
+- name: "Create Cloud Init VM Template (Ubuntu 24.04)"
   community.proxmox.proxmox_kvm:
     api_host: "{{ ansible_host }}"
     api_user: "{{ ansible_user }}@pam"

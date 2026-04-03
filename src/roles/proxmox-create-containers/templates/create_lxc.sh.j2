@@ -1,0 +1,36 @@
+#!/bin/bash
+# Creation script for LXC Container: {{ hostvars[item].proxmox_vm_name }} (ID: {{ hostvars[item].proxmox_vm_id }})
+
+set -e
+
+VMID="{{ hostvars[item].proxmox_vm_id }}"
+VMNAME="{{ hostvars[item].proxmox_vm_name }}"
+TEMPLATE_NAME="{{ container_image.stdout }}"
+STORAGE="{{ cloud_init_template.vm_storage }}"
+
+# Check if LXC already exists
+if pct list | grep -q "^$VMID "; then
+    echo "LXC $VMID already exists. Skipping creation."
+    exit 0
+fi
+
+echo "Creating LXC $VMID ($VMNAME) from template $TEMPLATE_NAME..."
+pct create "$VMID" "local:vztmpl/$TEMPLATE_NAME" \
+    --hostname "$VMNAME" \
+    --password "{{ hostvars[item].root_password }}" \
+    --rootfs "$STORAGE:{{ hostvars[item].proxmox_vm_disk_size | default('8G') | replace('G', '') }}" \
+    --cores {{ hostvars[item].proxmox_cpu }} \
+    --memory {{ hostvars[item].proxmox_memory }} \
+    --net0 "name=eth0,bridge=vmbr0,ip={{ hostvars[item].ansible_host }}/24,gw={{ network_gateway }}" \
+    --onboot 1 \
+    --unprivileged 1 \
+    --features nesting=1 \
+    --tags "{{ hostvars[item].proxmox_vm_tags }}"
+
+echo "Pushing SSH root authorized_keys..."
+mkdir -p "/tmp/ssh_keys_$VMID"
+cp "{{ vm_ssh_public_key | default('/root/.ssh/id_rsa_homelab.pub') }}" "/tmp/ssh_keys_$VMID/authorized_keys"
+pct push "$VMID" "/tmp/ssh_keys_$VMID/authorized_keys" /root/.ssh/authorized_keys
+rm -rf "/tmp/ssh_keys_$VMID"
+
+echo "LXC $VMNAME ($VMID) created successfully!"

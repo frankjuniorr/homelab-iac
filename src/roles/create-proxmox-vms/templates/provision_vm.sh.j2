@@ -1,0 +1,55 @@
+#!/bin/bash
+# Provisioning script for VM: {{ hostvars[item].proxmox_vm_name }} (ID: {{ hostvars[item].proxmox_vm_id }})
+
+set -e
+
+VMID="{{ hostvars[item].proxmox_vm_id }}"
+VMNAME="{{ hostvars[item].proxmox_vm_name }}"
+TEMPLATE_ID="{{ cloud_init_template.vm_id }}"
+STORAGE="{{ cloud_init_template.vm_storage }}"
+
+# Check if VM already exists
+if qm list | grep -q "^$VMID "; then
+    echo "VM $VMID already exists. Skipping clone."
+    exit 0
+fi
+
+echo "Cloning template $TEMPLATE_ID to new VM $VMID ($VMNAME)..."
+qm clone "$TEMPLATE_ID" "$VMID" --name "$VMNAME" --full 1 --storage "$STORAGE"
+
+echo "Configuring hardware resources..."
+qm set "$VMID" \
+    --cores {{ hostvars[item].proxmox_cpu }} \
+    --memory {{ hostvars[item].proxmox_memory }} \
+    --cpu host \
+    --onboot 1 \
+    --tags {{ hostvars[item].proxmox_vm_tags }}
+
+echo "Configuring Cloud-Init..."
+qm set "$VMID" \
+    --ciuser "{{ hostvars[item].vm_user }}" \
+    --cipassword "{{ hostvars[item].vm_user_passwd }}" \
+    --sshkeys "{{ vm_ssh_public_key | default('/root/.ssh/id_rsa_homelab.pub') }}" \
+    --ipconfig0 "ip={{ hostvars[item].ansible_host }}/24,gw={{ network_gateway }}" \
+    --citype nocloud
+
+echo "Resizing disk to {{ hostvars[item].proxmox_vm_disk_size }}..."
+qm disk resize "$VMID" scsi0 {{ hostvars[item].proxmox_vm_disk_size }}
+
+echo "Injecting Root Password and Hostname directly into the disk..."
+# Dynamically find the disk path in LVM
+DISK_PATH=$(pvs --noheadings -o pv_name | xargs -I {} find /dev -name "vm-$VMID-disk-*" | head -n 1)
+
+if [ -n "$DISK_PATH" ]; then
+    virt-customize -a "$DISK_PATH" \
+        --root-password password:{{ hostvars[item].root_password }} \
+        --hostname "$VMNAME" \
+        --run-command "echo 'root:{{ hostvars[item].root_password }}' | chpasswd"
+else
+    echo "WARNING: Could not find disk path for VM $VMID. Manual root password set might be required."
+fi
+
+echo "Updating Cloud-Init drive..."
+qm cloudinit update "$VMID"
+
+echo "Provisioning of VM $VMNAME ($VMID) completed successfully!"

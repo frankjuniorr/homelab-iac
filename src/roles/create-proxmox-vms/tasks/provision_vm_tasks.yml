@@ -1,0 +1,17 @@
+# OBS: Já tentei duas vezes utiliza os módulos Ansible para Proxmox, para fazer essa criação.
+# Criar até que cria, mas dá problema no Cloud-Init. o IP sempre pega o DHCP e nunca o IP fixo definido
+# pelo arquivo se src/hosts, e ainda dá problema no ssh.
+# Usando assim via CLI do Proxmox com módulo shell funciona de primeira
+- name: "Generate provisioning script for VM: {{ hostvars[item].proxmox_vm_name }}"
+  ansible.builtin.template:
+    src: provision_vm.sh.j2
+    dest: "/tmp/provision_vm_{{ hostvars[item].proxmox_vm_id }}.sh"
+    mode: '0755'
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: "Execute provisioning script on Proxmox host for: {{ hostvars[item].proxmox_vm_name }}"
+  ansible.builtin.shell: |
+    /bin/bash "/tmp/provision_vm_{{ hostvars[item].proxmox_vm_id }}.sh"
+    rm "/tmp/provision_vm_{{ hostvars[item].proxmox_vm_id }}.sh"
+  delegate_to: "{{ inventory_hostname }}"
+  changed_when: true
