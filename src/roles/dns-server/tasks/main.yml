@@ -9,11 +9,7 @@
   loop:
     - { regexp: '^#?\\s*PasswordAuthentication', line: 'PasswordAuthentication yes' }
     - { regexp: '^#?\\s*PermitRootLogin', line: 'PermitRootLogin yes' }
-
-- name: "restart sshd"
-  ansible.builtin.service:
-    name: sshd
-    state: restarted
+  notify: "Restart sshd"
 
 - name: "Create directory for resolved.conf.d (Port 53 conflict fix)"
   ansible.builtin.file:
@@ -28,11 +24,7 @@
       [Resolve]
       DNSStubListener=no
     mode: '0644'
-
-- name: "Restart systemd-resolved to apply changes"
-  ansible.builtin.service:
-    name: systemd-resolved
-    state: restarted
+  notify: "Restart systemd-resolved"
 
 - name: "Download AdGuardHome archive"
   ansible.builtin.get_url:
