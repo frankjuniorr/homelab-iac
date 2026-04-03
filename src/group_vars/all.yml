@@ -1,0 +1,28 @@
+---
+# Global variables for all hosts (Architecture & Configuration)
+
+ansible_ssh_common_args: -o StrictHostKeyChecking=no
+ssh_public_key_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.ssh/id_rsa_homelab.pub"
+ssh_private_key_file: "{{ lookup('ansible.builtin.env', 'HOME') }}/.ssh/id_rsa_homelab"
+
+# Network defaults
+network_gateway: 192.168.1.1
+external_dns_server: 8.8.8.8
+
+########################### K3s ###########################
+# flag to enable (or not) to master execute pods
+# Set to "true" if you want to master execute pods. Set to "false" otherwise
+master_execute_pod: true
+
+node_taint: "{{ '' if master_execute_pod else '--node-taint CriticalAddonsOnly=true:NoExecute' }}"
+
+# generic script to install k3s
+k3s_install_script: "curl -sfL https://get.k3s.io | K3S_TOKEN={{ k3s_token }} sh -s -"
+
+# K3s Server installation
+k3s_server_install_parameters: "{{ node_taint }} --write-kubeconfig-mode=644 --disable servicelb --disable traefik"
+k3s_server_install_command: "{{ k3s_install_script }} server {{ k3s_server_install_parameters }}"
+
+# K3s Agent installation
+k3s_node_install_parameters: "--server https://{{ hostvars[groups['k8s_masters_nodes'][0]]['ansible_host'] }}:6443"
+k3s_node_install_command: "{{ k3s_install_script }} agent {{ k3s_node_install_parameters }}"
