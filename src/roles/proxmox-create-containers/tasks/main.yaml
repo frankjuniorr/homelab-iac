@@ -39,9 +39,16 @@
     label: "{{ hostvars[item].proxmox_vm_name }}"
   changed_when: true
 
-- name: "Wait for Containers to initialize"
-  ansible.builtin.pause:
-    seconds: 15
+- name: "Wait for SSH to be ready on Containers"
+  ansible.builtin.wait_for:
+    host: "{{ hostvars[item].ansible_host }}"
+    port: 22
+    state: started
+    delay: 5
+    timeout: 300
+  loop: "{{ groups['containers_lxc'] }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
 
 - name: "Bootstrap: Basic configuration via script (LXC only)"
   ansible.builtin.include_tasks: bootstrap_lxc_tasks.yml

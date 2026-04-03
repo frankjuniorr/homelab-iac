@@ -12,7 +12,13 @@
     label: "{{ hostvars[item].proxmox_vm_name }}"
   changed_when: true
 
-# 30s é pouco para o cloud-init terminar de configurar rede+SSH no primeiro boot.
-- name: "Pause to wait VMs to be ready"
-  ansible.builtin.pause:
-    seconds: 60
+- name: "Wait for SSH to be ready on VMs"
+  ansible.builtin.wait_for:
+    host: "{{ hostvars[item].ansible_host }}"
+    port: 22
+    state: started
+    delay: 5
+    timeout: 300
+  loop: "{{ groups['vms_all'] }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
