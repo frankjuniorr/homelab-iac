@@ -1,63 +1,82 @@
 ---
 
-# Download Rocky Linux container image
-#############################################################################
-- name: "Choose Rocky Linux container image"
-  ansible.builtin.shell: "pveam available | grep \"rocky\" | awk '{print $2}'"
-  register: container_image
+- name: "Ensure Proxmox host has required Python tools (APT)"
+  ansible.builtin.apt:
+    name:
+      - python3-pip
+      - python3-requests
+    state: present
+    update_cache: yes
+  delegate_to: "{{ inventory_hostname }}"
 
-- name: "Download Rocky Linux container image"
+- name: "Install modern proxmoxer (>=2.0) via Pip3"
+  ansible.builtin.pip:
+    name: "proxmoxer>=2.0.0"
+    executable: pip3
+    extra_args: --break-system-packages
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: "Choose Ubuntu container image"
+  ansible.builtin.shell: "pveam available | grep \"ubuntu-24.04\" | awk '{print $2}'"
+  register: container_image
+  changed_when: false
+
+- name: "Download Ubuntu container image"
   ansible.builtin.shell: "pveam download local {{ container_image.stdout }}"
   args:
     creates: "/var/lib/vz/template/cache/{{ container_image.stdout }}"
 
-# Create LXC Containers
-#############################################################################
-- name: "Create LXC container on Proxmox"
+- name: "Create and Configure LXC Containers (Shell Mode)"
   ansible.builtin.shell: |
-    pct create {{ hostvars[item].proxmox_vm_id }} /var/lib/vz/template/cache/{{ container_image.stdout }} \
+    if ! pct list | grep -q "^{{ hostvars[item].proxmox_vm_id }} "; then
+      pct create {{ hostvars[item].proxmox_vm_id }} "local:vztmpl/{{ container_image.stdout }}" \
         --hostname {{ hostvars[item].proxmox_vm_name }} \
-        --storage {{ cloud_init_template.vm_storage }} \
-        --rootfs {{ cloud_init_template.vm_storage }}:8 \
+        --password {{ hostvars[item].root_password }} \
+        --rootfs {{ cloud_init_template.vm_storage }}:{{ hostvars[item].proxmox_vm_disk_size | default('8G') | replace('G', '') }} \
         --cores {{ hostvars[item].proxmox_cpu }} \
         --memory {{ hostvars[item].proxmox_memory }} \
-        --net0 name=eth0,bridge=vmbr0,ip={{ hostvars[item].ansible_host }}/24,gw={{ hostvars[item].network_gateway }} \
-        --password {{ hostvars[item].root_password }} \
-        --ssh-public-keys /root/.ssh/id_rsa.pub \
-        --tags "{{ hostvars[item].proxmox_vm_tags | default('') }}" \
-        --start 1 \
-        --onboot 1
-  args:
-    creates: "/etc/pve/lxc/{{ hostvars[item].proxmox_vm_id }}.conf"
+        --net0 name=eth0,bridge=vmbr0,ip={{ hostvars[item].ansible_host }}/24,gw={{ network_gateway }} \
+        --onboot 1 \
+        --unprivileged 1 \
+        --features nesting=1
+      
+      # Adicionar chave SSH do root
+      mkdir -p /tmp/ssh_keys_{{ hostvars[item].proxmox_vm_id }}
+      cp {{ vm_ssh_public_key | default('/root/.ssh/id_rsa_homelab.pub') }} /tmp/ssh_keys_{{ hostvars[item].proxmox_vm_id }}/authorized_keys
+      pct push {{ hostvars[item].proxmox_vm_id }} /tmp/ssh_keys_{{ hostvars[item].proxmox_vm_id }}/authorized_keys /root/.ssh/authorized_keys
+      rm -rf /tmp/ssh_keys_{{ hostvars[item].proxmox_vm_id }}
+    fi
   loop: "{{ groups['containers_lxc'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
-  register: container_creation
+  changed_when: true
 
-- name: "Update tags for LXC containers"
-  ansible.builtin.shell: |
-    pct set {{ hostvars[item].proxmox_vm_id }} --tags "{{ hostvars[item].proxmox_vm_tags | default('') }}"
+- name: "Ensure Containers are started"
+  ansible.builtin.shell: "pct start {{ hostvars[item].proxmox_vm_id }} || true"
   loop: "{{ groups['containers_lxc'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
-  changed_when: false
+  changed_when: true
+
+- name: "Wait for Containers to initialize"
+  ansible.builtin.pause:
+    seconds: 15
 
 - name: "Bootstrap: Basic configuration via pct exec (LXC only)"
   ansible.builtin.shell: |
     pct exec {{ hostvars[item].proxmox_vm_id }} -- bash -c "
-      dnf install -y python3.11 python3-dnf openssh-server && 
+      apt-get update && apt-get install -y python3 python3-pip openssh-server figlet cockpit && 
       useradd -m -s /bin/bash {{ hostvars[item].vm_user }} || true && 
       echo '{{ hostvars[item].vm_user }}:{{ hostvars[item].vm_user_passwd }}' | chpasswd &&
-      usermod -aG wheel {{ hostvars[item].vm_user }} &&
-      echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel &&
-      chmod 440 /etc/sudoers.d/wheel &&
+      usermod -aG sudo {{ hostvars[item].vm_user }} &&
+      echo '%sudo ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/sudo &&
+      chmod 440 /etc/sudoers.d/sudo &&
       sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config &&
-      systemctl enable --now sshd
+      systemctl enable --now ssh
     "
   loop: "{{ groups['containers_lxc'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
-  when: container_creation.changed
   tags:
     - proxmox-init
     - lxc

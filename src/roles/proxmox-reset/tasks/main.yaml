@@ -84,5 +84,5 @@
 #     state: absent
 #   loop:
 #     - "{{ config_cloud_image_directory }}"
-    # - "{{ rocky_linux_cloud_image_file }}"
-    # - "{{ rocky_linux_cloud_image_file_sha }}"
+    # - "{{ ubuntu_cloud_image_file }}"
+    # - "{{ ubuntu_cloud_image_file_sha }}"

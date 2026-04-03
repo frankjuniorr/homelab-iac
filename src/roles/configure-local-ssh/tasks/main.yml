@@ -48,7 +48,7 @@
     - { content: "{{ public_key.stdout }}", dest: "{{ ssh_public_key_file }}", permission: '0644' }
     - { content: "{{ private_key.stdout }}", dest: "{{ ssh_private_key_file }}", permission: '0600' }
 
-- name: Copy SSH config file
+- name: "Copy SSH config file"
   delegate_to: "localhost"
   become: false
   ansible.builtin.copy:

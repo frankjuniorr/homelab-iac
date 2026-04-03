@@ -10,25 +10,25 @@
     - { regexp: '^#?\\s*PasswordAuthentication', line: 'PasswordAuthentication yes' }
     - { regexp: '^#?\\s*PermitRootLogin', line: 'PermitRootLogin yes' }
 
-- name: restart sshd
+- name: "restart sshd"
   ansible.builtin.service:
     name: sshd
     state: restarted
 
-- name: Download AdGuardHome archive
+- name: "Download AdGuardHome archive"
   ansible.builtin.get_url:
     url: "{{ adguard_url }}"
     dest: "{{ adguard_archive }}"
     mode: "0644"
 
-- name: Extract AdGuardHome
+- name: "Extract AdGuardHome"
   ansible.builtin.unarchive:
     src: "{{ adguard_archive }}"
     dest: "{{ adguard_installation_dir }}"
     remote_src: true
     creates: "{{ adguard_installation_dir }}/AdGuardHome/AdGuardHome"
 
-- name: Check if AdGuardHome service is running
+- name: "Check if AdGuardHome service is running"
   ansible.builtin.command: systemctl is-active AdGuardHome
   register: adguard_status
   changed_when: false

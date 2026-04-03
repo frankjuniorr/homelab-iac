@@ -1,25 +1,26 @@
 ---
-# Bootstrap and Base Configuration for Guest OS (VMs and Containers)
-# Prioritizing Ansible modules over shell scripts
+# Base Configuration for Guest OS (Ubuntu 24.04 LTS)
+# Using APT package manager and native modules
 
-- name: "Bootstrap: Install Python 3.11 (Raw)"
-  ansible.builtin.raw: "dnf install -y python3.11"
+- name: "Update apt cache"
   become: true
-  changed_when: false
-  vars:
-    # O raw não usa o wrapper do Ansible, então o 3.6 ainda funciona aqui
-    ansible_python_interpreter: /usr/libexec/platform-python
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
 
-- name: "Ensure EPEL release is installed (Command)"
-  ansible.builtin.command: "dnf install -y epel-release"
+- name: "Install base packages"
   become: true
-  changed_when: false
-  # Usamos command para evitar o conflito do wrapper do módulo dnf com o Python 3.6
-
-- name: "Install base packages (Command)"
-  ansible.builtin.command: "dnf install -y openssh-server figlet cockpit unzip tar vim rsync"
-  become: true
-  changed_when: false
+  ansible.builtin.apt:
+    name:
+      - openssh-server
+      - figlet
+      - cockpit
+      - unzip
+      - tar
+      - vim
+      - rsync
+      - python3-pip
+    state: present
 
 - name: "Set user and password variables"
   ansible.builtin.set_fact:
@@ -31,7 +32,7 @@
   ansible.builtin.user:
     name: "{{ vm_user }}"
     shell: /bin/bash
-    groups: wheel
+    groups: sudo
     append: yes
     state: present
 
@@ -40,12 +41,12 @@
   ansible.builtin.shell: "echo '{{ vm_user }}:{{ vm_user_passwd }}' | chpasswd"
   changed_when: false
 
-- name: "Configure NOPASSWD for the wheel group"
+- name: "Configure NOPASSWD for the sudo group"
   become: true
   ansible.builtin.lineinfile:
     dest: /etc/sudoers
-    regexp: '^%wheel'
-    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    regexp: '^%sudo'
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
     state: present
     validate: visudo -cf %s
 
@@ -77,5 +78,5 @@
     enabled: yes
     state: started
   loop:
-    - sshd
+    - ssh
     - cockpit.socket

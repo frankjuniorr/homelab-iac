@@ -1,9 +1,9 @@
 ---
-- name: Get Garage status
+- name: "Get Garage status"
   ansible.builtin.shell: /usr/local/bin/garage status
   register: garage_status
 
-- name: Extract node ID
+- name: "Extract node ID"
   ansible.builtin.set_fact:
     garage_node_id: "{{ garage_status.stdout_lines
       | select('search', ansible_facts['hostname'])
@@ -12,7 +12,7 @@
       | list
       | first }}"
 
-- name: Check layout
+- name: "Check layout"
   ansible.builtin.shell: /usr/local/bin/garage layout show
   register: garage_layout
 
@@ -22,12 +22,12 @@
     -z dc1 -c {{ proxmox_vm_disk_size }} {{ garage_node_id }}
   when: "'NO ROLE ASSIGNED' in garage_status.stdout"
 
-- name: Apply layout if needed
+- name: "Apply layout if needed"
   ansible.builtin.shell: >
     /usr/local/bin/garage layout apply --version 1
   when: "'NO ROLE ASSIGNED' in garage_status.stdout"
 
-- name: List Garage keys
+- name: "List Garage keys"
   ansible.builtin.shell: /usr/local/bin/garage key list
   register: garage_keys
   changed_when: false
@@ -37,7 +37,7 @@
   when: "garage_key_name not in garage_keys.stdout"
   register: garage_key_created
 
-- name: Get existing key details
+- name: "Get existing key details"
   ansible.builtin.shell: /usr/local/bin/garage key info {{ garage_key_name }}
   register: garage_key_info
   when: "garage_key_name in garage_keys.stdout"

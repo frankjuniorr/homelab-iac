@@ -5,14 +5,14 @@ This document serves as the foundational mandate for Gemini CLI when working on 
 
 ## Project Overview
 
-**Homelab IaC** is a fully automated Infrastructure-as-Code (IaC) solution for deploying and managing a reproducible homelab on **Proxmox**. It leverages Ansible for orchestration, K3s for Kubernetes, and Rocky Linux as the primary guest OS.
+**Homelab IaC** is a fully automated Infrastructure-as-Code (IaC) solution for deploying and managing a reproducible homelab on **Proxmox**. It leverages Ansible for orchestration, K3s for Kubernetes, and Ubuntu as the primary guest OS.
 
 This project is part of a larger initiative of mine to build a homelab. In this case, this repository is responsible for creating the infrastructure based on Proxmox. This repository is also available on GitHub, and the link is: https://github.com/frankjuniorr/homelab-iac
 
 ### Key Technologies:
 - **Orchestration:** Ansible (Playbooks, Roles, Collections).
 - **Virtualization:** Proxmox VE (VMs and LXC Containers).
-- **Guest OS:** Rocky Linux (Cloud-Init for VMs).
+- **Guest OS:** Ubuntu (Cloud-Init for VMs).
 - **Kubernetes:** K3s cluster (Masters and Workers).
 - **Task Runner:** Just (via `Justfile`).
 - **Secret Management:** 1Password CLI (`op`).
@@ -36,7 +36,7 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 ### Logic Flow
 1. **Control Node:** Runs `just` commands which execute Ansible playbooks.
 2. **Proxmox Host:** Target for VM/LXC creation and management via API and SSH.
-3. **Guest Nodes:** Provisioned with Rocky Linux, then configured via Ansible for specific roles (DNS, K3s, etc.).
+3. **Guest Nodes:** Provisioned with Ubuntu, then configured via Ansible for specific roles (DNS, K3s, etc.).
 4. VMs in Proxmox: These are exclusively intended for the Kubernetes cluster (k3s)
 5. LXC Containers: These are intended for services that are intentionally run outside the Kubernetes cluster (k3s) (e.g., AdGuard)
 
@@ -65,9 +65,11 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 ### 3. Ansible Best Practices
 - **Roles:** Keep logic modular within `src/roles/`.
 - **Module Prioritization:** ALWAYS prioritize native Ansible modules over the `shell` or `command` modules. Only use `shell` when a specialized module does not exist or cannot fulfill the task's requirements.
+- **Task Naming:** The `name` field of every Ansible task MUST be enclosed in double quotes and written in English.
+- **Inventory Format:** Inventory files MUST always be written in `.yaml` format. The use of the legacy `.ini` format is strictly prohibited.
 - **Tags:** Rigorously use tags (`proxmox-init`, `deploy-infra`, `k3s-install`, `destroy-infra`, `update-all`) to allow granular execution.
 - **Idempotency:** ALWAYS ensure all roles and tasks are idempotent. Idempotency is a core requirement; tasks must be designed to be safe to run multiple times without causing errors or unnecessary changes.
-- **OS Support:** Focus on Rocky Linux compatibility for guests and Debian for Proxmox nodes.
+- **OS Support:** Focus on Ubuntu compatibility for guests and Debian for Proxmox nodes.
 
 ### 4. Configuration
 - The source of truth for inventory is `src/hosts.yaml` (managed via SOPS).
@@ -103,7 +105,7 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 
 ### Maintenance & Updates
 - `just homelab-update`: Full system update (Proxmox nodes + VMs + Containers).
-- `just homelab-update-guests`: Update only the guest VMs and LXC containers (Rocky Linux).
+- `just homelab-update-guests`: Update only the guest VMs and LXC containers (Ubuntu).
 - `just homelab-update-proxmox`: Update only the Proxmox host nodes (Debian).
 
 ### Power Management

@@ -1,8 +1,8 @@
 ---
 ##############################################
-# Update all Rocky Linux Hosts (VMs and Containers)
+# Update all Ubuntu Hosts (VMs and Containers)
 ##############################################
-- name: "Update OS packages on all Rocky Linux guests"
+- name: "Update OS packages on all Ubuntu guests"
   hosts: all:!proxmox_nodes
   become: true
   gather_facts: true

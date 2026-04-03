@@ -12,39 +12,27 @@
     group: root
     mode: '0755'
 
-- name: "Copy configuration file to remote server"
-  ansible.builtin.copy:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: root
-    group: root
-    mode: '0755'
-  loop:
-    - { src: "{{ role_path }}/files/sshd_config", dest: "{{ config_cloud_image_directory }}/sshd_config" }
-
-
-##############  TASKs relative to Rocky Linux image ##############
-- name: "Donwload Rocky Linux Cloud image file"
+- name: "Download Ubuntu 24.04 Cloud image file"
   ansible.builtin.get_url:
-    url: "{{ rocky_linux_cloud_image_url }}"
-    dest: "{{ rocky_linux_cloud_image_file }}"
-
-- name: "Change config files in Cloud Init Image"
-  ansible.builtin.shell: "{{ item }}"
-  loop:
-    - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/cloud/cloud.cfg -e \"s/^ssh_pwauth:.*$/ssh_pwauth: 1/\""
-    - "virt-edit -a {{ rocky_linux_cloud_image_file }} /etc/selinux/config -e \"s/^SELINUX=.*$/SELINUX=permissive/\""
-    - "virt-copy-in -a {{ rocky_linux_cloud_image_file }} {{ config_cloud_image_directory }}/sshd_config /etc/ssh/"
+    url: "{{ ubuntu_cloud_image_url }}"
+    dest: "{{ ubuntu_cloud_image_file }}"
+    force: true
 
 - name: "Customize Cloud Init Image"
-  ansible.builtin.shell: "{{ item }}"
-  loop:
-    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --timezone \"America/Recife\""
-    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --update"
-    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --install epel-release"
-    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --install qemu-guest-agent,nano,vim,wget,firewalld,figlet"
-    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl enable qemu-guest-agent'"
-    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl unmask firewalld'"
-    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl start firewalld'"
-    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --run-command 'sudo systemctl enable firewalld'"
-    - "virt-customize -a {{ rocky_linux_cloud_image_file }} --root-password password:{{ rocky_linux_cloud_image_root_password }}"
+  ansible.builtin.shell: |
+    virt-customize -a {{ ubuntu_cloud_image_file }} \
+      --timezone "America/Recife" \
+      --install qemu-guest-agent,nano,vim,wget,figlet \
+      --run-command "systemctl enable qemu-guest-agent" \
+      --run-command "sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config" \
+      --run-command "sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config" \
+      --run-command "sed -i 's/^#\?KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config" \
+      --run-command "systemctl enable ssh" \
+      --run-command "systemctl start ssh" \
+      --run-command "sed -i 's/^disable_root:.*$/disable_root: false/' /etc/cloud/cloud.cfg" \
+      --run-command "sed -i 's/^lock_passwd:.*$/lock_passwd: false/' /etc/cloud/cloud.cfg" \
+      --run-command "sed -i 's/^ssh_pwauth:.*$/ssh_pwauth: true/' /etc/cloud/cloud.cfg" \
+      --root-password password:{{ ubuntu_cloud_image_root_password }} \
+      --run-command "passwd -u root" \
+      --run-command "truncate -s 0 /etc/machine-id"
+  changed_when: true

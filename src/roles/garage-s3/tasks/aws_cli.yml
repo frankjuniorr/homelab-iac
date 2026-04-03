@@ -1,5 +1,5 @@
 ---
-- name: Ensure .aws directory exists (local)
+- name: "Ensure .aws directory exists (local)"
   ansible.builtin.file:
     path: "~/.aws"
     state: directory
@@ -7,7 +7,7 @@
   delegate_to: localhost
   become: false
 
-- name: Configure AWS config (local)
+- name: "Configure AWS config (local)"
   ansible.builtin.template:
     src: aws_config.j2
     dest: "~/.aws/config"
@@ -15,7 +15,7 @@
   delegate_to: localhost
   become: false
 
-- name: Configure AWS credentials (local)
+- name: "Configure AWS credentials (local)"
   ansible.builtin.template:
     src: aws_credentials.j2
     dest: "~/.aws/credentials"

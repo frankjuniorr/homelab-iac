@@ -1,6 +1,16 @@
 ---
 
-- name: Reset known_hosts entry
+- name: "Wait for SSH to be available"
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    delay: 30
+    timeout: 600
+    state: started
+  delegate_to: localhost
+  become: false
+
+- name: "Reset known_hosts entry"
   become: false
   command: ssh-keygen -R {{ ansible_host }}
   delegate_to: localhost

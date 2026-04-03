@@ -2,7 +2,7 @@
 # Main Orchestrator for VM management
 # Separation of responsibilities by task file
 
-- name: "Step 1: Customize Rocky Linux Cloud Image"
+- name: "Step 1: Customize Ubuntu Cloud Image"
   ansible.builtin.include_tasks: 1-prepare-image.yml
   when: inventory_hostname in groups['proxmox_nodes']
   tags:

@@ -1,56 +1,60 @@
 ---
-- name: "Check if VMs already exists"
-  ansible.builtin.command: "qm status {{ hostvars[item].proxmox_vm_id }}"
-  register: vm_status_result
-  ignore_errors: true
-  loop: "{{ groups['vms_all'] }}"
-  loop_control:
-    label: "{{ hostvars[item].proxmox_vm_name }}"
-
-- name: "Clone VMs from template"
+- name: "Provision and Configure VMs (Shell Mode)"
   ansible.builtin.shell: |
-    qm clone {{ cloud_init_template.vm_id }} {{ hostvars[item].proxmox_vm_id }} \
-      --name {{ hostvars[item].proxmox_vm_name }} \
-      --full true \
-      --storage {{ cloud_init_template.vm_storage }}
+    # Check if VM already exists
+    if ! qm list | grep -q "^{{ hostvars[item].proxmox_vm_id }} "; then
+      # Clone the template
+      qm clone {{ cloud_init_template.vm_id }} {{ hostvars[item].proxmox_vm_id }} \
+        --name {{ hostvars[item].proxmox_vm_name }} \
+        --full 1 \
+        --storage {{ cloud_init_template.vm_storage }}
+      
+      # Configure hardware resources
+      qm set {{ hostvars[item].proxmox_vm_id }} \
+        --cores {{ hostvars[item].proxmox_cpu }} \
+        --memory {{ hostvars[item].proxmox_memory }} \
+        --cpu host \
+        --onboot 1 \
+        --tags {{ hostvars[item].proxmox_vm_tags }}
+      
+      # Configure Cloud-Init (User, Network, SSH)
+      qm set {{ hostvars[item].proxmox_vm_id }} \
+        --ciuser {{ hostvars[item].vm_user }} \
+        --cipassword {{ hostvars[item].vm_user_passwd }} \
+        --sshkeys {{ vm_ssh_public_key | default('/root/.ssh/id_rsa_homelab.pub') }} \
+        --ipconfig0 "ip={{ hostvars[item].ansible_host }}/24,gw={{ network_gateway }}" \
+        --citype nocloud
+
+      # Resize disk
+      qm disk resize {{ hostvars[item].proxmox_vm_id }} scsi0 {{ hostvars[item].proxmox_vm_disk_size }}
+
+      # Inject Root Password and Hostname directly into the disk
+      # Path for LVM is /dev/pve/vm-<VMID>-disk-0 (or similar)
+      # We find it dynamically to be safe
+      DISK_PATH=$(pvs --noheadings -o pv_name | xargs -I {} find /dev -name "vm-{{ hostvars[item].proxmox_vm_id }}-disk-*" | head -n 1)
+      if [ -n "$DISK_PATH" ]; then
+        virt-customize -a "$DISK_PATH" \
+          --root-password password:{{ hostvars[item].root_password }} \
+          --hostname {{ hostvars[item].proxmox_vm_name }} \
+          --run-command "echo 'root:{{ hostvars[item].root_password }}' | chpasswd"
+      fi
+
+      # Update Cloud-Init drive
+      qm cloudinit update {{ hostvars[item].proxmox_vm_id }}
+    fi
   loop: "{{ groups['vms_all'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
-  when: vm_status_result is failed
+  changed_when: true
 
-- name: "Configure VMs"
-  ansible.builtin.shell: |
-    qm set {{ hostvars[item].proxmox_vm_id }} \
-      --cores {{ hostvars[item].proxmox_cpu }} \
-      --memory {{ hostvars[item].proxmox_memory }} \
-      --ciuser {{ hostvars[item].vm_user }} \
-      --cipassword {{ hostvars[item].vm_user_passwd }} \
-      --ipconfig0 ip={{ hostvars[item].ansible_host }}/24,gw={{ hostvars[item].network_gateway }} \
-      --scsihw virtio-scsi-pci \
-      --onboot 1 \
-      --tags {{ hostvars[item].proxmox_vm_tags }}
+- name: "Ensure VMs are started"
+  ansible.builtin.shell: "qm start {{ hostvars[item].proxmox_vm_id }} || true"
   loop: "{{ groups['vms_all'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
+  changed_when: true
 
-- name: "Check status of each VM"
-  ansible.builtin.command: "qm status {{ hostvars[item].proxmox_vm_id }}"
-  register: vm_status
-  failed_when: false
-  changed_when: false
-  loop: "{{ groups['vms_all'] }}"
-  loop_control:
-    label: "{{ hostvars[item].proxmox_vm_name }}"
-
-- name: "Start the VMs"
-  ansible.builtin.shell: |
-    qm start {{ hostvars[(item.item)].proxmox_vm_id }}
-  when: "'stopped' in item.stdout"
-  loop: "{{ vm_status.results }}"
-  loop_control:
-    label: "{{ hostvars[(item.item)].proxmox_vm_name }}"
-
+# 30s é pouco para o cloud-init terminar de configurar rede+SSH no primeiro boot.
 - name: "Pause to wait VMs to be ready"
   ansible.builtin.pause:
-    seconds: 20
-  when: vm_status.results | selectattr('stdout', 'search', 'stopped') | list | length > 0
+    seconds: 60

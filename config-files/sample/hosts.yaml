@@ -50,9 +50,9 @@ all:
 
       # Cloud init image config
       config_cloud_image_directory: "/root/config-cloud-image"
-      rocky_linux_cloud_image_url: "https://download.rockylinux.org/pub/rocky/8/images/x86_64/Rocky-8-GenericCloud-Base.latest.x86_64.qcow2"
-      rocky_linux_cloud_image_file: "/var/lib/vz/images/rocky8.qcow2"
-      rocky_linux_cloud_image_root_password: "RockyLinux"
+      ubuntu_cloud_image_url: "https://download.rockylinux.org/pub/rocky/8/images/x86_64/Rocky-8-GenericCloud-Base.latest.x86_64.qcow2"
+      ubuntu_cloud_image_file: "/var/lib/vz/images/ubuntu24.qcow2"
+      ubuntu_cloud_image_root_password: "Ubuntu"
 
     #####################################################################
     # VMs and Containers LXC

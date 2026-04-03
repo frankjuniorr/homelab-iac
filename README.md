@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Ansible-black.svg?style=for-the-badge&logo=ansible&logoColor=white" alt="Ansible"/>
   <img src="https://img.shields.io/badge/Proxmox-E74C3C.svg?style=for-the-badge&logo=proxmox&logoColor=white" alt="Proxmox"/>
   <img src="https://img.shields.io/badge/K3s-326CE5.svg?style=for-the-badge&logo=kubernetes&logoColor=white" alt="K3s"/>
-  <img src="https://img.shields.io/badge/Rocky_Linux-10B981.svg?style=for-the-badge&logo=rockylinux&logoColor=white" alt="Rocky Linux"/>
+  <img src="https://img.shields.io/badge/Rocky_Linux-10B981.svg?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu"/>
   <img src="https://img.shields.io/badge/1Password-0094F5.svg?style=for-the-badge&logo=1password&logoColor=white" alt="1Password"/>
   <img src="https://img.shields.io/badge/Just-blue.svg?style=for-the-badge&logo=just&logoColor=white" alt="Just"/>
 </p>
@@ -20,7 +20,7 @@ The **Homelab IaC** project is a fully automated solution for deploying and mana
 - **Reproducibility:** Rebuild the entire infrastructure from scratch in minutes.
 - **Consistency:** Ensure all VMs and Containers follow the same configuration standards.
 - **Security:** Use SOPS + Age for secret management and automate SSH key distribution.
-- **Modern Stack:** Leverage Rocky Linux (Cloud-Init), K3s for lightweight Kubernetes, and Ansible for orchestration.
+- **Modern Stack:** Leverage Ubuntu (Cloud-Init), K3s for lightweight Kubernetes, and Ansible for orchestration.
 
 ---
 
@@ -62,8 +62,8 @@ graph TD
 
     subgraph ProxmoxHost ["Proxmox Server"]
         A -- SSH / API --> P[Proxmox VE]
-        P --> VM[Rocky Linux VMs]
-        P --> LXC[Rocky Linux Containers]
+        P --> VM[Ubuntu VMs]
+        P --> LXC[Ubuntu Containers]
         
         subgraph Cluster ["K3s Cluster"]
             VM -- Install --> K[K3s Servers/Nodes]
@@ -184,7 +184,7 @@ Always use `just secrets-edit` to manage your variables.
 | Command | Description |
 | :--- | :--- |
 | `just homelab-update` | **Full Update:** Updates OS packages on Proxmox nodes, VMs, and Containers. |
-| `just homelab-update-guests` | Updates OS packages only on VMs and Containers (Rocky Linux). |
+| `just homelab-update-guests` | Updates OS packages only on VMs and Containers (Ubuntu). |
 | `just homelab-update-proxmox` | Updates OS packages only on Proxmox host nodes (Debian). |
 | `just save-data` | Backs up critical application data (e.g., AdGuardHome) to your local machine. |
 | `just homelab-start` | Powers on all VMs and Containers in the Proxmox host. |

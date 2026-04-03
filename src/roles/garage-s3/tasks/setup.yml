@@ -1,10 +1,10 @@
 ---
-- name: Check if Garage configuration exists
+- name: "Check if Garage configuration exists"
   ansible.builtin.stat:
     path: "{{ garage_config_dir }}/garage.toml"
   register: garage_config_file
 
-- name: Read existing Garage secrets
+- name: "Read existing Garage secrets"
   ansible.builtin.shell: |
     grep "{{ item.pattern }}" {{ garage_config_dir }}/garage.toml | cut -d'"' -f2
   loop:
@@ -15,13 +15,13 @@
   changed_when: false
   failed_when: false
 
-- name: Set existing secret facts
+- name: "Set existing secret facts"
   ansible.builtin.set_fact:
     "{{ item.item.var }}": "{{ item.stdout }}"
   loop: "{{ existing_secrets.results }}"
   when: garage_config_file.stat.exists and item.stdout | length > 0 and (hostvars[inventory_hostname][item.item.var] is not defined)
 
-- name: Generate Garage RPC secret dynamically
+- name: "Generate Garage RPC secret dynamically"
   ansible.builtin.shell: "openssl rand -hex 32"
   register: generated_rpc_secret
   changed_when: false
@@ -30,7 +30,7 @@
   become: false
   when: garage_rpc_secret is not defined
 
-- name: Generate Garage Admin token dynamically
+- name: "Generate Garage Admin token dynamically"
   ansible.builtin.shell: "openssl rand -hex 32"
   register: generated_admin_token
   changed_when: false
@@ -39,12 +39,12 @@
   become: false
   when: garage_admin_token is not defined
 
-- name: Set Garage secret facts (generated)
+- name: "Set Garage secret facts (generated)"
   ansible.builtin.set_fact:
     garage_rpc_secret: "{{ generated_rpc_secret.stdout | default(garage_rpc_secret) }}"
     garage_admin_token: "{{ generated_admin_token.stdout | default(garage_admin_token) }}"
 
-- name: Create garage directories
+- name: "Create garage directories"
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -57,7 +57,7 @@
     - "{{ garage_meta_dir }}"
     - "{{ garage_data_storage_dir }}"
 
-- name: Download garage binary
+- name: "Download garage binary"
   ansible.builtin.get_url:
     url: "{{ garage_binary_url }}"
     dest: /usr/local/bin/garage
@@ -66,7 +66,7 @@
     group: root
   notify: Restart garage
 
-- name: Create garage configuration
+- name: "Create garage configuration"
   ansible.builtin.template:
     src: garage.toml.j2
     dest: "{{ garage_config_dir }}/garage.toml"
@@ -75,7 +75,7 @@
     mode: '0640'
   notify: Restart garage
 
-- name: Create garage systemd service
+- name: "Create garage systemd service"
   ansible.builtin.template:
     src: garage.service.j2
     dest: /etc/systemd/system/garage.service
@@ -84,7 +84,7 @@
     mode: '0644'
   notify: Restart garage
 
-- name: Ensure garage service is started and enabled
+- name: "Ensure garage service is started and enabled"
   ansible.builtin.systemd:
     name: garage
     state: started
