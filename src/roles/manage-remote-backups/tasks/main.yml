@@ -1,0 +1,36 @@
+---
+# --- Execution ---
+- name: "Run {{ operation }} script: {{ script_name }}"
+  ansible.builtin.shell: "/bin/bash /home/{{ ansible_user }}/backups/{{ script_name }}"
+  register: script_output
+
+# --- Backup Logic (JSON Log Processing) ---
+- name: "Process and Show Backup Logs"
+  block:
+    - name: "Extract last execution JSON logs"
+      ansible.builtin.shell: "tac {{ log_file }} | sed '/--- Backup Started/q' | grep '^{' | tac"
+      register: last_log_json
+      changed_when: false
+
+    - name: "Show Structured Backup Summary"
+      ansible.builtin.debug:
+        msg: >-
+          {% set summary = [] %}
+          {% for line in last_log_json.stdout_lines %}
+            {% set entry = line | from_json %}
+            {% if entry.stats is defined or entry.level == 'error' %}
+              {% set _ = summary.append({
+                'Time': entry.time.split('T')[1].split('.')[0],
+                'Message': entry.msg | trim,
+                'Status': entry.stats | default('N/A')
+              }) %}
+            {% endif %}
+          {% endfor %}
+          {{ summary }}
+  when: operation == 'backup' and log_file is defined
+
+# --- Recovery Logic (Direct Output) ---
+- name: "Show Recovery Output"
+  ansible.builtin.debug:
+    var: script_output.stdout_lines
+  when: operation == 'recovery'

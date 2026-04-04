@@ -28,7 +28,7 @@ This project is part of a larger initiative of mine to build a homelab. In this 
     - `library/`: Custom Ansible modules (e.g., `ssh_copy_key.py`).
     - `callback_plugins/`: Custom output formatting (e.g., `beautiful_output.py`).
     - `main.yaml`: Primary deployment playbook.
-    - `reset.yaml`: Infrastructure cleanup playbook.
+    - `destroy.yaml`: Infrastructure cleanup playbook.
 - `config-files/`: Configuration templates and user-specific `hosts.yaml`.
 - `Justfile`: Entry point for all automation tasks.
 - `scripts/`: Auxiliary scripts.

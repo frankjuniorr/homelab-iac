@@ -1,9 +1,0 @@
----
-- name: "Backup Data"
-  hosts: proxmox_nodes
-  gather_facts: no
-  become: yes
-
-  roles:
-    - role: proxmox-save-data
-      tags: "reset-proxmox"

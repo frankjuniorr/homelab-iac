@@ -1,31 +1,4 @@
 ---
-##################################################################
-# Destroy VMs
-##################################################################
-- name: "Check if VM exists"
-  ansible.builtin.command: "qm status {{ hostvars[item].proxmox_vm_id }}"
-  register: vm_check
-  failed_when: false
-  changed_when: false
-  loop: "{{ groups['vms_all'] }}"
-  loop_control:
-    label: "{{ hostvars[item].proxmox_vm_name }}"
-
-- name: "Build list of existing VMs"
-  ansible.builtin.set_fact:
-    existing_vms: >-
-      {{
-        existing_vms | default([]) +
-        [item.item] if item.rc == 0 else existing_vms | default([])
-      }}
-  loop: "{{ vm_check.results }}"
-
-- name: "Destroy VM if exists"
-  ansible.builtin.shell: |
-    qm stop {{ hostvars[item].proxmox_vm_id }}
-    sleep 5
-    qm destroy {{ hostvars[item].proxmox_vm_id }} --purge
-  loop: "{{ existing_vms }}"
 
 ##################################################################
 # Destroy LXC Containers
@@ -38,6 +11,7 @@
   loop: "{{ groups['containers_lxc'] | default([]) }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
+  tags: ["destroy-lxc", "destroy-infra"]
 
 - name: "Build list of existing Containers"
   ansible.builtin.set_fact:
@@ -47,12 +21,45 @@
         [item.item] if item.rc == 0 else existing_containers | default([])
       }}
   loop: "{{ container_check.results }}"
+  tags: ["destroy-lxc", "destroy-infra"]
 
 - name: "Destroy Container if exists"
   ansible.builtin.shell: |
     pct stop {{ hostvars[item].proxmox_vm_id }}
     pct destroy {{ hostvars[item].proxmox_vm_id }} --purge
   loop: "{{ existing_containers }}"
+  tags: ["destroy-lxc", "destroy-infra"]
+
+##################################################################
+# Destroy VMs
+##################################################################
+- name: "Check if VM exists"
+  ansible.builtin.command: "qm status {{ hostvars[item].proxmox_vm_id }}"
+  register: vm_check
+  failed_when: false
+  changed_when: false
+  loop: "{{ groups['vms_all'] }}"
+  loop_control:
+    label: "{{ hostvars[item].proxmox_vm_name }}"
+  tags: ["destroy-vms", "destroy-infra"]
+
+- name: "Build list of existing VMs"
+  ansible.builtin.set_fact:
+    existing_vms: >-
+      {{
+        existing_vms | default([]) +
+        [item.item] if item.rc == 0 else existing_vms | default([])
+      }}
+  loop: "{{ vm_check.results }}"
+  tags: ["destroy-vms", "destroy-infra"]
+
+- name: "Destroy VM if exists"
+  ansible.builtin.shell: |
+    qm stop {{ hostvars[item].proxmox_vm_id }}
+    sleep 5
+    qm destroy {{ hostvars[item].proxmox_vm_id }} --purge
+  loop: "{{ existing_vms }}"
+  tags: ["destroy-vms", "destroy-infra"]
 
 ##################################################################
 # Remove VM Template
@@ -75,14 +82,3 @@
   register: vm_template_status
   failed_when: "'unable to find configuration file for VM' in vm_template_status.stderr and 'qm destroy' in item"
 
-##################################################################
-# Remove Temporary folder
-##################################################################
-# - name: "Delete temporary folder and image file"
-#   ansible.builtin.file:
-#     path: "{{ item }}"
-#     state: absent
-#   loop:
-#     - "{{ config_cloud_image_directory }}"
-    # - "{{ ubuntu_cloud_image_file }}"
-    # - "{{ ubuntu_cloud_image_file_sha }}"

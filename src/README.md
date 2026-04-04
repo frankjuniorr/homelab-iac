@@ -42,7 +42,7 @@ just homelab-reset
 
 - `main.yaml`: The primary entry point. It triggers the entire lifecycle: Proxmox init, image customization, VM/LXC creation, user configuration, and K3s installation.
 - `configure-ssh.yaml`: Used for the initial SSH key exchange with the Proxmox host.
-- `reset.yaml`: Orchestrates the destruction of the environment to return to a clean state.
+- `destroy.yaml`: Orchestrates the destruction of the environment to return to a clean state.
 - `save-data.yaml`: Handles backups of critical data (e.g., AdGuardHome configurations) to your local machine.
 
 ## Structure

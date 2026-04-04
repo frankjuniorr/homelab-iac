@@ -1,0 +1,54 @@
+---
+##################################################################
+# BACKUP SEQUENCE (Order: AdGuard -> S3, then S3 -> GDrive)
+##################################################################
+
+- name: "Backup Phase 1: AdGuard to S3 (Host: dns)"
+  hosts: dns
+  gather_facts: no
+  become: yes
+  tags: ["backup"]
+  roles:
+    - role: manage-remote-backups
+      vars:
+        operation: "backup"
+        script_name: "backup-adguard-to-s3.sh"
+        log_file: "/var/log/rclone/adguard-backup.log"
+
+- name: "Backup Phase 2: S3 to GDrive (Host: s3)"
+  hosts: s3
+  gather_facts: no
+  become: yes
+  tags: ["backup"]
+  roles:
+    - role: manage-remote-backups
+      vars:
+        operation: "backup"
+        script_name: "backup-s3-to-gdrive.sh"
+        log_file: "/var/log/rclone/garage-backup.log"
+
+##################################################################
+# RECOVERY SEQUENCE (Order: GDrive -> S3, then S3 -> AdGuard)
+##################################################################
+
+- name: "Recovery Phase 1: GDrive to S3 (Host: s3)"
+  hosts: s3
+  gather_facts: no
+  become: yes
+  tags: ["recovery"]
+  roles:
+    - role: manage-remote-backups
+      vars:
+        operation: "recovery"
+        script_name: "recovery-gdrive-from-s3.sh"
+
+- name: "Recovery Phase 2: S3 to AdGuard (Host: dns)"
+  hosts: dns
+  gather_facts: no
+  become: yes
+  tags: ["recovery"]
+  roles:
+    - role: manage-remote-backups
+      vars:
+        operation: "recovery"
+        script_name: "recovery-adguard-from-s3.sh"

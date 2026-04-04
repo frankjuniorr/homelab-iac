@@ -1,13 +1,27 @@
 ---
 
-- name: "Define HOME var"
+- name: "Define SSH configuration paths"
   ansible.builtin.set_fact:
-    home_folder: "{{ lookup('ansible.builtin.env', 'HOME') }}"
+    ssh_known_hosts: "{{ lookup('ansible.builtin.env', 'HOME') }}/.ssh/known_hosts"
+    ssh_servers_dir: "{{ lookup('ansible.builtin.env', 'HOME') }}/.ssh/servers"
 
-- name: "Clean {{ home_folder }}/.ssh/known_hosts"
+- name: "Remove SSH servers directory (~/.ssh/servers)"
   delegate_to: "localhost"
   become: false
-  ansible.builtin.shell: "echo > {{ item }}"
-  loop:
-    - "{{ home_folder }}/.ssh/known_hosts"
-    - "{{ home_folder }}/.ssh/config"
+  ansible.builtin.file:
+    path: "{{ ssh_servers_dir }}"
+    state: absent
+
+- name: "Remove host IPs from known_hosts file"
+  delegate_to: "localhost"
+  become: false
+  ansible.builtin.shell: "ssh-keygen -R {{ hostvars[item].ansible_host }}"
+  loop: "{{ groups['all'] }}"
+  when: 
+    - hostvars[item].ansible_host is defined
+    - hostvars[item].ansible_host != 'localhost'
+    - hostvars[item].ansible_host != '127.0.0.1'
+  failed_when: false
+  changed_when: true
+  loop_control:
+    label: "Cleaning SSH fingerprint for: {{ item }} ({{ hostvars[item].ansible_host }})"

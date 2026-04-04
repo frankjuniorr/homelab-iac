@@ -1,0 +1,49 @@
+---
+##################################################################
+# 1. Backup Data Before Destruction
+##################################################################
+- name: "Proactive Backup (AdGuard -> S3)"
+  hosts: dns
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: "Run AdGuard to S3 backup script"
+      ansible.builtin.shell: "/bin/bash /home/{{ ansible_user }}/backups/backup-adguard-to-s3.sh"
+      register: backup_s3
+      changed_when: backup_s3.rc == 0
+  tags: ["backup", "destroy-all"]
+
+- name: "Proactive Backup (S3 -> GDrive)"
+  hosts: s3
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: "Run S3 to GDrive backup script"
+      ansible.builtin.shell: "/bin/bash /home/{{ ansible_user }}/backups/backup-s3-to-gdrive.sh"
+      register: backup_gdrive
+      changed_when: backup_gdrive.rc == 0
+  tags: ["backup", "destroy-all"]
+
+##################################################################
+# 2. Uninstall K3s
+##################################################################
+- name: "Uninstall k3s"
+  hosts: k8s_cluster
+  become: true
+  gather_facts: no
+  roles:
+    - role: kubernetes-uninstall
+      tags: ["k3s-uninstall", "destroy-all"]
+
+##################################################################
+# 3. Proxmox Destruction (VMs & Containers)
+##################################################################
+- name: "Proxmox Destroy"
+  hosts: proxmox_nodes
+  gather_facts: no
+  become: yes
+  roles:
+    - role: proxmox-reset
+      tags: ["destroy-infra", "destroy-all"]
+    - role: clean-local-files
+      tags: ["clean-local", "destroy-all"]
