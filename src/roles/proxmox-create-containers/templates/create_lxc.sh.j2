@@ -3,22 +3,44 @@
 
 set -e
 
+# --- Variables ---
 VMID="{{ hostvars[item].proxmox_vm_id }}"
 VMNAME="{{ hostvars[item].proxmox_vm_name }}"
 TEMPLATE_NAME="{{ container_image.stdout }}"
 STORAGE="{{ cloud_init_template.vm_storage }}"
+DISK_SIZE="{{ hostvars[item].proxmox_vm_disk_size | default('8G') | replace('G', '') }}"
+ROOT_PASSWORD="{{ hostvars[item].root_password }}"
+SSH_PUB_KEY="{{ vm_ssh_public_key | default('/root/.ssh/id_rsa_homelab.pub') }}"
+TIMEZONE="{{ timezone }}"
 
-# Check if LXC already exists
+# Temporary paths for SSH key injection
+TMP_SSH_DIR="/tmp/ssh_keys_$VMID"
+TMP_AUTH_KEYS="$TMP_SSH_DIR/authorized_keys"
+
+# --- Pre-flight Check ---
 if pct list | grep -q "^$VMID "; then
     echo "LXC $VMID already exists. Skipping creation."
     exit 0
 fi
 
+# --- Container Creation ---
 echo "Creating LXC $VMID ($VMNAME) from template $TEMPLATE_NAME..."
+
+# Flag explanations:
+# --hostname: Set the container hostname
+# --password: Set the root password
+# --rootfs: Define storage pool and disk size (e.g., local-lvm:20)
+# --cores: Number of CPU cores assigned to the container
+# --memory: RAM amount in MB
+# --net0: Network interface config (name, bridge, static IP/CIDR, gateway)
+# --onboot: Start container automatically on Proxmox host boot
+# --unprivileged: Run as an unprivileged container for enhanced security
+# --features: Enable specific LXC features like 'nesting' (required for Docker/K3s inside LXC)
+# --tags: Administrative metadata tags
 pct create "$VMID" "local:vztmpl/$TEMPLATE_NAME" \
     --hostname "$VMNAME" \
-    --password "{{ hostvars[item].root_password }}" \
-    --rootfs "$STORAGE:{{ hostvars[item].proxmox_vm_disk_size | default('8G') | replace('G', '') }}" \
+    --password "$ROOT_PASSWORD" \
+    --rootfs "$STORAGE:$DISK_SIZE" \
     --cores {{ hostvars[item].proxmox_cpu }} \
     --memory {{ hostvars[item].proxmox_memory }} \
     --net0 "name=eth0,bridge=vmbr0,ip={{ hostvars[item].ansible_host }}/24,gw={{ network_gateway }}" \
@@ -27,12 +49,14 @@ pct create "$VMID" "local:vztmpl/$TEMPLATE_NAME" \
     --features nesting=1 \
     --tags "{{ hostvars[item].proxmox_vm_tags }}"
 
-    echo "Setting timezone to {{ timezone }}..."
-    pct set "$VMID" --timezone "{{ timezone }}"
+# --- Post-Creation Configuration ---
+echo "Setting timezone to $TIMEZONE..."
+pct set "$VMID" --timezone "$TIMEZONE"
 
-    echo "Pushing SSH root authorized_keys..."mkdir -p "/tmp/ssh_keys_$VMID"
-cp "{{ vm_ssh_public_key | default('/root/.ssh/id_rsa_homelab.pub') }}" "/tmp/ssh_keys_$VMID/authorized_keys"
-pct push "$VMID" "/tmp/ssh_keys_$VMID/authorized_keys" /root/.ssh/authorized_keys
-rm -rf "/tmp/ssh_keys_$VMID"
+echo "Injecting SSH root authorized_keys..."
+mkdir -p "$TMP_SSH_DIR"
+cp "$SSH_PUB_KEY" "$TMP_AUTH_KEYS"
+pct push "$VMID" "$TMP_AUTH_KEYS" /root/.ssh/authorized_keys
+rm -rf "$TMP_SSH_DIR"
 
 echo "LXC $VMNAME ($VMID) created successfully!"

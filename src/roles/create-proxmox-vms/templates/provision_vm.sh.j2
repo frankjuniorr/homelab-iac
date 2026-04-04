@@ -3,52 +3,90 @@
 
 set -e
 
+# --- Variables ---
 VMID="{{ hostvars[item].proxmox_vm_id }}"
 VMNAME="{{ hostvars[item].proxmox_vm_name }}"
 TEMPLATE_ID="{{ cloud_init_template.vm_id }}"
 STORAGE="{{ cloud_init_template.vm_storage }}"
+DISK_SIZE="{{ hostvars[item].proxmox_vm_disk_size }}"
+ROOT_PASSWORD="{{ hostvars[item].root_password }}"
+SSH_PUB_KEY="{{ vm_ssh_public_key | default('/root/.ssh/id_rsa_homelab.pub') }}"
+VM_IP="{{ hostvars[item].ansible_host }}"
+GW="{{ network_gateway }}"
 
-# Check if VM already exists
+# --- Pre-flight Check ---
 if qm list | grep -q "^$VMID "; then
     echo "VM $VMID already exists. Skipping clone."
     exit 0
 fi
 
+# --- VM Cloning ---
 echo "Cloning template $TEMPLATE_ID to new VM $VMID ($VMNAME)..."
-qm clone "$TEMPLATE_ID" "$VMID" --name "$VMNAME" --full 1 --storage "$STORAGE"
 
+# Flag explanations for qm clone:
+# --name: Set the name of the new VM
+# --full: Create a full copy of the disk (not a linked clone)
+# --storage: Target storage for the new VM's disks
+qm clone "$TEMPLATE_ID" "$VMID" \
+    --name "$VMNAME" \
+    --full 1 \
+    --storage "$STORAGE"
+
+# --- Hardware Configuration ---
 echo "Configuring hardware resources..."
+
+# Flag explanations for qm set (Hardware):
+# --cores: Number of CPU cores
+# --memory: RAM amount in MB
+# --cpu: CPU type (host for maximum performance)
+# --onboot: Start VM automatically on Proxmox host boot
+# --tags: Administrative metadata tags
 qm set "$VMID" \
     --cores {{ hostvars[item].proxmox_cpu }} \
     --memory {{ hostvars[item].proxmox_memory }} \
     --cpu host \
     --onboot 1 \
-    --tags {{ hostvars[item].proxmox_vm_tags }}
+    --tags "{{ hostvars[item].proxmox_vm_tags }}"
 
+# --- Cloud-Init Configuration ---
 echo "Configuring Cloud-Init..."
+
+# Flag explanations for qm set (Cloud-Init):
+# --ciuser: Set the default Cloud-Init user
+# --cipassword: Set the password for the Cloud-Init user
+# --sshkeys: Ingest public keys for the Cloud-Init user
+# --ipconfig0: Network interface 0 config (IP/CIDR and Gateway)
+# --citype: Cloud-Init datasource type (nocloud is most compatible for Linux guests)
 qm set "$VMID" \
     --ciuser "{{ hostvars[item].vm_user }}" \
     --cipassword "{{ hostvars[item].vm_user_passwd }}" \
-    --sshkeys "{{ vm_ssh_public_key | default('/root/.ssh/id_rsa_homelab.pub') }}" \
-    --ipconfig0 "ip={{ hostvars[item].ansible_host }}/24,gw={{ network_gateway }}" \
+    --sshkeys "$SSH_PUB_KEY" \
+    --ipconfig0 "ip=$VM_IP/24,gw=$GW" \
     --citype nocloud
 
-echo "Resizing disk to {{ hostvars[item].proxmox_vm_disk_size }}..."
-qm disk resize "$VMID" scsi0 {{ hostvars[item].proxmox_vm_disk_size }}
+# --- Disk & OS Customization ---
+echo "Resizing disk to $DISK_SIZE..."
+qm disk resize "$VMID" scsi0 "$DISK_SIZE"
 
 echo "Injecting Root Password and Hostname directly into the disk..."
-# Dynamically find the disk path in LVM
+# Dynamically find the disk path in LVM (e.g., /dev/pve/vm-400-disk-0)
 DISK_PATH=$(pvs --noheadings -o pv_name | xargs -I {} find /dev -name "vm-$VMID-disk-*" | head -n 1)
 
 if [ -n "$DISK_PATH" ]; then
+    # Flag explanations for virt-customize:
+    # -a: Target disk image/volume
+    # --root-password: Set the root user password
+    # --hostname: Set the internal OS hostname
+    # --run-command: Execute a specific bash command inside the disk context
     virt-customize -a "$DISK_PATH" \
-        --root-password password:{{ hostvars[item].root_password }} \
+        --root-password password:"$ROOT_PASSWORD" \
         --hostname "$VMNAME" \
-        --run-command "echo 'root:{{ hostvars[item].root_password }}' | chpasswd"
+        --run-command "echo 'root:$ROOT_PASSWORD' | chpasswd"
 else
     echo "WARNING: Could not find disk path for VM $VMID. Manual root password set might be required."
 fi
 
+# --- Finalization ---
 echo "Updating Cloud-Init drive..."
 qm cloudinit update "$VMID"
 
