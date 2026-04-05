@@ -7,7 +7,7 @@ echo "Starting bootstrap for {{ hostvars[item].proxmox_vm_name }}..."
 
 # Update and install base packages
 apt-get update
-apt-get install -y python3 python3-pip openssh-server figlet cockpit sudo curl
+apt-get install -y sudo
 
 # Create user if it doesn't exist
 if ! id -u "{{ hostvars[item].vm_user }}" >/dev/null 2>&1; then

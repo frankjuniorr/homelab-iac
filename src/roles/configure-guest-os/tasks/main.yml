@@ -18,8 +18,13 @@
       - unzip
       - tar
       - vim
+      - jq
+      - yq
       - rsync
+      - python3
       - python3-pip
+      - curl
+      - lsof
     state: present
 
 - name: "Set user and password variables"

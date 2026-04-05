@@ -158,7 +158,7 @@ homelab-stop:
 ############################################################################
 # UTILS
 ############################################################################
-# Alterna o plugin de saída estética (beautiful_output) para melhor visualização ou debug
+# Liga/Desliga o plugin de saída estética (beautiful_output) para melhor visualização ou debug
 plugin state:
     @if [ "{{state}}" == "on" ]; then \
         sed -i '/^# *stdout_callback = beautiful_output/s/^# *//' src/ansible.cfg; \
@@ -169,3 +169,7 @@ plugin state:
     else \
         echo "Use: just plugin on ou just plugin off"; \
     fi
+
+# Executa um diagnóstico completo da infraestrutura Homelab (Healthcheck)
+doctor:
+    ./scripts/doctor.sh
