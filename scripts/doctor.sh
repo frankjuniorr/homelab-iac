@@ -70,7 +70,8 @@ for host in "${ALL_HOSTS[@]}"; do
   if check_ssh "$host"; then
     ssh_ok="✅ YES"
     # Check for both cockpit.socket (common in Ubuntu) and cockpit.service
-    if ssh -q "$host" "systemctl is-active --quiet cockpit.socket || systemctl is-active --quiet cockpit"; then
+    # Added 2>/dev/null to avoid "Transport endpoint is not connected" noise during transients
+    if ssh -q "$host" "systemctl is-active --quiet cockpit.socket 2>/dev/null || systemctl is-active --quiet cockpit 2>/dev/null"; then
       cockpit_ok="✅ YES"
     fi
     status="🟢 ONLINE"
@@ -89,7 +90,7 @@ for host in "${ALL_HOSTS[@]}"; do
     cmd_prefix=""
     [[ "$host" != root@* ]] && cmd_prefix="sudo "
     
-    ssh -q "$host" "${cmd_prefix}lsof -iTCP -sTCP:LISTEN -P -n | tail -n +2 | awk '{print \$9 \",\" \$1}' | sed 's/.*://' | sort -nu" | gum table $TABLE_STYLE --print --columns "Port,Process"
+    ssh -q "$host" "${cmd_prefix}lsof -iTCP -sTCP:LISTEN -P -n 2>/dev/null | tail -n +2 | awk '{print \$9 \",\" \$1}' | sed 's/.*://' | sort -nu" | gum table $TABLE_STYLE --print --columns "Port,Process"
   else
     gum style --foreground "$COLOR_ERROR" "🔴 Host $display_name is OFFLINE"
   fi
@@ -110,14 +111,14 @@ if check_ssh "dns"; then
   fi
 
   echo "🔍 DNS Rewrites:"
-  ssh dns "sudo yq '.filtering.rewrites[] | .domain + \" -> \" + .answer' /opt/AdGuardHome/AdGuardHome.yaml 2>/dev/null" | gum style --foreground "$COLOR_INFO" || echo "No rewrites found."
+  ssh -q dns "sudo yq '.filtering.rewrites[] | .domain + \" -> \" + .answer' /opt/AdGuardHome/AdGuardHome.yaml 2>/dev/null" | gum style --foreground "$COLOR_INFO" || echo "No rewrites found."
 fi
 
 # Garage S3
 subheader "🗄️ Garage S3 (s3)"
 if check_ssh "s3"; then
   echo "🪣 Buckets:"
-  ssh s3 "garage bucket list" | tail -n +2 | awk '{print $1 "," $3}' | gum table $TABLE_STYLE --print --columns "ID,Name"
+  ssh -q s3 "garage bucket list" | tail -n +2 | awk '{print $1 "," $3}' | gum table $TABLE_STYLE --print --columns "ID,Name"
 fi
 
 # --- 4. Kubernetes Checks ---
@@ -147,9 +148,14 @@ for entry in "${LOGS[@]}"; do
   file=$(echo $entry | cut -d: -f2)
 
   if check_ssh "$host"; then
-    size=$(ssh "$host" "ls -lh $file" | awk '{print $5}')
-    last_date=$(ssh "$host" "grep 'Backup Started' $file | tail -n 1" | sed 's/--- Backup Started at //;s/ ---//')
-    log_data+="$host,$size,$last_date\n"
+    # Verify if file exists before trying to read it
+    if ssh -q "$host" "[ -f $file ]"; then
+      size=$(ssh -q "$host" "ls -lh $file" | awk '{print $5}')
+      last_date=$(ssh -q "$host" "grep 'Backup Started' $file | tail -n 1" | sed 's/--- Backup Started at //;s/ ---//')
+      log_data+="$host,$size,$last_date\n"
+    else
+      log_data+="$host,NOT FOUND,NEVER\n"
+    fi
   fi
 done
 echo -e "$log_data" | sed '/^$/d' | gum table $TABLE_STYLE --print --columns "Host,Log Size,Last Backup"
@@ -169,7 +175,8 @@ for entry in "${LOGS[@]}"; do
 
   if check_ssh "$host"; then
     cron_status="❌ NO CRON"
-    ssh "$host" "sudo crontab -l | grep -q $file" && cron_status="✅ ACTIVE"
+    # Silence stderr to avoid warnings if crontab doesn't exist yet
+    ssh -q "$host" "sudo crontab -l 2>/dev/null | grep -q $file" && cron_status="✅ ACTIVE"
     rclone_data+="$host,$cron_status\n"
   fi
 done

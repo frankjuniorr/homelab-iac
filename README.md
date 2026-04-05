@@ -34,9 +34,7 @@ Ensure these are installed and available in your `$PATH`:
 | Tool | Purpose |
 | :--- | :--- |
 | [Just](https://github.com/casey/just) | Command runner for all project tasks. |
-| [Ansible](https://www.ansible.com/) | Core orchestration and deployment engine. |
-| [SOPS](https://github.com/getsops/sops) | Secret encryption/decryption. |
-| [Age](https://github.com/FiloSottile/age) | Modern encryption tool (backend for SOPS). |
+| [Ansible](https://www.ansible.com/) | Core orchestration and deployment engine (includes Ansible-Vault). |
 | [1Password CLI](https://developer.1password.com/docs/cli/) | Secure retrieval of SSH keys and tokens. |
 | [AWS CLI](https://aws.amazon.com/cli/) | Required to interact with Garage S3 buckets. |
 | **Python 3 & Pip3** | Required for Ansible and auxiliary scripts. |
@@ -56,8 +54,8 @@ These are automatically checked and installed during `just init`:
 graph TD
     subgraph Localhost ["Local Machine (Control Node)"]
         J[Justfile] --> A[Ansible Playbooks]
-        H["src/hosts.sops.yaml"] --> A
-        AGE[Age Key] --> A
+        H["src/hosts.yaml"] --> A
+        VP[Vault Password File] --> A
     end
 
     subgraph ProxmoxHost ["Proxmox Server"]
@@ -139,15 +137,15 @@ stateDiagram-v2
 
 ---
 
-## Secrets Management (SOPS + age)
+## Secrets Management (Ansible-Vault)
 
-To keep the repository public and secure, this project uses **SOPS** with **age**. This allows the `src/hosts.sops.yaml` file to remain in Git version control while keeping all sensitive values encrypted.
+To keep the repository public and secure, this project uses **Ansible-Vault**. This allows the `src/hosts.yaml` file to remain in Git version control while keeping all sensitive values encrypted.
 
-### 1. Installation
-Ensure you have [sops](https://github.com/getsops/sops) and [age](https://github.com/FiloSottile/age) installed on your control machine.
+### 1. Setup
+The vault password is stored locally and excluded from Git.
 
 ### 2. Initial Setup
-1.  **Generate your private key:** `just secrets-keygen`.
+1.  **Generate your vault password:** `just secrets-keygen`.
 2.  **Prepare your hosts file:** `just init-hosts`.
 3.  **Encrypt and Edit:** `just secrets-edit`.
 
@@ -162,8 +160,8 @@ Always use `just secrets-edit` to manage your variables.
 
 | Command | Description |
 | :--- | :--- |
-| `just init-hosts` | Initializes `src/hosts.sops.yaml` from the sample template. |
-| `just secrets-keygen` | Generates a new Age key pair for SOPS in `~/.config/sops/age/keys.txt`. |
+| `just init-hosts` | Initializes `src/hosts.yaml` from the sample template. |
+| `just secrets-keygen` | Generates a new vault password file in `~/.config/homelab-iac/.vault_pass`. |
 | `just secrets-edit` | Decrypts, opens in your editor, and re-encrypts the hosts file on save. |
 | `just init` | Installs git hooks, checks dependencies, installs Ansible roles, and configures Proxmox SSH. |
 

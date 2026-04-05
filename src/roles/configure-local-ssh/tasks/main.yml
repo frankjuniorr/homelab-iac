@@ -20,6 +20,22 @@
     - "{{ home_folder }}/.ssh"
     - "{{ home_folder }}/.ssh/servers"
 
+# check if ssh keys exist
+#######################################################################
+- name: "Check if public key exists"
+  delegate_to: "localhost"
+  become: false
+  ansible.builtin.stat:
+    path: "{{ ssh_public_key_file }}"
+  register: pub_key_stat
+
+- name: "Check if private key exists"
+  delegate_to: "localhost"
+  become: false
+  ansible.builtin.stat:
+    path: "{{ ssh_private_key_file }}"
+  register: priv_key_stat
+
 # get ssh keys from 1Password
 #######################################################################
 - name: "Get public key from 1Password"
@@ -27,12 +43,14 @@
   become: false
   ansible.builtin.command: op read "op://Homelab/Homelab SSH/public key"
   register: public_key
+  when: not pub_key_stat.stat.exists
 
 - name: "Get private key from 1Password"
   delegate_to: "localhost"
   become: false
   ansible.builtin.command: op read "op://Homelab/Homelab SSH/private key"
   register: private_key
+  when: not priv_key_stat.stat.exists
 
 # Creating ssh keys on localhost
 #######################################################################
@@ -47,6 +65,7 @@
   loop:
     - { content: "{{ public_key.stdout }}", dest: "{{ ssh_public_key_file }}", permission: '0644' }
     - { content: "{{ private_key.stdout }}", dest: "{{ ssh_private_key_file }}", permission: '0600' }
+  when: (not pub_key_stat.stat.exists) or (not priv_key_stat.stat.exists)
 
 - name: "Copy SSH config file"
   delegate_to: "localhost"

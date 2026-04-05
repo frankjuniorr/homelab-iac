@@ -1,10 +1,10 @@
 set shell := ["bash", "-c"]
 
 # Variáveis
-export SOPS_AGE_KEY_FILE := home_dir() + "/.config/sops/age/keys.txt"
+export VAULT_PASS_FILE := home_dir() + "/.config/homelab-iac/.vault_pass"
 
-# Helper para rodar ansible com inventário descriptografado em memória (via process substitution)
-ansible_cmd := "ansible-playbook -i <(sops -d " + quote(invocation_directory() + "/src/hosts.yaml") + ")"
+# Helper para rodar ansible com inventário criptografado (Ansible-Vault descriptografa em runtime)
+ansible_cmd := "ansible-playbook -i " + quote(invocation_directory() + "/src/hosts.yaml") + " --vault-password-file " + VAULT_PASS_FILE
 
 ############################################################################
 # FIRST USE
@@ -31,7 +31,7 @@ install-hooks:
 init: install-hooks
     cd scripts && ./check_dependencies.sh
     ansible-galaxy install -r src/requirements.yml
-    cd src && {{ansible_cmd}} --ask-become-pass configure-ssh.yaml
+    cd src && {{ansible_cmd}} configure-ssh.yaml
 
 
 ############################################################################
@@ -41,15 +41,15 @@ init: install-hooks
 # - proxmox-init: Prepara imagem Cloud-Init e Templates no Proxmox
 # - deploy-infra: Cria Containers LXC, VMs e configura SO Guest, DNS, S3 e Firewall
 deploy-homelab: secrets-encrypt init
-    cd src && {{ansible_cmd}} --ask-become-pass main.yaml --tags "proxmox-init,deploy-infra"
+    cd src && {{ansible_cmd}} main.yaml --tags "proxmox-init,deploy-infra"
 
 # Provisiona apenas a infraestrutura básica (LXC + VMs) sem instalar o Kubernetes
 deploy-infra:
-    cd src && {{ansible_cmd}} --ask-become-pass main.yaml --tags "deploy-infra"
+    cd src && {{ansible_cmd}} main.yaml --tags "deploy-infra"
 
 # Cria e configura apenas os Containers LXC (DNS/AdGuard e Garage S3)
 deploy-lxc:
-    cd src && {{ansible_cmd}} --ask-become-pass main.yaml --tags "lxc"
+    cd src && {{ansible_cmd}} main.yaml --tags "lxc"
 
 # Cria e configura apenas as VMs (Nós do cluster K8s)
 deploy-vms:
@@ -113,36 +113,36 @@ recovery:
     cd src && {{ansible_cmd}} backup-recovery.yaml --tags "recovery"
 
 ############################################################################
-# SECRETS (SOPS + age)
+# SECRETS (Ansible-Vault)
 ############################################################################
-# Cria uma nova chave age se não existir em ~/.config/sops/age/keys.txt
+# Cria um novo arquivo de senha para o vault se não existir em ~/.config/homelab-iac/.vault_pass
 secrets-keygen:
-    @test ! -d ~/.config/sops && mkdir -p ~/.config/sops/age
-    @test ! -f ~/.config/sops/age/keys.txt && age-keygen -o ~/.config/sops/age/keys.txt || echo "Key file already exists"
+    @test ! -d ~/.config/homelab-iac && mkdir -p ~/.config/homelab-iac
+    @test ! -f {{VAULT_PASS_FILE}} && openssl rand -base64 32 > {{VAULT_PASS_FILE}} && chmod 600 {{VAULT_PASS_FILE}} || echo "Vault password file already exists"
 
 # Criptografa o arquivo de hosts inicial (Garante segurança no Git)
 secrets-encrypt:
-    @if ! grep -q "sops:" src/hosts.yaml; then \
-        sops --encrypt --in-place src/hosts.yaml && echo "src/hosts.yaml encrypted"; \
+    @if ! grep -q "\$ANSIBLE_VAULT" src/hosts.yaml; then \
+        ansible-vault encrypt src/hosts.yaml --vault-password-file {{VAULT_PASS_FILE}} && echo "src/hosts.yaml encrypted"; \
     else \
-        echo "src/hosts.yaml is already encrypted"; \
+        echo "src/hosts.yaml already encrypted"; \
     fi
 
 # Abre o arquivo de hosts criptografado diretamente no editor padrão
 secrets-edit:
-    sops src/hosts.yaml
+    ansible-vault edit src/hosts.yaml --vault-password-file {{VAULT_PASS_FILE}}
 
 # Descriptografa o arquivo de hosts permanentemente (use com cautela)
 secrets-decrypt:
-    @if grep -q "sops:" src/hosts.yaml; then \
-        sops --decrypt --in-place src/hosts.yaml && echo "src/hosts.yaml decrypted"; \
+    @if grep -q "\$ANSIBLE_VAULT" src/hosts.yaml; then \
+        ansible-vault decrypt src/hosts.yaml --vault-password-file {{VAULT_PASS_FILE}} && echo "src/hosts.yaml decrypted"; \
     else \
         echo "src/hosts.yaml is already decrypted"; \
     fi
 
 # Apenas visualiza os segredos descriptografados no terminal
 secrets-view:
-    sops -d src/hosts.yaml
+    ansible-vault view src/hosts.yaml --vault-password-file {{VAULT_PASS_FILE}}
 
 ############################################################################
 # POWER MANAGEMENT
