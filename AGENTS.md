@@ -103,7 +103,7 @@
 - **`gather_facts`** is set to `false` by default; enabled only when needed
 
 ### Naming
-- **K8s Masters:** Hindu trinity names (Brahma, Vishnu, Shiva)
+- **K8s Masters:** Hindu trinity names (Indra, Vishnu, Shiva)
 - **K8s Workers:** Hindu mythology figures (Ganesha, Krishna, Lakshmi)
 - **LXC Containers:** Planet names (e.g., Jupiter for S3, Saturn for DNS)
 

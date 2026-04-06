@@ -76,7 +76,7 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 
 
 ### 5. Naming
-- Kubernetes VMs - Master Nodes: Every VM that is part of the Kubernetes cluster is named after a Hindu mythology deity. The Kubernetes master nodes are named after the main Hindu trinity: Brahma, Vishnu, Shiva.
+- Kubernetes VMs - Master Nodes: Every VM that is part of the Kubernetes cluster is named after a Hindu mythology deity. The Kubernetes master nodes are named after the main Hindu trinity: Indra, Vishnu, Shiva.
 - Kubernetes VMs - Worker Nodes: The worker VMs in the Kubernetes cluster are also named after figures from Hindu mythology, but from a lower tier in the hierarchy of deities. Examples: Ganesha, Krishna, Lakshmi.
 - LXC Containers - Services outside the cluster: For LXC containers that run outside the Kubernetes cluster, I use names of planets from the Solar System, e.g., Saturn, Jupiter, Neptune, Pluto.
 
