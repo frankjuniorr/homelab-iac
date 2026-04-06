@@ -17,7 +17,7 @@ garage_admin_api_bind_addr: "[::]:3903"
 garage_metrics_bind_addr: "[::]:3902"
 
 ##########################################################
-# Lista de Buckets
+# Lista de Buckets (Provisionamento Inicial)
 ##########################################################
 garage_buckets:
   - name: adguard-bucket

@@ -75,7 +75,7 @@ all:
       proxmox_vm_tags: "dns"
 
       ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: ""
+      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/adguard-icon.png"
 
     ############# Container: Storage (Garage S3)
     s3:
@@ -93,7 +93,7 @@ all:
       proxmox_vm_tags: "storage,s3,backup"
 
       ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: ""
+      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/garage-s3.png"
 
     ############# VMS: K8s Cluster: K8s Masters
     k8s-master:
@@ -113,7 +113,7 @@ all:
       proxmox_vm_tags: "k8s,masters"
 
       ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: ""
+      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/kubernetes-icon.png"
 
     ############# K8S CLUSTER: K8s Workers
     k8s-worker-1:
@@ -133,7 +133,7 @@ all:
       proxmox_vm_tags: "k8s,workers"
 
       ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: ""
+      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/kubernetes-icon.png"
 
     k8s-worker-2:
       ansible_host: ""
@@ -150,7 +150,7 @@ all:
       proxmox_vm_tags: "k8s,workers"
 
       ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: ""
+      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/kubernetes-icon.png"
 
 
 #####################################################################

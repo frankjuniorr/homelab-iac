@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 # Função: check_encrypt_host_file
-# Objetivo: Verificar se o arquivo de hosts contém os metadados do SOPS antes de permitir o commit.
+# Objetivo: Verificar se o arquivo de hosts contém os metadados do Ansible-Vault antes de permitir o commit.
 check_encrypt_host_file() {
-  HOSTS_FILE="src/hosts.sops.yaml"
+  HOSTS_FILE="src/hosts.yaml"
 
   if [ -f "$HOSTS_FILE" ]; then
     # IMPORTANTE: Usamos 'git show :path' para olhar o conteúdo que está no STAGE
-    if git show :"$HOSTS_FILE" | grep -q "sops:"; then
+    if git show :"$HOSTS_FILE" | grep -q "\$ANSIBLE_VAULT"; then
       return 0 # Sucesso: o arquivo está encriptado, continua para a próxima função
     else
       echo "------------------------------------------------------------------------"
@@ -45,7 +45,16 @@ add_git_files() {
   fi
 }
 
+# Função: ensure_scripts_executable
+# Objetivo: Garante que todos os scripts na pasta scripts/ tenham permissão de execução.
+ensure_scripts_executable() {
+  chmod +x scripts/*.sh
+  # Garante que o próprio hook tenha permissão (caso seja atualizado)
+  chmod +x .git/hooks/pre-commit
+}
+
 # Execução das verificações de forma sequencial
+ensure_scripts_executable
 check_encrypt_host_file
 ensure_plugin_on
 add_git_files

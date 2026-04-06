@@ -15,7 +15,7 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 - **Guest OS:** Ubuntu (Cloud-Init for VMs).
 - **Kubernetes:** K3s cluster (Masters and Workers).
 - **Task Runner:** Just (via `Justfile`).
-- **Secret Management:** 1Password CLI (`op`).
+- **Secret Management:** Ansible-Vault via `~/.config/homelab-iac/.vault_pass`.
 - **Networking:** DNS Client/Server configuration.
 
 ---
@@ -45,8 +45,8 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 ## Core Mandates & Conventions
 
 ### 0. Security First
-- **Credential Protection:** NEVER log, print, or commit secrets, API keys, or sensitive credentials. 
-- **Secret Management:** Always use SOPS for sensitive files that MUST be in Git (like `src/hosts.yaml`).
+- **Credential Protection:** NEVER log, print, or commit secrets, API keys, or sensitive credentials.
+- **Secret Management:** Always use Ansible-Vault for `src/hosts.yaml` (`$ANSIBLE_VAULT` header must be present before any commit).
 - **Git Hygiene:** Ensure that all non-encrypted sensitive data, `.env` files, and local configurations are strictly excluded via `.gitignore`.
 - **Pre-commit Validation:** Always ensure that sensitive files are encrypted before committing.
 
@@ -55,9 +55,9 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 - Avoid running `ansible-playbook` directly unless a specific subset of tasks or debugging is required.
 
 ### 2. Secret Management (Ansible-Vault)
-- **Never hardcode secrets.** Use Ansible-Vault for `src/hosts.yaml`.
-- **Vault Password:** The password should be stored in `~/.config/homelab-iac/.vault_pass`. NEVER commit this file.
-- **Hosts File Management:** ALWAYS use `just secrets-decrypt` before editing and `just secrets-encrypt` after editing `src/hosts.yaml` (or use `just secrets-edit`). NEVER leave the file decrypted in the repository.
+- **Never hardcode secrets.** All sensitive data in `src/hosts.yaml` is encrypted with Ansible-Vault.
+- **Vault Password:** Stored at `~/.config/homelab-iac/.vault_pass` (permissions `600`). NEVER commit this file.
+- **Hosts File Management:** ALWAYS use `just secrets-edit` to open the encrypted file in your editor (decrypt → edit → re-encrypt atomically). Alternatively, use `just secrets-decrypt` to decrypt manually, then ALWAYS run `just secrets-encrypt` before committing. NEVER leave the file decrypted in the repository.
 - **Sync Sample:** Whenever `src/hosts.yaml` is updated, you MUST also update `config-files/sample/hosts.yaml` with the same structure (but empty/placeholder values) to keep it in sync.
 
 ### 3. Ansible Best Practices
@@ -70,9 +70,9 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 - **OS Support:** Focus on Ubuntu compatibility for guests and Debian for Proxmox nodes.
 
 ### 4. Configuration
-- The source of truth for inventory is `src/hosts.yaml` (managed via SOPS).
+- The source of truth for inventory is `src/hosts.yaml` (encrypted with Ansible-Vault).
 - Template files should use `.j2` extension and reside in role `templates/` folders.
-- **Garage Buckets:** The array `garage_buckets` in `src/roles/garage-s3/defaults/main.yaml` is the source of truth for S3 buckets. Ansible will create missing buckets AND delete any buckets not present in this array.
+- **Garage Buckets:** The array `garage_buckets` in `src/roles/garage-s3/defaults/main.yaml` is used to provision base buckets. Ansible will create missing buckets from this list, but it will NOT delete buckets that are not present in this array (allowing for standalone bucket creation).
 
 
 ### 5. Naming
@@ -85,21 +85,21 @@ This project is part of a larger initiative of mine to build a homelab. In this 
 ## Common Workflows
 
 ### Initial Setup
-1. `just init-hosts`: Initialize the `src/hosts.sops.yaml` file from sample.
-2. `just secrets-keygen`: Generate age keys for SOPS.
+1. `just init-hosts`: Initialize the `src/hosts.yaml` file from sample template.
+2. `just secrets-keygen`: Generate the Ansible-Vault password file at `~/.config/homelab-iac/.vault_pass`.
 3. `just secrets-edit`: Configure your infrastructure secrets.
-4. `just init`: Install dependencies and configure initial Proxmox SSH access.
+4. `just init`: Install git hooks, Ansible Galaxy collections, and configure initial Proxmox SSH access.
 
 ### Infrastructure Deployment
-- `just homelab-build`: Full infrastructure deployment (VMs + Containers + K3s).
+- `just deploy-homelab`: Full infrastructure deployment (VMs + Containers + K3s).
 - `just deploy-infra`: Provision VMs/Containers and configure basic services.
 - `just deploy-lxc`: Provisions and configures only the LXC Containers (DNS, S3).
 - `just deploy-vms`: Provisions and configures only the Virtual Machines (K3s).
 - `just k3s-install`: Specifically install or update the K3s cluster.
 
 ### Cleanup & Maintenance
-- `just homelab-reset`: Full teardown of the environment.
-- `just save-data`: Backup critical application data from nodes to localhost.
+- `just destroy-homelab`: Full teardown of the environment.
+- `just backup`: Backup critical application data from nodes to remote S3/GDrive.
 
 ### Maintenance & Updates
 - `just homelab-update`: Full system update (Proxmox nodes + VMs + Containers).

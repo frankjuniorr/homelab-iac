@@ -11,11 +11,11 @@ rpc_secret = "{{ garage_rpc_secret | default('placeholder_rpc_secret_change_me')
 [s3_api]
 api_bind_addr = "{{ garage_s3_api_bind_addr }}"
 s3_region = "{{ garage_s3_region }}"
-root_domain = ".s3.garage"
+root_domain = ".s3.frank.lab.io"
 
 [s3_web]
 bind_addr = "[::]:3902"
-root_domain = ".web.garaje"
+root_domain = ".frank.lab.io"
 
 [k2v_api]
 api_bind_addr = "[::]:3904"

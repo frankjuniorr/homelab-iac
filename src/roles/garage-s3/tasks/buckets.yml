@@ -27,12 +27,6 @@
     - bucket_creation.rc == 0
     - "'Created bucket' in bucket_creation.stdout"
 
-- name: "Delete removed buckets"
-  ansible.builtin.shell: >
-    /usr/local/bin/garage bucket delete --yes --purge {{ item }}
-  loop: "{{ existing_bucket_names }}"
-  when: "item not in (garage_buckets | map(attribute='name') | list)"
-
 - name: "Apply bucket permissions"
   ansible.builtin.shell: >
     /usr/local/bin/garage bucket allow

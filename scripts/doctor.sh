@@ -2,12 +2,12 @@
 # doctor.sh - Homelab Healthcheck Diagnostic Tool (Enhanced with gum)
 # Managed by "homelab-iac"
 
-# --- Colors (ANSI 256) ---
-COLOR_HEADER="130"   # Pink/Purple
-COLOR_SUBHEADER="86" # Cyan/Teal
-COLOR_SUCCESS="46"   # Green
-COLOR_ERROR="196"    # Red
-COLOR_INFO="245"     # Grey/Muted
+# --- Colors (Terminal Theme) ---
+COLOR_HEADER="5"    # Magenta (Standard)
+COLOR_SUBHEADER="6" # Cyan (Standard)
+COLOR_SUCCESS="2"   # Green (Standard)
+COLOR_ERROR="1"     # Red (Standard)
+COLOR_INFO="0"      # White/Light Grey (Standard)
 
 # Check if gum is installed
 if ! command -v gum &>/dev/null; then
@@ -89,7 +89,7 @@ for host in "${ALL_HOSTS[@]}"; do
     # Conditionally use sudo: only if not connecting as root
     cmd_prefix=""
     [[ "$host" != root@* ]] && cmd_prefix="sudo "
-    
+
     ssh -q "$host" "${cmd_prefix}lsof -iTCP -sTCP:LISTEN -P -n 2>/dev/null | tail -n +2 | awk '{print \$9 \",\" \$1}' | sed 's/.*://' | sort -nu" | gum table $TABLE_STYLE --print --columns "Port,Process"
   else
     gum style --foreground "$COLOR_ERROR" "🔴 Host $display_name is OFFLINE"

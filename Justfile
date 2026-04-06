@@ -18,7 +18,6 @@ init-hosts:
 ############################################################################
 # Instala git hooks para garantir segurança (pre-commit verifica criptografia SOPS)
 install-hooks:
-    @chmod +x scripts/*.sh
     @echo "Installing git pre-commit hook..."
     @cp -f scripts/pre-commit.sh .git/hooks/pre-commit
     @chmod +x .git/hooks/pre-commit
@@ -173,3 +172,7 @@ plugin state:
 # Executa um diagnóstico completo da infraestrutura Homelab (Healthcheck)
 doctor:
     ./scripts/doctor.sh
+
+# Gerenciamento de buckets S3 (Garage) via CLI interativa
+s3 action='':
+    ./scripts/s3-manager.sh {{action}}
