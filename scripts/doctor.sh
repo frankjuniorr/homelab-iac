@@ -208,5 +208,12 @@ else
   gum style --foreground "$COLOR_ERROR" --bold "❌ ~/.ssh/servers/homelab.conf NOT found."
 fi
 
+subheader "🔒 Local AWS Configuration (~/.aws/config)"
+if [ -f ~/.aws/config ]; then
+  gum style --foreground "$COLOR_INFO" "$(cat ~/.aws/config)"
+else
+  gum style --foreground "$COLOR_ERROR" --bold "❌ ~/.aws/config NOT found."
+fi
+
 echo ""
 gum style --foreground "$COLOR_SUCCESS" --bold "🎉 Diagnostic Complete!"
