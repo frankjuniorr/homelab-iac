@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Environment='RUST_LOG=garage=info' 'RUST_BACKTRACE=1'
-ExecStart=/usr/local/bin/garage server
+ExecStart=/usr/local/bin/garage -c {{ garage_config_dir }}/garage.toml server
 LimitNOFILE=42000
 
 [Install]

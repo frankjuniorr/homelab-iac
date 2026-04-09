@@ -3,7 +3,7 @@ garage_version: "2.2.0"
 garage_arch: "x86_64-unknown-linux-musl"
 garage_binary_url: "https://garagehq.deuxfleurs.fr/_releases/v{{ garage_version }}/{{ garage_arch }}/garage"
 
-garage_config_dir: "/etc"
+garage_config_dir: "/etc/garage"
 garage_data_dir: "/var/lib/garage"
 garage_meta_dir: "/var/lib/garage/meta"
 garage_data_storage_dir: "/var/lib/garage/data"
