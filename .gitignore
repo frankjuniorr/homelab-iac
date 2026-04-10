@@ -1,3 +1,10 @@
+########################## AI Assistants ##########################
+.claude/
+.agents/
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+
 ########################## Secret Management ##########################
 # Ansible-Vault
 .vault_pass
