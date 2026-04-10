@@ -6,11 +6,18 @@
     label: "{{ hostvars[item].proxmox_vm_name }}"
 
 - name: "Ensure VMs are started"
-  ansible.builtin.shell: "qm start {{ hostvars[item].proxmox_vm_id }} || true"
+  ansible.builtin.shell: |
+    if qm status {{ hostvars[item].proxmox_vm_id }} | grep -q "status: running"; then
+      echo "already_running"
+    else
+      qm start {{ hostvars[item].proxmox_vm_id }}
+      echo "started"
+    fi
   loop: "{{ groups['vms_all'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
-  changed_when: true
+  register: vm_start_result
+  changed_when: "'started' in vm_start_result.stdout"
 
 - name: "Wait for SSH to be ready on VMs"
   ansible.builtin.wait_for:
