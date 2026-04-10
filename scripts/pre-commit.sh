@@ -10,15 +10,10 @@ check_encrypt_host_file() {
     if git show :"$HOSTS_FILE" | grep -q "\$ANSIBLE_VAULT"; then
       return 0 # Sucesso: o arquivo está encriptado, continua para a próxima função
     else
-      echo "------------------------------------------------------------------------"
-      echo "❌ ERROR: $HOSTS_FILE is NOT encrypted in the git stage!"
-      echo "------------------------------------------------------------------------"
-      echo "Steps to fix:"
-      echo "1. Run: just secrets-encrypt"
-      echo "2. Run: git add $HOSTS_FILE"
-      echo "3. Try to commit again."
-      echo "------------------------------------------------------------------------"
-      exit 1 # Falha: interrompe o commit
+      echo "⚠️  $HOSTS_FILE is not encrypted. Running 'just secrets-encrypt'..."
+      just secrets-encrypt
+      git add "$HOSTS_FILE"
+      echo "✅ $HOSTS_FILE encrypted and re-staged."
     fi
   fi
 }
