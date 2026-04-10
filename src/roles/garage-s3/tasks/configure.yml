@@ -37,13 +37,6 @@
   when: "garage_key_name not in garage_keys.stdout"
   register: garage_key_created
 
-- name: "Get existing key details"
-  ansible.builtin.shell: /usr/local/bin/garage key info {{ garage_key_name }}
-  register: garage_key_info
-  when: "garage_key_name in garage_keys.stdout"
-  changed_when: false
-
 - name: "Ensure key has create-bucket permission"
   ansible.builtin.shell: "/usr/local/bin/garage key allow --create-bucket {{ garage_key_name }}"
-  when: "garage_key_name in garage_keys.stdout and 'Can create buckets:  true' not in garage_key_info.stdout"
   changed_when: true

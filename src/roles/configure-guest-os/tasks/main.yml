@@ -76,6 +76,15 @@
   ansible.builtin.shell: "figlet -k $(hostname) > /etc/motd.d/10-welcome.motd"
   changed_when: false
 
+- name: "Install VM-only packages (K8s storage dependencies)"
+  become: true
+  ansible.builtin.apt:
+    name:
+      - open-iscsi
+      - nfs-common
+    state: present
+  when: inventory_hostname in groups['vms_all']
+
 - name: "Enable and start base services"
   become: true
   ansible.builtin.systemd:
