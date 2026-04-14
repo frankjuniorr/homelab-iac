@@ -1,6 +1,6 @@
 ---
 - name: "List existing buckets"
-  ansible.builtin.shell: /usr/local/bin/garage bucket list
+  ansible.builtin.shell: "{{ garage_cmd }} bucket list"
   register: garage_buckets_list
   changed_when: false
 
@@ -14,8 +14,7 @@
       | list }}"
 
 - name: "Create missing buckets"
-  ansible.builtin.shell: >
-    /usr/local/bin/garage bucket create {{ item.name }}
+  ansible.builtin.shell: "{{ garage_cmd }} bucket create {{ item.name }}"
   loop: "{{ garage_buckets }}"
   when: "item.name not in existing_bucket_names"
   register: bucket_creation
@@ -29,7 +28,7 @@
 
 - name: "Apply bucket permissions"
   ansible.builtin.shell: >
-    /usr/local/bin/garage bucket allow
+    {{ garage_cmd }} bucket allow
     {{ item.permissions | map('regex_replace', '^', '--') | join(' ') }}
     {{ item.name }}
     --key {{ garage_access_key }}

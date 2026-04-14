@@ -111,6 +111,10 @@ backup:
 recovery:
     cd src && {{ansible_cmd}} backup-recovery.yaml --tags "recovery"
 
+# Exibe os logs do último backup de cada fase (AdGuard→S3 e S3→GDrive) via SSH
+backup-logs:
+    ./scripts/backup-logs.sh
+
 ############################################################################
 # SECRETS (Ansible-Vault)
 ############################################################################

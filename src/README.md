@@ -5,7 +5,7 @@ This directory contains the Ansible code responsible for the initial configurati
 
 The project automates the following:
 - **Proxmox Initialization:** Configures storage and creates the necessary infrastructure for guests.
-- **Rocky Linux Customization:** Downloads the **Rocky Linux 8** Generic Cloud image and uses `virt-customize` to inject configurations (SSH, SELinux, etc.).
+- **Ubuntu Customization:** Downloads the **Ubuntu 24.04** Generic Cloud image and uses `virt-customize` to inject configurations (SSH, etc.).
 - **VM Template Creation:** Creates a Cloud-Init VM template on Proxmox.
 - **Resource Provisioning:** Creates both LXC Containers and Virtual Machines directly via Ansible (no Terraform required).
 - **Environment Configuration:** Sets up users, SSH keys, DNS (AdGuardHome), and system packages across all nodes.

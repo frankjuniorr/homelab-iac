@@ -50,7 +50,7 @@ all:
 
       # Cloud init image config
       config_cloud_image_directory: "/root/config-cloud-image"
-      ubuntu_cloud_image_url: "https://download.rockylinux.org/pub/rocky/8/images/x86_64/Rocky-8-GenericCloud-Base.latest.x86_64.qcow2"
+      ubuntu_cloud_image_url: "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
       ubuntu_cloud_image_file: "/var/lib/vz/images/ubuntu24.qcow2"
       ubuntu_cloud_image_root_password: "Ubuntu"
 
@@ -69,7 +69,7 @@ all:
       # values relative to VM in proxmox
       proxmox_vm_id: 
       proxmox_cpu: 1
-      proxmox_memory: 1024
+      proxmox_memory: 512
       proxmox_vm_name: ""
       proxmox_vm_disk_size: "20G"
       proxmox_vm_tags: "dns"
@@ -87,7 +87,7 @@ all:
 
       proxmox_vm_id: 
       proxmox_cpu: 1
-      proxmox_memory: 1024
+      proxmox_memory: 512
       proxmox_vm_name: "jupiter"
       proxmox_vm_disk_size: "40G"
       proxmox_vm_tags: "storage,s3,backup"
@@ -105,11 +105,11 @@ all:
 
       # Values relative to VM in proxmox
       # Just need to add these variables, in the first node.
-      proxmox_vm_id: 
+      proxmox_vm_id:
       proxmox_cpu: 2
       proxmox_vm_name: ""
-      proxmox_memory: 6144
-      proxmox_vm_disk_size: "20G"
+      proxmox_memory: 8192
+      proxmox_vm_disk_size: "40G"
       proxmox_vm_tags: "k8s,masters"
 
       ansible_python_interpreter: /usr/bin/python3.11
@@ -125,11 +125,11 @@ all:
 
       # Values relative to VM in proxmox
       # Just need to add these variables, in the first node.
-      proxmox_vm_id: 
+      proxmox_vm_id:
       proxmox_cpu: 2
       proxmox_vm_name: ""
-      proxmox_memory: 8192
-      proxmox_vm_disk_size: "20G"
+      proxmox_memory: 10240
+      proxmox_vm_disk_size: "40G"
       proxmox_vm_tags: "k8s,workers"
 
       ansible_python_interpreter: /usr/bin/python3.11
@@ -143,10 +143,10 @@ all:
       vm_user_passwd: ""
 
       proxmox_vm_name: ""
-      proxmox_vm_id: 
+      proxmox_vm_id:
       proxmox_cpu: 2
-      proxmox_memory: 8192
-      proxmox_vm_disk_size: "20G"
+      proxmox_memory: 10240
+      proxmox_vm_disk_size: "40G"
       proxmox_vm_tags: "k8s,workers"
 
       ansible_python_interpreter: /usr/bin/python3.11

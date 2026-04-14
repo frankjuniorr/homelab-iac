@@ -1,6 +1,6 @@
 ---
 - name: "Get Garage status"
-  ansible.builtin.shell: /usr/local/bin/garage status
+  ansible.builtin.shell: "{{ garage_cmd }} status"
   register: garage_status
 
 - name: "Extract node ID"
@@ -13,30 +13,29 @@
       | first }}"
 
 - name: "Check layout"
-  ansible.builtin.shell: /usr/local/bin/garage layout show
+  ansible.builtin.shell: "{{ garage_cmd }} layout show"
   register: garage_layout
 
 - name: "Assign layout if not configured"
   ansible.builtin.shell: >
-    /usr/local/bin/garage layout assign
+    {{ garage_cmd }} layout assign
     -z dc1 -c {{ proxmox_vm_disk_size }} {{ garage_node_id }}
   when: "'NO ROLE ASSIGNED' in garage_status.stdout"
 
 - name: "Apply layout if needed"
-  ansible.builtin.shell: >
-    /usr/local/bin/garage layout apply --version 1
+  ansible.builtin.shell: "{{ garage_cmd }} layout apply --version 1"
   when: "'NO ROLE ASSIGNED' in garage_status.stdout"
 
 - name: "List Garage keys"
-  ansible.builtin.shell: /usr/local/bin/garage key list
+  ansible.builtin.shell: "{{ garage_cmd }} key list"
   register: garage_keys
   changed_when: false
 
 - name: "Create key if not exists"
-  ansible.builtin.shell: "/usr/local/bin/garage key import {{ garage_access_key }} {{ garage_secret_key }} -n {{ garage_key_name }} --yes"
+  ansible.builtin.shell: "{{ garage_cmd }} key import {{ garage_access_key }} {{ garage_secret_key }} -n {{ garage_key_name }} --yes"
   when: "garage_key_name not in garage_keys.stdout"
   register: garage_key_created
 
 - name: "Ensure key has create-bucket permission"
-  ansible.builtin.shell: "/usr/local/bin/garage key allow --create-bucket {{ garage_key_name }}"
+  ansible.builtin.shell: "{{ garage_cmd }} key allow --create-bucket {{ garage_key_name }}"
   changed_when: true

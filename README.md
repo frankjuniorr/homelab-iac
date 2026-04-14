@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Ansible-black.svg?style=for-the-badge&logo=ansible&logoColor=white" alt="Ansible"/>
   <img src="https://img.shields.io/badge/Proxmox-E74C3C.svg?style=for-the-badge&logo=proxmox&logoColor=white" alt="Proxmox"/>
   <img src="https://img.shields.io/badge/K3s-326CE5.svg?style=for-the-badge&logo=kubernetes&logoColor=white" alt="K3s"/>
-  <img src="https://img.shields.io/badge/Rocky_Linux-10B981.svg?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu"/>
+  <img src="https://img.shields.io/badge/Ubuntu-E95420.svg?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu"/>
   <img src="https://img.shields.io/badge/1Password-0094F5.svg?style=for-the-badge&logo=1password&logoColor=white" alt="1Password"/>
   <img src="https://img.shields.io/badge/Just-blue.svg?style=for-the-badge&logo=just&logoColor=white" alt="Just"/>
 </p>
