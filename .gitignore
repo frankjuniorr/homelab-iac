@@ -1,7 +1,5 @@
 ########################## AI Assistants ##########################
 .claude/
-.agents/
-CLAUDE.md
 AGENTS.md
 GEMINI.md
 
