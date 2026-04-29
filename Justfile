@@ -41,6 +41,7 @@ init: install-hooks
 # - deploy-infra: Cria Containers LXC, VMs e configura SO Guest, DNS, S3 e Firewall
 deploy-homelab: secrets-encrypt init
     cd src && {{ansible_cmd}} main.yaml --tags "proxmox-init,deploy-infra"
+    cd src && {{ansible_cmd}} main.yaml --tags "post-deploy"
 
 # Provisiona apenas a infraestrutura básica (LXC + VMs) sem instalar o Kubernetes
 deploy-infra:
@@ -103,13 +104,23 @@ homelab-update-proxmox:
 ############################################################################
 # BACKUP & RECOVERY (REMOTE)
 ############################################################################
-# Dispara a sequência de backup remoto (AdGuard -> S3 -> GDrive) via Ansible
+# Dispara a sequência de backup remoto (AdGuard -> S3 -> GDrive + PostgreSQL dump) via Ansible
 backup:
     cd src && {{ansible_cmd}} backup-recovery.yaml --tags "backup"
+    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "backup-postgres"
 
 # Dispara a sequência de recovery remoto (GDrive -> S3 -> AdGuard) via Ansible
 recovery:
     cd src && {{ansible_cmd}} backup-recovery.yaml --tags "recovery"
+
+# Backup imediato do PostgreSQL (pg_dump → Garage S3)
+backup-postgres:
+    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "backup-postgres"
+
+# Recovery manual do PostgreSQL (Garage S3 → restore no LXC)
+# Normalmente não necessário — o deploy já faz isso automaticamente
+recovery-postgres:
+    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "recovery-postgres"
 
 # Exibe os logs do último backup de cada fase (AdGuard→S3 e S3→GDrive) via SSH
 backup-logs:

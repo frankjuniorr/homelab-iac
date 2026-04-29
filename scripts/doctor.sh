@@ -59,7 +59,7 @@ fi
 
 # --- 2. Guest Services & Reachability ---
 header "🌐 GLOBAL SERVICES STATUS"
-ALL_HOSTS=("root@proxmox" "dns" "s3" "k8s-master" "k8s-worker-1" "k8s-worker-2")
+ALL_HOSTS=("root@proxmox" "dns" "s3" "postgres" "k8s-master" "k8s-worker-1" "k8s-worker-2")
 service_data=""
 for host in "${ALL_HOSTS[@]}"; do
   display_name=$(echo "$host" | sed 's/root@//')
@@ -121,6 +121,22 @@ if check_ssh "s3"; then
   ssh -q s3 "garage bucket list" | tail -n +2 | awk '{print $1 "," $3}' | gum table $TABLE_STYLE --print --columns "ID,Name"
 fi
 
+# PostgreSQL
+subheader "🐘 PostgreSQL (postgres)"
+if check_ssh "postgres"; then
+  PG_STATUS=$(ssh -q postgres "systemctl is-active postgresql 2>/dev/null")
+  if [ "$PG_STATUS" = "active" ]; then
+    gum style --foreground "$COLOR_SUCCESS" --bold "✅ PostgreSQL service: active"
+    echo "🗄️ Databases:"
+    ssh -q postgres "sudo -u postgres psql -t -c '\l' 2>/dev/null | grep -v '^\s*$'" | awk -F'|' '{print $1 "," $3}' | sed 's/ //g' | gum table $TABLE_STYLE --print --columns "Name,Owner" 2>/dev/null || true
+  else
+    gum style --foreground "$COLOR_ERROR" --bold "❌ PostgreSQL service: $PG_STATUS"
+  fi
+
+  echo "📦 Latest S3 dump:"
+  ssh -q postgres "rclone lsf garage:homelab-postgres/dumps/ --config /root/.config/rclone/rclone.conf 2>/dev/null | sort | tail -n 3" | gum style --foreground "$COLOR_INFO" || echo "  No dumps found"
+fi
+
 # --- 4. Kubernetes Checks ---
 header "☸️ K3s CLUSTER STATUS"
 if [ -f ~/.kube/config.k3s ]; then
@@ -141,6 +157,7 @@ log_data=""
 LOGS=(
   "dns:/var/log/rclone/adguard-backup.log"
   "s3:/var/log/rclone/garage-backup.log"
+  "postgres:/var/log/postgres-backup.log"
 )
 
 for entry in "${LOGS[@]}"; do
@@ -151,7 +168,7 @@ for entry in "${LOGS[@]}"; do
     # Verify if file exists before trying to read it
     if ssh -q "$host" "[ -f $file ]"; then
       size=$(ssh -q "$host" "ls -lh $file" | awk '{print $5}')
-      last_date=$(ssh -q "$host" "grep 'Backup Started' $file | tail -n 1" | sed 's/--- Backup Started at //;s/ ---//')
+      last_date=$(ssh -q "$host" "grep -E 'Backup Started|Backup completed' $file | tail -n 1" | sed 's/--- Backup Started at //;s/ ---//;s/\[//;s/\].*//')
       log_data+="$host,$size,$last_date\n"
     else
       log_data+="$host,NOT FOUND,NEVER\n"
@@ -167,6 +184,7 @@ rclone_data=""
 LOGS=(
   "dns:backup-adguard-to-s3.sh"
   "s3:backup-s3-to-gdrive.sh"
+  "postgres:postgres-backup.sh"
 )
 
 for entry in "${LOGS[@]}"; do
@@ -192,7 +210,7 @@ else
 fi
 
 subheader "📝 /etc/hosts (Nodes)"
-grep -E "proxmox|dns|s3|k8s-" /etc/hosts | awk '{print $1 "," $2}' | gum table $TABLE_STYLE --print --columns "IP,Hostname"
+grep -E "proxmox|dns|s3|postgres|k8s-" /etc/hosts | awk '{print $1 "," $2}' | gum table $TABLE_STYLE --print --columns "IP,Hostname"
 
 subheader "🔒 Local SSH Configuration (~/.ssh/config)"
 if [ -f ~/.ssh/config ]; then

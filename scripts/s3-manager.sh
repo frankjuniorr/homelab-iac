@@ -35,18 +35,96 @@ function header() {
 
 function list_buckets() {
   header "🪣 LISTING BUCKETS"
-  aws s3 ls --endpoint-url "$ENDPOINT_URL" | awk '{print $1 "," $2 "," $3}' | gum table --print --columns "Date,Time,BucketName"
+
+  local bucket_list total_bytes=0 total_objects=0
+  bucket_list=$(aws s3 ls --endpoint-url "$ENDPOINT_URL" 2>/dev/null)
+
+  local table_data=""
+  while IFS= read -r line; do
+    local bname bdate btime
+    bdate=$(echo "$line" | awk '{print $1}')
+    btime=$(echo "$line" | awk '{print $2}')
+    bname=$(echo "$line" | awk '{print $3}')
+    [ -z "$bname" ] && continue
+
+    local size_info
+    size_info=$(aws s3 ls "s3://${bname}/" --endpoint-url "$ENDPOINT_URL" --recursive 2>/dev/null | \
+      awk '{sum+=$3; count++} END {printf "%d objects / %.2f MB", count, sum/1024/1024}')
+    [ -z "$size_info" ] && size_info="0 objects / 0.00 MB"
+
+    local raw_bytes raw_objs
+    raw_bytes=$(aws s3 ls "s3://${bname}/" --endpoint-url "$ENDPOINT_URL" --recursive 2>/dev/null | awk '{sum+=$3} END {print sum+0}')
+    raw_objs=$(aws s3 ls "s3://${bname}/" --endpoint-url "$ENDPOINT_URL" --recursive 2>/dev/null | wc -l)
+    total_bytes=$((total_bytes + raw_bytes))
+    total_objects=$((total_objects + raw_objs))
+
+    table_data+="${bdate},${btime},${bname},${size_info}\n"
+  done <<< "$bucket_list"
+
+  echo -e "$table_data" | sed '/^$/d' | gum table --print --columns "Date,Time,Bucket,Size"
+
+  local total_mb
+  total_mb=$(awk "BEGIN {printf \"%.2f\", $total_bytes/1024/1024}")
+  echo
+  gum style --foreground "$COLOR_SUBHEADER" --bold "Total: ${total_objects} objects / ${total_mb} MB across $(echo "$bucket_list" | wc -l) buckets"
+}
+
+function _browse_bucket() {
+  local bucket=$1
+  local prefix=""
+
+  while true; do
+    local raw dirs files entries=() idx=0
+
+    raw=$(aws s3 ls "s3://${bucket}/${prefix}" --endpoint-url "$ENDPOINT_URL" 2>/dev/null)
+
+    [ -n "$prefix" ] && entries+=("..")
+
+    while IFS= read -r line; do
+      if [[ "$line" =~ ^[[:space:]]*PRE[[:space:]]+(.+)$ ]]; then
+        entries+=("📁  ${BASH_REMATCH[1]}")
+      elif [[ "$line" =~ ^([0-9-]+)[[:space:]]+([0-9:]+)[[:space:]]+([0-9]+)[[:space:]]+(.+)$ ]]; then
+        local fdate="${BASH_REMATCH[1]}" ftime="${BASH_REMATCH[2]}" fsize="${BASH_REMATCH[3]}" fname="${BASH_REMATCH[4]}"
+        entries+=("📄  ${fname}  (${fsize} B, ${fdate} ${ftime})")
+      fi
+    done <<< "$raw"
+
+    if [ ${#entries[@]} -eq 0 ]; then
+      echo "(empty)" | fzf --header "s3://${bucket}/${prefix}  [Esc to exit]" --no-sort --height=40% --disabled
+      return
+    fi
+
+    local selected
+    selected=$(printf '%s\n' "${entries[@]}" | fzf \
+      --header "s3://${bucket}/${prefix}  [Enter=open dir, Esc=exit]" \
+      --prompt "Browse > " \
+      --no-sort \
+      --height=60%)
+
+    [ -z "$selected" ] && return  # Esc
+
+    if [[ "$selected" == ".." ]]; then
+      prefix="${prefix%*/}"       # strip trailing /
+      prefix="${prefix%/*}/"      # go up one level
+      [[ "$prefix" == "/" ]] && prefix=""
+    elif [[ "$selected" == 📁* ]]; then
+      local dir
+      dir=$(echo "$selected" | sed 's/^📁[[:space:]]*//')
+      prefix="${prefix}${dir}"
+    fi
+    # 📄 = file: just re-show the current level
+  done
 }
 
 function list_contents() {
   local bucket=$1
   if [ -z "$bucket" ]; then
-    bucket=$(aws s3 ls --endpoint-url "$ENDPOINT_URL" | awk '{print $3}' | gum choose --header "Select bucket to list" --header.foreground "$COLOR_SUBHEADER" --item.foreground "$COLOR_INFO" --selected.foreground "$COLOR_HEADER")
+    bucket=$(aws s3 ls --endpoint-url "$ENDPOINT_URL" | awk '{print $3}' | gum choose --header "Select bucket to browse" --header.foreground "$COLOR_SUBHEADER" --item.foreground "$COLOR_INFO" --selected.foreground "$COLOR_HEADER")
   fi
   [ -z "$bucket" ] && return
 
-  header "📂 CONTENTS OF: $bucket"
-  aws s3 ls "s3://$bucket/" --endpoint-url "$ENDPOINT_URL" | awk '{print $1 "," $2 "," $3 "," $4}' | gum table --print --columns "Date,Time,Size,FileName"
+  header "📂 BROWSING: $bucket"
+  _browse_bucket "$bucket"
 }
 
 function create_bucket() {
