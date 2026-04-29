@@ -27,6 +27,17 @@
         script_name: "backup-s3-to-gdrive.sh"
         log_file: "/var/log/rclone/garage-backup.log"
 
+- name: "Backup Phase 3: PostgreSQL dump to Garage S3 (Host: postgres)"
+  hosts: postgres
+  gather_facts: no
+  become: yes
+  tags: ["backup", "backup-postgres"]
+  tasks:
+    - name: "Run postgres backup"
+      ansible.builtin.include_role:
+        name: postgres-lxc
+        tasks_from: backup
+
 ##################################################################
 # RECOVERY SEQUENCE (Order: GDrive -> S3, then S3 -> AdGuard)
 ##################################################################
@@ -52,3 +63,14 @@
       vars:
         operation: "recovery"
         script_name: "recovery-adguard-from-s3.sh"
+
+- name: "Recovery Phase 3: Restore PostgreSQL from Garage S3 (Host: postgres)"
+  hosts: postgres
+  gather_facts: no
+  become: yes
+  tags: ["recovery-postgres"]
+  tasks:
+    - name: "Run postgres recovery"
+      ansible.builtin.include_role:
+        name: postgres-lxc
+        tasks_from: recovery

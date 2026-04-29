@@ -86,6 +86,21 @@
         - deploy-infra
         - lxc
 
+# #############################################
+# # Executing only in 'postgres' host
+# #############################################
+- name: "Configuring the PostgreSQL Database Server"
+  hosts: postgres
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: postgres-lxc
+      tags:
+        - deploy-infra
+        - lxc
+        - postgres
+
 ##############################################
 # RClone Configuration
 ##############################################
@@ -140,4 +155,42 @@
         - deploy-infra
         - k3s-install
         - vms
+
+##############################################
+# Prometheus Node Exporter (all LXC containers)
+##############################################
+- name: "Install node_exporter on LXC containers"
+  hosts: containers_lxc
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: node-exporter-lxc
+      tags:
+        - deploy-infra
+        - lxc
+        - monitoring
+
+##############################################
+# Post-Deploy Cleanup
+##############################################
+- name: "Post-deploy cleanup: delete cloud-init template VM"
+  hosts: proxmox_nodes
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: "Check if cloud-init template VM {{ cloud_init_template.vm_id }} exists"
+      ansible.builtin.command: "qm status {{ cloud_init_template.vm_id }}"
+      register: template_check
+      failed_when: false
+      changed_when: false
+      tags: ["post-deploy"]
+
+    - name: "Delete cloud-init template VM {{ cloud_init_template.vm_id }}"
+      ansible.builtin.shell: |
+        qm stop {{ cloud_init_template.vm_id }} || true
+        qm destroy {{ cloud_init_template.vm_id }} --purge
+      when: template_check.rc == 0
+      tags: ["post-deploy"]
 

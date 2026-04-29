@@ -4,3 +4,4 @@
 collections:
   - name: ansible.posix
   - name: community.proxmox
+  - name: community.postgresql
