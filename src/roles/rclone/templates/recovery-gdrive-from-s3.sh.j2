@@ -1,6 +1,9 @@
 #!/bin/bash
-# Sync Garage metadata and data to Google Drive
+# Restore selected Garage S3 buckets from Google Drive
 # Managed by "homelab-iac"
+#
+# Only restores lightweight, stateful buckets. K8s-managed buckets
+# (velero, longhorn) are intentionally excluded — they repopulate on cluster deploy.
 
 # Ensure common paths are in PATH for cron and user flexibility
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
@@ -11,8 +14,15 @@ if ! command -v rclone &> /dev/null; then
     exit 1
 fi
 
-# Backing up the filesystem paths of Garage
-rclone copy {{ gdrive_remote_name }}: {{ garage_s3_remote_name }}: \
-  --progress \
-  --transfers 8 \
-  --checkers 16
+BUCKETS=(
+  "{{ adguard_bucket_name }}"
+  "homelab-postgres"
+)
+
+for bucket in "${BUCKETS[@]}"; do
+  echo "--- Restoring bucket: ${bucket} ---"
+  rclone copy {{ gdrive_remote_name }}:${bucket} {{ garage_s3_remote_name }}:${bucket} \
+    --progress \
+    --transfers 8 \
+    --checkers 16
+done

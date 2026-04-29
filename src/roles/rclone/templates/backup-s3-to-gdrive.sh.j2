@@ -20,6 +20,7 @@ LOG_FILE="{{ rclone_log_dir }}/garage-backup.log"
     --log-level INFO \
     --transfers 8 \
     --checkers 16 \
-    --create-empty-src-dirs
+    --create-empty-src-dirs \
+    --delete-empty-src-dirs
   echo "--- Backup Finished at $(date) ---"
 } >> "$LOG_FILE" 2>&1
