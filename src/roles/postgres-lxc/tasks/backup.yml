@@ -1,0 +1,27 @@
+---
+- name: "Deploy postgres backup script"
+  ansible.builtin.template:
+    src: postgres-backup.sh.j2
+    dest: "{{ postgres_backup_script }}"
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: "Ensure backup log file exists"
+  ansible.builtin.file:
+    path: "{{ postgres_backup_log }}"
+    state: touch
+    owner: root
+    group: root
+    mode: "0640"
+    modification_time: preserve
+    access_time: preserve
+
+- name: "Schedule daily postgres backup via cron"
+  ansible.builtin.cron:
+    name: "postgres-backup"
+    user: root
+    hour: "{{ postgres_backup_cron_hour }}"
+    minute: "{{ postgres_backup_cron_minute }}"
+    job: "{{ postgres_backup_script }} >> {{ postgres_backup_log }} 2>&1"
+    state: present

@@ -1,0 +1,17 @@
+---
+- name: "Set listen_addresses to allow external connections"
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ postgres_version }}/main/postgresql.conf"
+    regexp: "^#?listen_addresses"
+    line: "listen_addresses = '{{ postgres_listen_addresses }}'"
+  notify: "Restart PostgreSQL"
+
+- name: "Allow connections from homelab network in pg_hba.conf"
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ postgres_version }}/main/pg_hba.conf"
+    line: "host    {{ postgres_db }}    {{ postgres_user }}    {{ postgres_hba_network }}    md5"
+    insertafter: EOF
+  notify: "Restart PostgreSQL"
+
+- name: "Flush handlers to apply config before database tasks"
+  ansible.builtin.meta: flush_handlers

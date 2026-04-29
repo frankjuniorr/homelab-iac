@@ -1,0 +1,21 @@
+---
+- name: "Check for latest postgres dump in S3"
+  ansible.builtin.command:
+    cmd: "rclone lsf {{ postgres_s3_remote_name }}:{{ postgres_s3_bucket }}/dumps/ --config {{ postgres_rclone_config_file }}"
+  register: dump_list
+  changed_when: false
+  failed_when: false
+
+- name: "Set latest dump fact"
+  ansible.builtin.set_fact:
+    postgres_latest_dump: "{{ dump_list.stdout_lines | sort | last | default('') }}"
+
+- name: "Restore latest dump if found"
+  ansible.builtin.shell: |
+    rclone cat {{ postgres_s3_remote_name }}:{{ postgres_s3_bucket }}/dumps/{{ postgres_latest_dump }} \
+      --config {{ postgres_rclone_config_file }} \
+    | gunzip | psql -U postgres {{ postgres_db }}
+  when: postgres_latest_dump != ''
+  become: true
+  become_user: postgres
+  changed_when: true

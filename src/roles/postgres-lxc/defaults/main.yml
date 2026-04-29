@@ -1,0 +1,22 @@
+---
+postgres_version: "16"
+postgres_db: app
+postgres_user: app
+postgres_data_dir: "/var/lib/postgresql/{{ postgres_version }}/main"
+
+postgres_listen_addresses: "0.0.0.0"
+postgres_hba_network: "192.168.1.0/24"
+
+postgres_rclone_config_dir: "/root/.config/rclone"
+postgres_rclone_config_file: "{{ postgres_rclone_config_dir }}/rclone.conf"
+postgres_s3_remote_name: "garage"
+postgres_s3_bucket: "homelab-postgres"
+postgres_s3_endpoint: "http://{{ hostvars['s3']['ansible_host'] }}:3900"
+
+postgres_backup_script: "/opt/postgres-backup.sh"
+postgres_backup_log: "/var/log/postgres-backup.log"
+postgres_backup_cron_hour: "1"
+postgres_backup_cron_minute: "45"
+
+postgres_exporter_version: "0.16.0"
+postgres_exporter_port: 9187

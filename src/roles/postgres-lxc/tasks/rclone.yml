@@ -1,0 +1,16 @@
+---
+- name: "Ensure rclone config directory exists for root"
+  ansible.builtin.file:
+    path: "{{ postgres_rclone_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: "Deploy rclone config pointing to Garage S3"
+  ansible.builtin.template:
+    src: rclone.conf.j2
+    dest: "{{ postgres_rclone_config_file }}"
+    owner: root
+    group: root
+    mode: "0600"

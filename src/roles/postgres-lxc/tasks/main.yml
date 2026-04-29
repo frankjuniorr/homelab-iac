@@ -1,0 +1,21 @@
+---
+- name: "Install PostgreSQL"
+  ansible.builtin.import_tasks: install.yml
+
+- name: "Configure PostgreSQL"
+  ansible.builtin.import_tasks: configure.yml
+
+- name: "Create database and user"
+  ansible.builtin.import_tasks: database.yml
+
+- name: "Configure rclone for S3 backup"
+  ansible.builtin.import_tasks: rclone.yml
+
+- name: "Install backup script and cron"
+  ansible.builtin.import_tasks: backup.yml
+
+- name: "Restore latest dump from S3 if available"
+  ansible.builtin.import_tasks: recovery.yml
+
+- name: "Install postgres_exporter for Prometheus monitoring"
+  ansible.builtin.import_tasks: monitoring.yml

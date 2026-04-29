@@ -1,0 +1,19 @@
+---
+- name: "Install PostgreSQL {{ postgres_version }} and dependencies"
+  ansible.builtin.apt:
+    name:
+      - "postgresql-{{ postgres_version }}"
+      - python3-psycopg2
+    state: present
+    update_cache: true
+
+- name: "Install rclone via official install script"
+  ansible.builtin.shell: "curl -sS https://rclone.org/install.sh | bash"
+  args:
+    creates: /usr/bin/rclone
+
+- name: "Ensure PostgreSQL service is started and enabled"
+  ansible.builtin.systemd:
+    name: postgresql
+    state: started
+    enabled: true

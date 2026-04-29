@@ -1,0 +1,13 @@
+[Unit]
+Description=Prometheus PostgreSQL Exporter
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+User=postgres
+EnvironmentFile=/etc/postgres_exporter.env
+ExecStart=/usr/local/bin/postgres_exporter
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
