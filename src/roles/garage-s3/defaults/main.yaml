@@ -25,4 +25,16 @@ garage_buckets:
     permissions:
       - read
       - write
+  - name: homelab-postgres
+    permissions:
+      - read
+      - write
+  - name: homelab-velero
+    permissions:
+      - read
+      - write
+  - name: homelab-longhorn
+    permissions:
+      - read
+      - write
 
