@@ -1,0 +1,59 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "description": "Garage S3 binary version (Deuxfleurs Forgejo release)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^src/roles/garage-s3/defaults/main\\.ya?ml$/"
+      ],
+      "matchStrings": ["garage_version:\\s*\"(?<currentValue>[\\d.]+)\""],
+      "datasourceTemplate": "gitea-releases",
+      "depNameTemplate": "Deuxfleurs/garage",
+      "registryUrlTemplate": "https://git.deuxfleurs.fr",
+      "versioningTemplate": "semver"
+    },
+    {
+      "description": "AdGuard Home binary version (GitHub release)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^src/roles/dns-server/defaults/main\\.ya?ml$/"
+      ],
+      "matchStrings": ["adguard_version:\\s*\"(?<currentValue>v[\\d.]+)\""],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "AdguardTeam/AdGuardHome"
+    },
+    {
+      "description": "PostgreSQL major version used by apt (Docker Hub tag)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^src/roles/postgres-lxc/defaults/main\\.ya?ml$/"
+      ],
+      "matchStrings": ["postgres_version:\\s*\"(?<currentValue>[\\d]+)\""],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "postgres",
+      "versioningTemplate": "docker"
+    },
+    {
+      "description": "postgres_exporter binary version (GitHub release)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^src/roles/postgres-lxc/defaults/main\\.ya?ml$/"
+      ],
+      "matchStrings": ["postgres_exporter_version:\\s*\"(?<currentValue>[\\d.]+)\""],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "prometheus-community/postgres_exporter"
+    },
+    {
+      "description": "node_exporter binary version for LXC containers (GitHub release)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^src/roles/node-exporter-lxc/defaults/main\\.ya?ml$/"
+      ],
+      "matchStrings": ["node_exporter_version:\\s*\"(?<currentValue>[\\d.]+)\""],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "prometheus/node_exporter"
+    }
+  ]
+}
