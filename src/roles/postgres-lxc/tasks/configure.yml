@@ -6,6 +6,13 @@
     line: "listen_addresses = '{{ postgres_listen_addresses }}'"
   notify: "Restart PostgreSQL"
 
+- name: "Set dynamic_shared_memory_type to mmap for LXC compatibility"
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ postgres_version }}/main/postgresql.conf"
+    regexp: "^#?dynamic_shared_memory_type"
+    line: "dynamic_shared_memory_type = mmap"
+  notify: "Restart PostgreSQL"
+
 - name: "Allow connections from homelab network in pg_hba.conf"
   ansible.builtin.lineinfile:
     path: "/etc/postgresql/{{ postgres_version }}/main/pg_hba.conf"
