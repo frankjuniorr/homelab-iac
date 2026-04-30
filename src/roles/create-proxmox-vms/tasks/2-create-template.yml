@@ -30,6 +30,7 @@
     api_host: "{{ ansible_host }}"
     api_user: "{{ ansible_user }}@pam"
     api_password: "{{ root_password }}"
+    validate_certs: false
     node: "{{ proxmox_target_node }}"
     vmid: "{{ cloud_init_template.vm_id }}"
     name: "{{ cloud_init_template.vm_template_name }}"

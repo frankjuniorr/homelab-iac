@@ -39,6 +39,7 @@ all:
       ansible_user: "root"
       root_password: ""
       proxmox_target_node: ""
+      ansible_python_interpreter: /usr/bin/python3
 
       # VM Template with cloud init image, config
       cloud_init_template:

@@ -104,23 +104,13 @@ homelab-update-proxmox:
 ############################################################################
 # BACKUP & RECOVERY (REMOTE)
 ############################################################################
-# Dispara a sequência de backup remoto (AdGuard -> S3 -> GDrive + PostgreSQL dump) via Ansible
+# Backup completo: AdGuard→S3, Postgres→S3, S3→GDrive (nessa ordem)
 backup:
-    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "backup"
-    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "backup-postgres"
+    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "backup,backup-postgres,backup-gdrive"
 
-# Dispara a sequência de recovery remoto (GDrive -> S3 -> AdGuard) via Ansible
+# Recovery completo: GDrive→S3, S3→AdGuard, S3→Postgres (nessa ordem)
 recovery:
-    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "recovery"
-
-# Backup imediato do PostgreSQL (pg_dump → Garage S3)
-backup-postgres:
-    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "backup-postgres"
-
-# Recovery manual do PostgreSQL (Garage S3 → restore no LXC)
-# Normalmente não necessário — o deploy já faz isso automaticamente
-recovery-postgres:
-    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "recovery-postgres"
+    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "recovery,recovery-postgres"
 
 # Exibe os logs do último backup de cada fase (AdGuard→S3 e S3→GDrive) via SSH
 backup-logs:

@@ -1,6 +1,7 @@
 ---
 ##################################################################
-# BACKUP SEQUENCE (Order: AdGuard -> S3, then S3 -> GDrive)
+# BACKUP SEQUENCE
+# Order: AdGuard -> S3, Postgres -> S3, then S3 -> GDrive (last)
 ##################################################################
 
 - name: "Backup Phase 1: AdGuard to S3 (Host: dns)"
@@ -15,28 +16,28 @@
         script_name: "backup-adguard-to-s3.sh"
         log_file: "/var/log/rclone/adguard-backup.log"
 
-- name: "Backup Phase 2: S3 to GDrive (Host: s3)"
+- name: "Backup Phase 2: PostgreSQL dump to Garage S3 (Host: postgres)"
+  hosts: postgres
+  gather_facts: no
+  become: yes
+  tags: ["backup-postgres"]
+  tasks:
+    - name: "Run postgres backup"
+      ansible.builtin.include_role:
+        name: postgres-lxc
+        tasks_from: backup
+
+- name: "Backup Phase 3: S3 to GDrive (Host: s3)"
   hosts: s3
   gather_facts: no
   become: yes
-  tags: ["backup"]
+  tags: ["backup-gdrive"]
   roles:
     - role: manage-remote-backups
       vars:
         operation: "backup"
         script_name: "backup-s3-to-gdrive.sh"
         log_file: "/var/log/rclone/garage-backup.log"
-
-- name: "Backup Phase 3: PostgreSQL dump to Garage S3 (Host: postgres)"
-  hosts: postgres
-  gather_facts: no
-  become: yes
-  tags: ["backup", "backup-postgres"]
-  tasks:
-    - name: "Run postgres backup"
-      ansible.builtin.include_role:
-        name: postgres-lxc
-        tasks_from: backup
 
 ##################################################################
 # RECOVERY SEQUENCE (Order: GDrive -> S3, then S3 -> AdGuard)
