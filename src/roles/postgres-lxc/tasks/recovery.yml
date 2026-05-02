@@ -14,8 +14,6 @@
   ansible.builtin.shell: |
     rclone cat {{ postgres_s3_remote_name }}:{{ postgres_s3_bucket }}/dumps/{{ postgres_latest_dump }} \
       --config {{ postgres_rclone_config_file }} \
-    | gunzip | psql -U postgres {{ postgres_db }}
+    | gunzip | runuser -u postgres -- psql {{ postgres_db }}
   when: postgres_latest_dump != ''
-  become: true
-  become_user: postgres
   changed_when: true

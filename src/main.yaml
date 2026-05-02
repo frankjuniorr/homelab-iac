@@ -86,6 +86,20 @@
         - deploy-infra
         - lxc
 
+##############################################
+# RClone Configuration
+##############################################
+- name: "Configuring RClone for backups"
+  hosts: localhost,dns,s3
+  become: false
+  gather_facts: true
+
+  roles:
+    - role: rclone
+      tags:
+        - deploy-infra
+        - lxc
+
 # #############################################
 # # Executing only in 'postgres' host
 # #############################################
@@ -100,20 +114,6 @@
         - deploy-infra
         - lxc
         - postgres
-
-##############################################
-# RClone Configuration
-##############################################
-- name: "Configuring RClone for backups"
-  hosts: localhost,dns,s3
-  become: false
-  gather_facts: true
-
-  roles:
-    - role: rclone
-      tags:
-        - deploy-infra
-        - lxc
 
 ##############################################
 # Opening 6443 port on cluster k8s Firewall

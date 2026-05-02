@@ -21,11 +21,18 @@
   gather_facts: no
   become: yes
   tags: ["backup-postgres"]
+  vars:
+    postgres_backup_script: "/opt/postgres-backup.sh"
   tasks:
-    - name: "Run postgres backup"
+    - name: "Deploy/update postgres backup script"
       ansible.builtin.include_role:
         name: postgres-lxc
         tasks_from: backup
+
+    - name: "Run postgres backup now"
+      ansible.builtin.command:
+        cmd: "{{ postgres_backup_script }}"
+      changed_when: true
 
 - name: "Backup Phase 3: S3 to GDrive (Host: s3)"
   hosts: s3
