@@ -19,8 +19,8 @@ LOG_FILE="{{ rclone_log_dir }}/garage-backup.log"
     --use-json-log \
     --log-level INFO \
     --transfers 8 \
-    --checkers 16 \
-    --create-empty-src-dirs \
-    --delete-empty-src-dirs
-  echo "--- Backup Finished at $(date) ---"
+    --checkers 16
+  RCLONE_RC=$?
+  echo "--- Backup Finished at $(date) (rc=${RCLONE_RC}) ---"
+  exit $RCLONE_RC
 } >> "$LOG_FILE" 2>&1
