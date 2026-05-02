@@ -80,8 +80,7 @@ if [ -n "$DISK_PATH" ]; then
     # --run-command: Execute a specific bash command inside the disk context
     virt-customize -a "$DISK_PATH" \
         --root-password password:"$ROOT_PASSWORD" \
-        --hostname "$VMNAME" \
-        --run-command "echo 'root:$ROOT_PASSWORD' | chpasswd"
+        --hostname "$VMNAME"
 else
     echo "WARNING: Could not find disk path for VM $VMID. Manual root password set might be required."
 fi
