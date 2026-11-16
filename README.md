@@ -6,7 +6,6 @@
   </a>
   <img src="https://img.shields.io/badge/Ansible-black.svg?style=for-the-badge&logo=ansible&logoColor=white" alt="Ansible"/>
   <img src="https://img.shields.io/badge/Proxmox-E74C3C.svg?style=for-the-badge&logo=proxmox&logoColor=white" alt="Proxmox"/>
-  <img src="https://img.shields.io/badge/K3s-326CE5.svg?style=for-the-badge&logo=kubernetes&logoColor=white" alt="K3s"/>
   <img src="https://img.shields.io/badge/Ubuntu-E95420.svg?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu"/>
   <img src="https://img.shields.io/badge/1Password-0094F5.svg?style=for-the-badge&logo=1password&logoColor=white" alt="1Password"/>
   <img src="https://img.shields.io/badge/Just-blue.svg?style=for-the-badge&logo=just&logoColor=white" alt="Just"/>
@@ -18,9 +17,15 @@ The **Homelab IaC** project is a fully automated solution for deploying and mana
 
 ### Proposal:
 - **Reproducibility:** Rebuild the entire infrastructure from scratch in minutes.
-- **Consistency:** Ensure all VMs and Containers follow the same configuration standards.
+- **Consistency:** Ensure all VMs follow the same configuration standards.
 - **Security:** Use SOPS + Age for secret management and automate SSH key distribution.
-- **Modern Stack:** Leverage Ubuntu (Cloud-Init), K3s for lightweight Kubernetes, and Ansible for orchestration.
+- **Modern Stack:** Leverage Ubuntu (Cloud-Init), Docker Compose, Home Assistant OS, and Ansible for orchestration.
+
+### Current scope (Phase 1 — Foundation)
+- **`netuno`** (VM, `192.168.1.51`): Docker host. The AdGuard (DNS), Tailscale (subnet router) and Duplicati (backup) stacks run here and are deployed by the sibling project `homelab-deploys` (`just deploy-stacks`).
+- **`terra`** (VM): Home Assistant OS, created from the official HAOS image (UEFI/q35).
+
+Kubernetes and the remaining phases (PostgreSQL/Garage consolidation into compose, user apps, media/cloud, GitOps, monitoring) are **roadmap only**: they are added back to the code gradually, one phase at a time.
 
 ---
 
@@ -36,7 +41,6 @@ Ensure these are installed and available in your `$PATH`:
 | [Just](https://github.com/casey/just) | Command runner for all project tasks. |
 | [Ansible](https://www.ansible.com/) | Core orchestration and deployment engine (includes Ansible-Vault). |
 | [1Password CLI](https://developer.1password.com/docs/cli/) | Secure retrieval of SSH keys and tokens. |
-| [AWS CLI](https://aws.amazon.com/cli/) | Required to interact with Garage S3 buckets. |
 | **Python 3 & Pip3** | Required for Ansible and auxiliary scripts. |
 
 ### 2. Python Libraries
@@ -60,19 +64,14 @@ graph TD
 
     subgraph ProxmoxHost ["Proxmox Server"]
         A -- SSH / API --> P[Proxmox VE]
-        P --> VM[Ubuntu VMs]
-        P --> LXC[Ubuntu Containers]
-        
-        subgraph Cluster ["K3s Cluster"]
-            VM -- Install --> K[K3s Servers/Nodes]
-        end
+        P --> NET["netuno (VM) - Docker host"]
+        P --> HAOS["terra (VM) - Home Assistant OS"]
+        NET -. "stacks deployed by homelab-deploys" .-> ST["AdGuard / Tailscale / Duplicati"]
     end
 
     subgraph Outputs ["Automated Outputs"]
         A -- Updates --> SC["~/.ssh/config"]
-        A -- Updates --> AC["~/.aws"]
         A -- Updates --> EH["/etc/hosts"]
-        A -- Fetches --> KC["~/.kube/config.k3s"]
     end
 ```
 
@@ -81,9 +80,7 @@ graph TD
 To provide a seamless experience, the project automatically manages several configuration files on your **Local Machine (Control Node)**:
 
 1.  **`~/.ssh/config`**: Configures SSH access to all homelab nodes, including 1Password agent integration.
-2.  **`~/.aws/`**: Generates `config` and `credentials` for the AWS CLI to interact with the Garage S3 API.
-3.  **`/etc/hosts`**: Maps the IP addresses of all VMs and Containers to their respective hostnames for local resolution.
-4.  **`~/.kube/config.k3s`**: Fetches and updates the Kubernetes configuration to allow `kubectl` to manage the K3s cluster.
+2.  **`/etc/hosts`**: Maps the IP addresses of all VMs to their respective hostnames for local resolution.
 
 ---
 
@@ -113,22 +110,21 @@ stateDiagram-v2
     Initialization --> Deployment: Build Lab
     
     state Deployment {
-        E: just homelab-build
+        E: just deploy-homelab
         F: just deploy-infra
-        G: just k3s-install
-        E --> [*]
+        G: just deploy-stacks (homelab-deploys)
+        E --> G
     }
-    
+
     state Maintenance {
         H: just homelab-update
-        I: just save-data
         J: just homelab-start/stop
     }
-    
+
     state Teardown {
-        K: just homelab-reset
+        K: just destroy-homelab
     }
-    
+
     Deployment --> Maintenance: Operations
     Maintenance --> Deployment: Re-deploy / Scale
     Maintenance --> Teardown: Clean start
@@ -170,32 +166,32 @@ Always use `just secrets-edit` to manage your variables.
 
 | Command | Description |
 | :--- | :--- |
-| `just homelab-build` | **Full Deploy:** Full initialization + VM/LXC creation + K3s installation. |
-| `just deploy-infra` | Provisions only the VMs and Containers and configures basic services. |
-| `just deploy-lxc` | **LXC Only:** Provisions and configures only the LXC Containers (DNS, S3). |
-| `just deploy-vms` | **VMs Only:** Provisions and configures only the Virtual Machines (K3s). |
-| `just k3s-install` | Installs or updates the K3s cluster on existing nodes. |
+| `just deploy-homelab` | **Full Deploy:** Full initialization + VM creation (`netuno`, `terra`) + weekly vzdump job. |
+| `just deploy-infra` | Provisions only the VMs and configures basic services. |
+| `just deploy-vms` | **VMs Only:** Provisions and configures only the VMs (`netuno` Docker host and `terra` Home Assistant OS). |
+
+After the infrastructure is up, run `just deploy-stacks` in `homelab-deploys` to bring up AdGuard, Tailscale and Duplicati on `netuno`.
 
 ### 3. Maintenance & Operations
 *Commands for daily management and updates.*
 
 | Command | Description |
 | :--- | :--- |
-| `just homelab-update` | **Full Update:** Updates OS packages on Proxmox nodes, VMs, and Containers. |
-| `just homelab-update-guests` | Updates OS packages only on VMs and Containers (Ubuntu). |
+| `just homelab-update` | **Full Update:** Updates OS packages on Proxmox nodes, and VMs. |
+| `just homelab-update-guests` | Updates OS packages only on the Ubuntu guests (HAOS updates itself). |
 | `just homelab-update-proxmox` | Updates OS packages only on Proxmox host nodes (Debian). |
-| `just save-data` | Backs up critical application data (e.g., AdGuardHome) to your local machine. |
-| `just homelab-start` | Powers on all VMs and Containers in the Proxmox host. |
-| `just homelab-stop` | Gracefully shuts down all VMs and Containers. |
+| `just doctor` | Full health check (requires `gum`). |
+| `just homelab-start` | Powers on all VMs in the Proxmox host. |
+| `just homelab-stop` | Gracefully shuts down all VMs. |
 
 ### 4. Teardown
 *Commands to clean up the environment.*
 
 | Command | Description |
 | :--- | :--- |
-| `just homelab-reset` | **Full Cleanup:** Destroys all guests and resets Proxmox to a clean state. |
-| `just destroy-infra` | Destroys only the VMs and Containers without affecting Proxmox host config. |
-| `just k3s-uninstall` | Removes Kubernetes from the nodes without destroying the VMs. |
+| `just destroy-homelab` | **Full Cleanup:** Destroys all guests and cleans local SSH files. |
+| `just destroy-infra` | Destroys only the VMs without affecting local files. |
+| `just destroy-vms` | Destroys only the VMs (`netuno`, `terra`). |
 
 ---
 

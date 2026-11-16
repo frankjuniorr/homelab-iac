@@ -38,83 +38,51 @@ init: install-hooks
 ############################################################################
 # Deploy completo da Homelab:
 # - proxmox-init: Prepara imagem Cloud-Init e Templates no Proxmox
-# - deploy-infra: Cria Containers LXC, VMs e configura SO Guest, DNS, S3 e Firewall
+# - deploy-infra: Cria VMs (netuno/Docker, terra/HAOS), job de vzdump e configura SO Guest e Docker
+# Depois: `just deploy-stacks` em homelab-deploys sobe AdGuard, Tailscale e Duplicati na netuno
 deploy-homelab: secrets-encrypt init
     cd src && {{ansible_cmd}} main.yaml --tags "proxmox-init,deploy-infra"
     cd src && {{ansible_cmd}} main.yaml --tags "post-deploy"
 
-# Provisiona apenas a infraestrutura básica (LXC + VMs) sem instalar o Kubernetes
+# Provisiona apenas a infraestrutura básica (VMs)
 deploy-infra:
     cd src && {{ansible_cmd}} main.yaml --tags "deploy-infra"
 
-# Cria e configura apenas os Containers LXC (DNS/AdGuard e Garage S3)
-deploy-lxc:
-    cd src && {{ansible_cmd}} main.yaml --tags "lxc"
-
-# Cria e configura apenas as VMs (Nós do cluster K8s)
+# Cria e configura apenas as VMs (netuno/Docker e terra/Home Assistant OS)
 deploy-vms:
     cd src && {{ansible_cmd}} main.yaml --tags "vms"
-
-# Executa apenas a instalação do cluster K3s (Masters e Workers)
-k3s-install:
-    cd src && {{ansible_cmd}} main.yaml --tags "k3s-install"
 
 ############################################################################
 # DESTROY
 ############################################################################
 # Destruição total da Homelab:
-# - backup: Executa scripts de backup remotos antes da destruição
-# - k3s-uninstall: Desinstala o K3s de todos os nós
-# - destroy-infra: Remove todas as VMs e Containers do Proxmox
+# - destroy-infra: Remove todas as VMs do Proxmox
 # - clean-local: Limpa configurações de SSH e fingerprints locais
 destroy-homelab:
     cd src && {{ansible_cmd}} destroy.yaml --tags "destroy-all"
 
-# Remove apenas as VMs e Containers do Proxmox, mantendo arquivos locais
+# Remove apenas as VMs do Proxmox, mantendo arquivos locais
 destroy-infra:
     cd src && {{ansible_cmd}} destroy.yaml --tags "destroy-infra"
 
-# Remove apenas os Containers LXC (DNS e S3) do Proxmox
-destroy-lxc:
-    cd src && {{ansible_cmd}} destroy.yaml --tags "destroy-lxc"
-
-# Remove apenas as VMs (Nós do cluster K8s) do Proxmox
+# Remove apenas as VMs (netuno e terra) do Proxmox
 destroy-vms:
     cd src && {{ansible_cmd}} destroy.yaml --tags "destroy-vms"
-
-# Remove apenas o Kubernetes do cluster, mantendo as VMs ligadas
-k3s-uninstall:
-    cd src && {{ansible_cmd}} destroy.yaml --tags "k3s-uninstall"
 
 ############################################################################
 # MAINTENANCE & UPDATES
 ############################################################################
-# Atualiza todos os SOs (Proxmox host + VMs + Containers)
+# Atualiza todos os SOs (Proxmox host + VMs)
 homelab-update:
     cd src && {{ansible_cmd}} update-os.yaml --tags "update-all"
 
-# Atualiza apenas os sistemas operacionais convidados (Ubuntu Noble)
+# Atualiza apenas os sistemas operacionais convidados (Ubuntu Noble; o HAOS se atualiza sozinho)
 homelab-update-guests:
     cd src && {{ansible_cmd}} update-os.yaml --tags "update-guests"
 
 # Atualiza apenas os nós Proxmox (Debian)
 homelab-update-proxmox:
     cd src && {{ansible_cmd}} update-os.yaml --tags "update-proxmox"
-
-############################################################################
-# BACKUP & RECOVERY (REMOTE)
-############################################################################
-# Backup completo: AdGuard→S3, Postgres→S3, S3→GDrive (nessa ordem)
-backup:
-    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "backup,backup-postgres,backup-gdrive"
-
-# Recovery completo: GDrive→S3, S3→AdGuard, S3→Postgres (nessa ordem)
-recovery:
-    cd src && {{ansible_cmd}} backup-recovery.yaml --tags "recovery,recovery-postgres"
-
-# Exibe os logs do último backup de cada fase (AdGuard→S3 e S3→GDrive) via SSH
-backup-logs:
-    ./scripts/backup-logs.sh
 
 ############################################################################
 # SECRETS (Ansible-Vault)
@@ -151,11 +119,11 @@ secrets-view:
 ############################################################################
 # POWER MANAGEMENT
 ############################################################################
-# Liga todas as instâncias (Containers e VMs) no Proxmox
+# Liga todas as instâncias (VMs) no Proxmox
 homelab-start:
     cd src && {{ansible_cmd}} power-management.yaml --tags "start"
 
-# Desliga todas as instâncias (Containers e VMs) no Proxmox
+# Desliga todas as instâncias (VMs) no Proxmox
 homelab-stop:
     cd src && {{ansible_cmd}} power-management.yaml --tags "stop"
 
@@ -177,7 +145,3 @@ plugin state:
 # Executa um diagnóstico completo da infraestrutura Homelab (Healthcheck)
 doctor:
     ./scripts/doctor.sh
-
-# Gerenciamento de buckets S3 (Garage) via CLI interativa
-s3 action='':
-    ./scripts/s3-manager.sh {{action}}
