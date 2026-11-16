@@ -1,0 +1,59 @@
+---
+# Home Assistant OS (HAOS) VM: not a cloud-init clone, it boots from the official qcow2 image.
+# Requires OVMF (UEFI) + q35. HAOS gets its IP via DHCP: set a static address afterwards
+# (router DHCP reservation, or `ha network update` on the HAOS console).
+
+- name: "Check if the HAOS VM already exists"
+  ansible.builtin.command: "qm status {{ hostvars[item].proxmox_vm_id }}"
+  register: haos_vm_check
+  failed_when: false
+  changed_when: false
+  loop: "{{ groups['haos_hosts'] | default([]) }}"
+
+- name: "Download the HAOS image"
+  ansible.builtin.get_url:
+    url: "{{ haos_image_url }}"
+    dest: "{{ haos_image_dir }}/{{ haos_image_name }}.qcow2.xz"
+    mode: '0644'
+  when: haos_vm_check.results | map(attribute='rc') | select('ne', 0) | list | length > 0
+
+- name: "Decompress the HAOS image"
+  ansible.builtin.command: "unxz --keep {{ haos_image_dir }}/{{ haos_image_name }}.qcow2.xz"
+  args:
+    creates: "{{ haos_image_dir }}/{{ haos_image_name }}.qcow2"
+  when: haos_vm_check.results | map(attribute='rc') | select('ne', 0) | list | length > 0
+
+- name: "Create the HAOS VM (UEFI, q35)"
+  ansible.builtin.shell: |
+    set -e
+    VMID={{ hostvars[item.item].proxmox_vm_id }}
+    qm create $VMID \
+      --name "{{ hostvars[item.item].proxmox_vm_name }}" \
+      --machine q35 --bios ovmf --ostype l26 \
+      --cores {{ hostvars[item.item].proxmox_cpu }} \
+      --memory {{ hostvars[item.item].proxmox_memory }} \
+      --cpu host --agent enabled=1 --onboot 1 \
+      --tags "{{ hostvars[item.item].proxmox_vm_tags }}" \
+      --scsihw virtio-scsi-pci \
+      --net0 virtio,bridge=vmbr0 \
+      --efidisk0 {{ cloud_init_template.vm_storage }}:1,efitype=4m,pre-enrolled-keys=0 \
+      --scsi0 {{ cloud_init_template.vm_storage }}:0,import-from={{ haos_image_dir }}/{{ haos_image_name }}.qcow2,discard=on,ssd=1 \
+      --boot order=scsi0
+    qm disk resize $VMID scsi0 {{ hostvars[item.item].proxmox_vm_disk_size }}
+  loop: "{{ haos_vm_check.results }}"
+  loop_control:
+    label: "{{ hostvars[item.item].proxmox_vm_name }}"
+  when: item.rc != 0
+  changed_when: true
+
+- name: "Start the HAOS VM"
+  ansible.builtin.shell: |
+    if qm status {{ hostvars[item].proxmox_vm_id }} | grep -q "status: running"; then
+      echo "already_running"
+    else
+      qm start {{ hostvars[item].proxmox_vm_id }}
+      echo "started"
+    fi
+  register: haos_start
+  changed_when: "'started' in haos_start.stdout"
+  loop: "{{ groups['haos_hosts'] | default([]) }}"

@@ -23,6 +23,13 @@
     - proxmox-init
     - vms
 
+- name: "Step 4: Provision Home Assistant OS VM"
+  ansible.builtin.include_tasks: 4-provision-haos.yml
+  when: inventory_hostname in groups['proxmox_nodes']
+  tags:
+    - proxmox-init
+    - vms
+
 - name: "Step 5: Write Proxmox Notes for VMs"
   ansible.builtin.include_role:
     name: proxmox-write-notes

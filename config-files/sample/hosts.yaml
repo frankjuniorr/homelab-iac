@@ -10,26 +10,6 @@ all:
 
     network_gateway: ""
 
-    ########################### K3s ###########################
-    # k3s token, used by installation on master and joins nodes
-    k3s_token: ""
-
-    # flag to enable (or not) to master execute pods
-    # Set to "true" if you want to master execute pods. Set to "false" otherwise
-    master_execute_pod: true
-    node_taint: "{{ '' if master_execute_pod else '--node-taint CriticalAddonsOnly=true:NoExecute' }}"
-
-    # generic script to install k3s
-    k3s_install_script: "curl -sfL https://get.k3s.io | K3S_TOKEN={{ k3s_token }} sh -s -"
-
-    # K3s Server installation
-    k3s_server_install_parameters: "{{ node_taint }} --write-kubeconfig-mode=644 --disable servicelb --disable traefik"
-    k3s_server_install_command: "{{ k3s_install_script }} server {{ k3s_server_install_parameters }}"
-
-    # K3s Agent installation
-    k3s_node_install_parameters: "--server https://{{ hostvars[groups['k8s_masters_nodes'][0]]['ansible_host'] }}:6443"
-    k3s_node_install_command: "{{ k3s_install_script }} agent {{ k3s_node_install_parameters }}"
-
   hosts:
     #####################################################################
     # Proxmox Nodes
@@ -56,120 +36,36 @@ all:
       ubuntu_cloud_image_root_password: "Ubuntu"
 
     #####################################################################
-    # VMs and Containers LXC
+    # VMs
     #####################################################################
 
-    ############# Container: DNS
-    dns:
-      ansible_host: ""
+    ############# VM: Docker host (netuno) - AdGuard, Tailscale, Duplicati via docker-compose
+    # ansible_user must NOT be "docker" (it would clash with the docker group)
+    docker:
+      ansible_host: ""            # e.g. 192.168.1.51 (the IP the LAN will use as DNS)
       ansible_user: ""
-      root_password: ""
+      root_password: ""           # must be equal to vm_user_passwd (used by ssh_copy_key)
       vm_user: ""
       vm_user_passwd: ""
 
-      # values relative to VM in proxmox
-      proxmox_vm_id:
-      proxmox_cpu: 1
-      proxmox_memory: 512
-      proxmox_vm_name: "mercurio"
-      proxmox_vm_disk_size: "20G"
-      proxmox_vm_tags: "dns"
-
-      ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/adguard-icon.png"
-
-    ############# Container: Storage (Garage S3)
-    s3:
-      ansible_host: ""
-      ansible_user: ""
-      root_password: ""
-      vm_user: ""
-      vm_user_passwd: ""
-
-      proxmox_vm_id:
-      proxmox_cpu: 1
-      proxmox_memory: 512
-      proxmox_vm_name: "saturno"
-      proxmox_vm_disk_size: "50G"
-      proxmox_vm_tags: "storage,s3,backup"
-
-      ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/garage-s3.png"
-
-    ############# Container: Database (PostgreSQL)
-    postgres:
-      ansible_host: ""
-      ansible_user: ""
-      root_password: ""
-      vm_user: ""
-      vm_user_passwd: ""
-
-      proxmox_vm_id:
-      proxmox_cpu: 1
-      proxmox_memory: 1024
-      proxmox_vm_name: "urano"
-      proxmox_vm_disk_size: "20G"
-      proxmox_vm_tags: "database,postgres"
-
-      ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/postgres-icon.png"
-
-    ############# VMS: K8s Cluster: K8s Masters
-    k8s-master:
-      ansible_host: ""
-      ansible_user: ""
-      root_password: ""
-      vm_user: ""
-      vm_user_passwd: ""
-
-      # Values relative to VM in proxmox
-      # Just need to add these variables, in the first node.
       proxmox_vm_id:
       proxmox_cpu: 2
-      proxmox_vm_name: ""
-      proxmox_memory: 8192
+      proxmox_vm_name: "netuno"
+      proxmox_memory: 4096
       proxmox_vm_disk_size: "40G"
-      proxmox_vm_tags: "k8s,masters"
+      proxmox_vm_tags: "docker,compose"
 
-      ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/kubernetes-icon.png"
+    ############# VM: Home Assistant OS (terra) - boots from the official HAOS image, no cloud-init
+    haos:
+      ansible_host: ""            # HAOS uses DHCP: reserve this IP in the router
+      ansible_user: "root"
 
-    ############# K8S CLUSTER: K8s Workers
-    k8s-worker-1:
-      ansible_host: ""
-      ansible_user: ""
-      root_password: ""
-      vm_user: ""
-      vm_user_passwd: ""
-
-      # Values relative to VM in proxmox
-      # Just need to add these variables, in the first node.
       proxmox_vm_id:
       proxmox_cpu: 2
-      proxmox_vm_name: ""
-      proxmox_memory: 10240
-      proxmox_vm_disk_size: "40G"
-      proxmox_vm_tags: "k8s,workers"
-
-      ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/kubernetes-icon.png"
-
-    k8s-worker-2:
-      ansible_host: ""
-      ansible_user: ""
-      root_password: ""
-      vm_user: ""
-      vm_user_passwd: ""
-
-      proxmox_vm_name: ""
-      proxmox_vm_id:
-      proxmox_cpu: 2
-      proxmox_memory: 10240
-      proxmox_vm_disk_size: "40G"
-      proxmox_vm_tags: "k8s,workers"
-
-      ansible_python_interpreter: /usr/bin/python3.11
-      note_icon_url: "https://raw.githubusercontent.com/frankjuniorr/homelab-iac/main/images/icons/kubernetes-icon.png"
+      proxmox_vm_name: "terra"
+      proxmox_memory: 4096
+      proxmox_vm_disk_size: "32G"
+      proxmox_vm_tags: "homeassistant,haos"
 
 
 #####################################################################
@@ -182,47 +78,23 @@ all:
       hosts:
         proxmox:
 
-    # DNS Servers
-    dns_server_hosts:
+    # Docker host (netuno)
+    docker_hosts:
       hosts:
-        dns:
+        docker:
 
-    # Garage Storage
-    garage_hosts:
+    # Home Assistant OS VM (terra)
+    haos_hosts:
       hosts:
-        s3:
+        haos:
 
-    # LXC Containers
-    containers_lxc:
-      hosts:
-        dns:
-        s3:
-        postgres:
-
-    # K8s Masters nodes
-    k8s_masters_nodes:
-      hosts:
-        k8s-master:
-
-    # K8s Workers nodes
-    k8s_worker_nodes:
-      hosts:
-        k8s-worker-1:
-        k8s-worker-2:
-
-    # k8s Cluster nodes
-    k8s_cluster:
+    # Ubuntu VMs (cloned from the cloud-init template)
+    ubuntu_vms:
       children:
-        k8s_masters_nodes:
-        k8s_worker_nodes:
+        docker_hosts:
 
-    # All Vms
+    # All VMs
     vms_all:
       children:
-        k8s_cluster:
-
-    # All Vms EXCEPT k8s cluster vms
-    single_vms:
-      children:
-        dns_server_hosts:
-        garage_hosts:
+        ubuntu_vms:
+        haos_hosts:

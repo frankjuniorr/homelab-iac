@@ -1,0 +1,6 @@
+---
+# Home Assistant OS image (https://github.com/home-assistant/operating-system/releases)
+haos_version: "18.4"   # 18.5 has no haos_ova asset yet (404); verify the .qcow2.xz exists before bumping
+haos_image_name: "haos_ova-{{ haos_version }}"
+haos_image_url: "https://github.com/home-assistant/operating-system/releases/download/{{ haos_version }}/{{ haos_image_name }}.qcow2.xz"
+haos_image_dir: "/var/lib/vz/images"

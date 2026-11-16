@@ -1,0 +1,104 @@
+---
+# Docker Engine + Compose plugin on the Ubuntu VM that hosts the compose stacks (netuno).
+# Also prepares the host for AdGuard (port 53) and Tailscale subnet router (IP forwarding).
+
+- name: "Install Docker apt prerequisites"
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "Ensure the apt keyrings directory exists"
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: "Download Docker apt signing key"
+  ansible.builtin.get_url:
+    url: "{{ docker_apt_key_url }}"
+    dest: "{{ docker_apt_key_path }}"
+    mode: '0644'
+
+- name: "Add Docker apt repository"
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: deb
+    uris: "{{ docker_apt_repo_url }}"
+    suites: "{{ ansible_distribution_release }}"
+    components: stable
+    architectures: amd64
+    signed_by: "{{ docker_apt_key_path }}"
+    state: present
+    enabled: true
+  register: docker_repo
+
+- name: "Update apt cache after adding the Docker repository"
+  ansible.builtin.apt:
+    update_cache: true
+  when: docker_repo.changed
+
+- name: "Install Docker Engine and Compose plugin"
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+
+- name: "Enable and start the Docker service"
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: "Add the guest user to the docker group"
+  ansible.builtin.user:
+    name: "{{ vm_user }}"
+    groups: docker
+    append: true
+
+# Port 53 conflict: systemd-resolved listens on 127.0.0.53:53 and blocks AdGuard Home.
+- name: "Create resolved.conf.d directory"
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    mode: '0755'
+
+- name: "Disable the systemd-resolved stub listener (free port 53)"
+  ansible.builtin.copy:
+    dest: /etc/systemd/resolved.conf.d/adguard.conf
+    content: |
+      [Resolve]
+      DNSStubListener=no
+    mode: '0644'
+  notify: "Restart systemd-resolved"
+
+# Tailscale Subnet Router needs forwarding enabled on the host.
+- name: "Enable IP forwarding (IPv4 and IPv6)"
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_file: /etc/sysctl.d/99-tailscale.conf
+    sysctl_set: true
+    state: present
+    reload: true
+  loop:
+    - net.ipv4.ip_forward
+    - net.ipv6.conf.all.forwarding
+
+- name: "Create the stacks directory (one sub-directory per service)"
+  ansible.builtin.file:
+    path: "{{ docker_stacks_dir }}"
+    state: directory
+    owner: "{{ vm_user }}"
+    group: "{{ vm_user }}"
+    mode: '0755'
+
+- name: "Flush handlers so port 53 is free before any stack is deployed"
+  ansible.builtin.meta: flush_handlers

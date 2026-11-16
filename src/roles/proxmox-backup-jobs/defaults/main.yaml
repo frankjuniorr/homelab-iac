@@ -1,0 +1,8 @@
+---
+# Weekly Proxmox vzdump job covering the VMs (netuno, terra).
+vzdump_job_id: "homelab-weekly"
+vzdump_storage: "local"            # must have "VZDump backup file" content enabled
+vzdump_schedule: "sun 03:00"
+vzdump_mode: "snapshot"
+vzdump_compress: "zstd"
+vzdump_prune_backups: "keep-last=3"

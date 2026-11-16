@@ -1,7 +1,7 @@
 ---
 - name: "Provision and Configure VMs (Shell Mode)"
   ansible.builtin.include_tasks: provision_vm_tasks.yml
-  loop: "{{ groups['vms_all'] }}"
+  loop: "{{ groups['ubuntu_vms'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
 
@@ -13,7 +13,7 @@
       qm start {{ hostvars[item].proxmox_vm_id }}
       echo "started"
     fi
-  loop: "{{ groups['vms_all'] }}"
+  loop: "{{ groups['ubuntu_vms'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"
   register: vm_start_result
@@ -26,6 +26,6 @@
     state: started
     delay: 5
     timeout: 300
-  loop: "{{ groups['vms_all'] }}"
+  loop: "{{ groups['ubuntu_vms'] }}"
   loop_control:
     label: "{{ hostvars[item].proxmox_vm_name }}"

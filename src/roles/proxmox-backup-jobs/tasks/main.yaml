@@ -1,0 +1,39 @@
+---
+# Idempotent: create the job when missing, otherwise update it in place.
+- name: "Read existing Proxmox backup jobs"
+  ansible.builtin.command: "pvesh get /cluster/backup --output-format json"
+  register: vzdump_jobs
+  changed_when: false
+
+- name: "Build the vzdump job definition"
+  ansible.builtin.set_fact:
+    vzdump_vmids: "{{ groups['vms_all'] | map('extract', hostvars, 'proxmox_vm_id') | map('string') | sort | join(',') }}"
+    vzdump_job_exists: "{{ (vzdump_jobs.stdout | from_json | selectattr('id', 'equalto', vzdump_job_id) | list | length) > 0 }}"
+
+- name: "Create the weekly vzdump job"
+  ansible.builtin.command: >-
+    pvesh create /cluster/backup
+    --id {{ vzdump_job_id }}
+    --vmid {{ vzdump_vmids }}
+    --storage {{ vzdump_storage }}
+    --schedule "{{ vzdump_schedule }}"
+    --mode {{ vzdump_mode }}
+    --compress {{ vzdump_compress }}
+    --prune-backups {{ vzdump_prune_backups }}
+    --enabled 1
+    --comment "Managed by homelab-iac"
+  when: not vzdump_job_exists
+  changed_when: true
+
+- name: "Update the weekly vzdump job"
+  ansible.builtin.command: >-
+    pvesh set /cluster/backup/{{ vzdump_job_id }}
+    --vmid {{ vzdump_vmids }}
+    --storage {{ vzdump_storage }}
+    --schedule "{{ vzdump_schedule }}"
+    --mode {{ vzdump_mode }}
+    --compress {{ vzdump_compress }}
+    --prune-backups {{ vzdump_prune_backups }}
+    --enabled 1
+  when: vzdump_job_exists
+  changed_when: false
