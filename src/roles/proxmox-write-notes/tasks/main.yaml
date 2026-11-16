@@ -12,3 +12,4 @@
     proxmox_vm_user: "{{ hostvars[item].vm_user | default(hostvars[item].ansible_user) }}"
     proxmox_vm_name: "{{ hostvars[item].proxmox_vm_name }}"
     note_icon_url: "{{ hostvars[item].note_icon_url | default('') }}"
+    proxmox_os: "{{ 'Home Assistant OS' if item in groups['haos_hosts'] | default([]) else 'Ubuntu' }}"

@@ -8,13 +8,6 @@
   become: true
 
   roles:
-    
-    # Create Containers
-    - role: proxmox-create-containers
-      tags:
-        - proxmox-init
-        - lxc
-
     # Provision VMs (Customize Image, Template and Clone)
     - role: create-proxmox-vms
       tags:
@@ -22,10 +15,25 @@
         - vms
 
 ##############################################
+# Weekly vzdump of the VMs (netuno, terra)
+##############################################
+- name: "Schedule weekly vzdump of the VMs"
+  hosts: proxmox_nodes
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: proxmox-backup-jobs
+      tags:
+        - deploy-infra
+        - vms
+        - vzdump
+
+##############################################
 # Running in all hosts
 ##############################################
 - name: "Creating the user and configuring ssh"
-  hosts: all
+  hosts: all:!haos_hosts
   become: true
   gather_facts: false
 
@@ -33,7 +41,6 @@
     - role: configure-remote-ssh
       tags:
         - deploy-infra
-        - lxc
         - vms
 
 
@@ -41,7 +48,7 @@
 # Base Guest OS Configuration
 ##############################################
 - name: "Configure Guest OS"
-  hosts: vms_all,containers_lxc
+  hosts: ubuntu_vms
   become: true
   gather_facts: false
 
@@ -49,7 +56,6 @@
     - role: configure-guest-os
       tags:
         - deploy-infra
-        - lxc
         - vms
 
     - role: dns-client
@@ -57,119 +63,21 @@
         - deploy-infra
         - vms
 
-# #############################################
-# # Executing only in 'dns' host
-# #############################################
-- name: "Configuring the DNS Server"
-  hosts: dns
-  remote_user: adguard
-  become: true
-  gather_facts: false
-
-  roles:
-    - role: dns-server
-      tags:
-        - deploy-infra
-        - lxc
-
-# #############################################
-# # Executing only in 's3' host
-# #############################################
-- name: "Configuring the Garage S3 Server"
-  hosts: s3
+##############################################
+# Docker host (netuno): Docker Engine + Compose, port 53 free, IP forwarding
+# The stacks themselves (AdGuard, Tailscale, Duplicati) are deployed by homelab-deploys
+##############################################
+- name: "Configuring the Docker host"
+  hosts: docker_hosts
   become: true
   gather_facts: true
 
   roles:
-    - role: garage-s3
-      tags:
-        - deploy-infra
-        - lxc
-
-##############################################
-# RClone Configuration
-##############################################
-- name: "Configuring RClone for backups"
-  hosts: localhost,dns,s3
-  become: false
-  gather_facts: true
-
-  roles:
-    - role: rclone
-      tags:
-        - deploy-infra
-        - lxc
-
-# #############################################
-# # Executing only in 'postgres' host
-# #############################################
-- name: "Configuring the PostgreSQL Database Server"
-  hosts: postgres
-  become: true
-  gather_facts: false
-
-  roles:
-    - role: postgres-lxc
-      tags:
-        - deploy-infra
-        - lxc
-        - postgres
-
-##############################################
-# Opening 6443 port on cluster k8s Firewall
-##############################################
-- name: "Applying firewall settings to k8s cluster nodes"
-  hosts: k8s_cluster
-  become: true
-  gather_facts: true
-
-  roles:
-    - role: kubernetes-firewall
+    - role: docker-host
       tags:
         - deploy-infra
         - vms
-
-##############################################
-# Installing k3s
-##############################################
-- name: "Installing k3s servers"
-  hosts: k8s_masters_nodes
-  become: true
-  gather_facts: false
-
-  roles:
-    - role: kubernetes-install-masters
-      tags:
-        - deploy-infra
-        - k3s-install
-        - vms
-
-- name: "Installing k3s nodes"
-  hosts: k8s_worker_nodes
-  become: true
-  gather_facts: false
-
-  roles:
-    - role: kubernetes-install-nodes
-      tags:
-        - deploy-infra
-        - k3s-install
-        - vms
-
-##############################################
-# Prometheus Node Exporter (all LXC containers)
-##############################################
-- name: "Install node_exporter on LXC containers"
-  hosts: containers_lxc
-  become: true
-  gather_facts: false
-
-  roles:
-    - role: node-exporter-lxc
-      tags:
-        - deploy-infra
-        - lxc
-        - monitoring
+        - docker
 
 ##############################################
 # Post-Deploy Cleanup

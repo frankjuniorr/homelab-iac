@@ -1,8 +1,8 @@
 # Notes for {{ proxmox_vm_user }}
 
-![Icon]({{ note_icon_url }})
-
-- **Operating System:** Ubuntu
+{% if note_icon_url %}![Icon]({{ note_icon_url }})
+{% endif %}
+- **Operating System:** {{ proxmox_os | default('Ubuntu') }}
 - **CPU:** {{ proxmox_cpu }} vCPUs
 - **Memory:** {{ (proxmox_memory | int / 1024) | round(1) }} GB
 - **Disk:** {{ proxmox_vm_disk_size }}

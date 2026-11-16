@@ -1,9 +1,9 @@
 ---
 ##############################################
-# Update all Ubuntu Hosts (VMs and Containers)
+# Update all Ubuntu Hosts (VMs)
 ##############################################
 - name: "Update OS packages on all Ubuntu guests"
-  hosts: all:!proxmox_nodes
+  hosts: all:!proxmox_nodes:!haos_hosts
   become: true
   gather_facts: true
 
